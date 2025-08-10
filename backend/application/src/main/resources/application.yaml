@@ -10,3 +10,14 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://auth-server:8080
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/financedb
+    username: user
+    password: password
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        ddl-auto: update
