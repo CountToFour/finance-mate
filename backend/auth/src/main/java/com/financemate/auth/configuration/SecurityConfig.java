@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -73,14 +74,16 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
-        RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
+        PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+
+        RegisteredClient registeredClient = RegisteredClient.withId("1555331e-6540-4b59-bf49-eb1b25fcd953")
                 .clientId("client")
-                .clientSecret("{noop}secret") // tylko do testów!
+                .clientSecret(encoder.encode("secret")) // tylko do testów!
                 .redirectUri("http://localhost:8082/login/oauth2/code/client")
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
@@ -88,6 +91,9 @@ public class SecurityConfig {
                 .scope("profile")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .build();
+
+        System.out.println(">>> ClientId: " + registeredClient.getClientId());
+        System.out.println(">>> ClientSecret (encoded): " + registeredClient.getClientSecret());
 
         return new InMemoryRegisteredClientRepository(registeredClient);
     }
