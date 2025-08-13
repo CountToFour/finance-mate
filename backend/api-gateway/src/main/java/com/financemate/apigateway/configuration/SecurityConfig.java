@@ -18,6 +18,9 @@ public class SecurityConfig {
                         .pathMatchers("/api/v1/users/register").permitAll() // publiczny dostęp
                         .anyExchange().authenticated() // wszystko inne wymaga tokenu
                 )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(Customizer.withDefaults()) // włącza sprawdzanie tokenu JWT
+                )
                 .oauth2Login(Customizer.withDefaults())
                 .oauth2Client(Customizer.withDefaults())
                 .logout(Customizer.withDefaults())
