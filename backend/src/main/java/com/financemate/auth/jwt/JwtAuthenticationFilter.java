@@ -27,7 +27,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-
         final String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             chain.doFilter(request, response);
@@ -35,10 +34,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         final String jwt = authHeader.substring(7);
+        System.out.println("Extracted JWT: " + jwt); // Debugging line
         final String username = jwtService.extractUsername(jwt);
+        System.out.println("Extracted Username: " + username); // Debugging line
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails user = userRepository.findByEmail(username).orElse(null);
+            UserDetails user = userRepository.findByUsername(username).orElse(null);
+            System.out.println("User found: " + (user != null)); // Debugging line
             boolean tokenNotRevoked = tokenRepository.findByToken(jwt)
                     .map(t -> !t.isExpired() && !t.isRevoked())
                     .orElse(true); // domyślnie true dla access tokenów nieprzechowywanych
