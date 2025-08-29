@@ -5,12 +5,14 @@ import com.financemate.expenses.dto.ExpenseDto;
 import com.financemate.expenses.mapper.ExpenseMapper;
 import com.financemate.expenses.model.Expense;
 import com.financemate.expenses.repository.ExpenseRepository;
+import com.financemate.expenses.utils.ExpenseSpecifications;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,10 +33,19 @@ public class ExpenseService {
         return expenseRepository.save(expense1);
     }
 
-    public List<ExpenseDto> getExpensesByUser(String userId) {
-        return expenseRepository.findByUserId(userId).stream()
+    public List<ExpenseDto> getExpensesByUser(String userId, String category, BigDecimal minPrice, BigDecimal maxPrice,
+                                              LocalDate startDate, LocalDate endDate) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+
+        Specification<Expense> spec = Specification.allOf(ExpenseSpecifications.hasUserId(userId))
+                .and(ExpenseSpecifications.hasCategory(category))
+                .and(ExpenseSpecifications.amountBetween(minPrice, maxPrice))
+                .and(ExpenseSpecifications.dateBetween(startDate, endDate));
+
+        return expenseRepository.findAll(spec).stream()
                 .map(expenseMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public void deleteExpense(String id) {

@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
@@ -25,7 +26,7 @@ public class ExpenseDto {
 
     @NotNull(message = "Amount cannot be null")
     @Positive(message = "Amount must be greater than 0")
-    private double price;
+    private BigDecimal price;
 
     @Size(max = 255, message = "Description must have max 255 characters")
     private String description;

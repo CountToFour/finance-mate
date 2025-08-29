@@ -12,8 +12,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -34,8 +37,18 @@ public class ExpenseController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<ExpenseDto>> getExpenses(@PathVariable String userId) {
-        return ResponseEntity.ok(expenseService.getExpensesByUser(userId));
+    public ResponseEntity<List<ExpenseDto>> getExpensesByUser(
+            @PathVariable String userId,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate) {
+        try {
+            return ResponseEntity.ok(expenseService.getExpensesByUser(userId, category, minPrice, maxPrice, startDate, endDate));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @DeleteMapping("/{id}")

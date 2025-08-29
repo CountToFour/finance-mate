@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
@@ -22,7 +23,7 @@ public class Expense {
     private String userId;
     @Nullable
     private String description;
-    private double price;
+    private BigDecimal price;
     private String category;
     private LocalDate expenseDate;
 
