@@ -3,6 +3,7 @@ package com.financemate.expenses.controller;
 import com.financemate.expenses.dto.ExpenseDto;
 import com.financemate.expenses.model.Expense;
 import com.financemate.expenses.service.ExpenseService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,9 +24,13 @@ public class ExpenseController {
     private final ExpenseService expenseService;
 
     @PostMapping
-    public ResponseEntity<Expense> addExpense(@RequestBody ExpenseDto expense) {
-        Expense saved = expenseService.addExpense(expense);
-        return ResponseEntity.ok(saved);
+    public ResponseEntity<Expense> addExpense(@Valid @RequestBody ExpenseDto expense) {
+        try {
+            Expense saved = expenseService.addExpense(expense);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/{userId}")
