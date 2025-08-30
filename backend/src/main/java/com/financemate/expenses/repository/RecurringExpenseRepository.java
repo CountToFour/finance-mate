@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface RecurringExpenseRepository extends JpaRepository<RecurringExpense, String> {
     List<RecurringExpense> findAllByActive(boolean active);
+    List<RecurringExpense> findAllByUserId(String userId);
 }

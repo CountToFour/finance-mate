@@ -10,4 +10,5 @@ public interface ExpenseMapper {
     Expense expenseToEntity(ExpenseDto dto);
     ExpenseDto expenseToDto(Expense entity);
     RecurringExpense recurringExpenseToEntity(ExpenseDto dto);
+    ExpenseDto recurringExpenseToDto(RecurringExpense entity);
 }

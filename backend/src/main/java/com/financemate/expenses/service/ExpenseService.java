@@ -60,7 +60,66 @@ public class ExpenseService {
                 .toList();
     }
 
+    public List<ExpenseDto> getAllRecurringExpenses(String userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+
+        return recurringExpenseRepository.findAllByUserId(userId).stream()
+                .map(expenseMapper::recurringExpenseToDto)
+                .toList();
+    }
+
     public void deleteExpense(String id) {
         expenseRepository.deleteById(id);
+    }
+
+    public void deactivateRecurringExpense(String id) {
+        RecurringExpense recurringExpense = recurringExpenseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Recurring expense not found with id: " + id));
+        recurringExpense.setActive(!recurringExpense.isActive());
+        recurringExpenseRepository.save(recurringExpense);
+    }
+
+    public Expense editExpense(String id, ExpenseDto expenseDto) {
+        Expense existingExpense = expenseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Expense not found with id: " + id));
+
+        if (expenseDto.getCategory() != null) {
+            existingExpense.setCategory(expenseDto.getCategory());
+        }
+        if (expenseDto.getPrice() != null) {
+            existingExpense.setPrice(expenseDto.getPrice());
+        }
+        if (expenseDto.getDescription() != null) {
+            existingExpense.setDescription(expenseDto.getDescription());
+        }
+        if (expenseDto.getExpenseDate() != null) {
+            existingExpense.setExpenseDate(expenseDto.getExpenseDate());
+        }
+
+        return expenseRepository.save(existingExpense);
+    }
+
+    public RecurringExpense editRecurringExpense(String id, ExpenseDto expenseDto) {
+        RecurringExpense existingRecurringExpense = recurringExpenseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Recurring expense not found with id: " + id));
+
+        if (expenseDto.getCategory() != null) {
+            existingRecurringExpense.setCategory(expenseDto.getCategory());
+        }
+        if (expenseDto.getPrice() != null) {
+            existingRecurringExpense.setPrice(expenseDto.getPrice());
+        }
+        if (expenseDto.getDescription() != null) {
+            existingRecurringExpense.setDescription(expenseDto.getDescription());
+        }
+        if (expenseDto.getExpenseDate() != null) {
+            existingRecurringExpense.setExpenseDate(expenseDto.getExpenseDate());
+        }
+        if (expenseDto.getPeriodType() != null && expenseDto.getPeriodType() != PeriodType.NONE) {
+            existingRecurringExpense.setPeriodType(expenseDto.getPeriodType());
+        }
+
+        return recurringExpenseRepository.save(existingRecurringExpense);
     }
 }
