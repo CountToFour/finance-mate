@@ -25,8 +25,8 @@ public class ExpenseDto {
     @NotBlank(message = "Category cannot be empty")
     private String category;
 
-    @NotNull(message = "Amount cannot be null")
-    @Positive(message = "Amount must be greater than 0")
+    @NotNull(message = "Price cannot be null")
+    @Positive(message = "Price must be greater than 0")
     private BigDecimal price;
 
     @Size(max = 255, message = "Description must have max 255 characters")
