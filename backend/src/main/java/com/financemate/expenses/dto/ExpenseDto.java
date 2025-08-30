@@ -1,5 +1,6 @@
 package com.financemate.expenses.dto;
 
+import com.financemate.expenses.model.PeriodType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
@@ -33,4 +34,7 @@ public class ExpenseDto {
 
     @PastOrPresent(message = "Date cannot be in the future")
     private LocalDate expenseDate;
+
+    @NotNull(message = "Period type cannot be null")
+    private PeriodType periodType;
 }

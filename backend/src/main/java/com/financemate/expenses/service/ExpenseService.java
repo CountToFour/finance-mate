@@ -4,7 +4,10 @@ import com.financemate.auth.repository.UserRepository;
 import com.financemate.expenses.dto.ExpenseDto;
 import com.financemate.expenses.mapper.ExpenseMapper;
 import com.financemate.expenses.model.Expense;
+import com.financemate.expenses.model.PeriodType;
+import com.financemate.expenses.model.RecurringExpense;
 import com.financemate.expenses.repository.ExpenseRepository;
+import com.financemate.expenses.repository.RecurringExpenseRepository;
 import com.financemate.expenses.utils.ExpenseSpecifications;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
@@ -19,11 +22,20 @@ import java.util.List;
 public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
+    private final RecurringExpenseRepository recurringExpenseRepository;
     private final ExpenseMapper expenseMapper;
     private final UserRepository userRepository;
 
     public Expense addExpense(ExpenseDto expense) {
-        Expense expense1 = expenseMapper.toEntity(expense);
+
+        if (expense.getPeriodType() != PeriodType.NONE) {
+            RecurringExpense recurringExpense = expenseMapper.recurringExpenseToEntity(expense);
+            recurringExpense.setActive(true);
+            recurringExpense.setLastGeneratedDate(expense.getExpenseDate());
+            recurringExpenseRepository.save(recurringExpense);
+        }
+
+        Expense expense1 = expenseMapper.expenseToEntity(expense);
         userRepository.findById(expense.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + expense.getUserId()));
         if (expense1.getExpenseDate() == null) {
@@ -44,7 +56,7 @@ public class ExpenseService {
                 .and(ExpenseSpecifications.dateBetween(startDate, endDate));
 
         return expenseRepository.findAll(spec).stream()
-                .map(expenseMapper::toDto)
+                .map(expenseMapper::expenseToDto)
                 .toList();
     }
 
