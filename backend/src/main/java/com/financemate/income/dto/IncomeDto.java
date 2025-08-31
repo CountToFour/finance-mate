@@ -1,5 +1,6 @@
 package com.financemate.income.dto;
 
+import com.financemate.expenses.model.PeriodType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -27,4 +28,7 @@ public class IncomeDto {
 
     @Size(max = 255, message = "Description must have max 255 characters")
     private String description;
+
+    @NotNull(message = "Period type cannot be null")
+    private PeriodType periodType;
 }
