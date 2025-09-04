@@ -2,8 +2,8 @@ import { createTheme } from '@mui/material/styles';
 
 const commonColors = {
     beige: "#F7F5F3",
-    gold: "#CDB557",
-    lightBlue: "#7AB6D1",
+    gold: "#EBE6CD",
+    lightBlue: "#70B2B1",
     purple: "#A175BF",
     blue: "#5C86D3",
 };
@@ -20,6 +20,9 @@ export const lightTheme = createTheme({
         },
         secondary: {
             main: commonColors.purple,
+        },
+        warning: {
+            main: commonColors.gold,
         },
         text: {
             primary: "#000000",
@@ -46,6 +49,9 @@ export const darkTheme = createTheme({
         },
         secondary: {
             main: commonColors.purple,
+        },
+        warning: {
+            main: commonColors.gold,
         },
         text: {
             primary: "#ffffff",

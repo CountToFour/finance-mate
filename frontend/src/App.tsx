@@ -5,7 +5,7 @@ import {darkTheme, lightTheme} from "./theme/theme.tsx";
 import {useState} from "react";
 
 export default function App() {
-    const [darkMode, setDarkMode] = useState(true)
+    const [darkMode, setDarkMode] = useState(false)
 
     return (
         <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>

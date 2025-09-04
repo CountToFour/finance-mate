@@ -2,13 +2,12 @@ import {
     AppBar,
     Toolbar,
     Typography,
-    Button,
     Box,
     Drawer,
     List,
     ListItemIcon,
     ListItemText,
-    ListItemButton
+    ListItemButton, Avatar, Button
 } from '@mui/material';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
@@ -17,7 +16,9 @@ import {BarChart, Home, PieChart, Settings} from "lucide-react";
 const drawerWidth = 240;
 
 export function Layout() {
-    const logout = useAuthStore((s) => s.logout);
+    const logout = useAuthStore(s => s.logout);
+    const user = useAuthStore(s => s.user);
+    const name = user?.username || 'User';
     const navigate = useNavigate();
 
     const menuItems = [
@@ -28,6 +29,20 @@ export function Layout() {
         { text: "Raporty", icon: <BarChart />, path: "/" },
         { text: "Ustawienia", icon: <Settings />, path: "/" },
     ];
+
+    const stringAvatar = (displayName: string) => {
+        const trimmed = displayName.trim();
+        const parts = trimmed.split(' ').filter(Boolean);
+        const initials =
+            parts.length >= 2
+                ? `${parts[0][0]}${parts[1][0]}`
+                : (trimmed.slice(0, 2) || '?').toUpperCase();
+
+        return {
+            sx: { bgcolor: 'secondary.main', width: 32, height: 32, fontSize: 14 },
+            children: initials,
+        };
+    };
 
     return (
         <Box sx={{ display: "flex", bgcolor: "background.default", minHeight: "100vh" }}>
@@ -40,8 +55,10 @@ export function Layout() {
                     [`& .MuiDrawer-paper`]: {
                         width: drawerWidth,
                         boxSizing: "border-box",
-                        bgcolor: "background.default",
+                        bgcolor: "warning.main",
                         borderRight: "1px solid #e0e0e0",
+                        display: 'flex',
+                        flexDirection: 'column',
                     },
                 }}
             >
@@ -58,6 +75,17 @@ export function Layout() {
                         </ListItemButton>
                     ))}
                 </List>
+                <Box sx={{ mt: 'auto', p: 2 }}>
+                    <Button
+                        fullWidth
+                        variant="outlined"
+                        color="secondary"
+                        onClick={() => { logout(); navigate('/login'); }}
+                    >
+                        Wyloguj
+                    </Button>
+                </Box>
+
             </Drawer>
 
             {/* Main content */}
@@ -70,10 +98,15 @@ export function Layout() {
                     sx={{ ml: `${drawerWidth}px`, width: `calc(100% - ${drawerWidth}px)` }}
                 >
                     <Toolbar sx={{ justifyContent: 'flex-end' }}>
-                        <Typography variant="h6" sx={{ mr: 2 }}>Finance</Typography>
-                        <Button color="inherit" onClick={() => { logout(); navigate('/login'); }}>
-                            Wyloguj
-                        </Button>
+                        <Avatar {...stringAvatar(name)} />
+                        <Box sx={{ ml: 2, mr: 2 }}>
+                            <Typography variant="body2" sx={{ mr: 2 }}>
+                                {name}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                                {user?.email}
+                            </Typography>
+                        </Box>
                     </Toolbar>
                 </AppBar>
 
