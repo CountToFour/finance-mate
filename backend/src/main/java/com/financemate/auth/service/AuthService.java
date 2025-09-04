@@ -91,6 +91,6 @@ public class AuthService implements UserDetailsService {
                 .revoked(false)
                 .build());
 
-        return new AuthResponse(access, refresh);
+        return new AuthResponse(access, refresh, user.getUsername(), user.getEmail());
     }
 }

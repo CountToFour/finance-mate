@@ -46,6 +46,16 @@ function Login() {
                         Zaloguj się
                     </Button>
                 </form>
+                <Button
+                    variant="text"
+                    color="secondary"
+                    fullWidth
+                    sx={{mt: 1}}
+                    onClick={() => navigate('/register')}
+                >
+                    Załóż konto
+                </Button>
+
             </Paper>
         </Container>
     );

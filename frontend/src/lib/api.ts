@@ -21,3 +21,12 @@ export const login = (email: string, password: string ) => axios.post(
         password: password,
     }
 )
+
+export const register = (email: string, password: string, username: string) => axios.post(
+    'http://localhost:8080/api/auth/register',
+    {
+        email: email,
+        password: password,
+        username: username
+    }
+)

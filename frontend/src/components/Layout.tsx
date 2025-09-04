@@ -3,7 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
 
 
-function Layout() {
+export function Layout() {
     const logout = useAuthStore((s) => s.logout);
     const navigate = useNavigate();
 
@@ -19,5 +19,3 @@ function Layout() {
         </>
     );
 }
-
-export default Layout;
