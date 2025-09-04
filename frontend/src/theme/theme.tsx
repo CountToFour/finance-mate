@@ -1,24 +1,29 @@
 import { createTheme } from '@mui/material/styles';
-export const theme = createTheme({
+
+const commonColors = {
+    beige: "#F7F5F3",
+    gold: "#CDB557",
+    lightBlue: "#7AB6D1",
+    purple: "#A175BF",
+    blue: "#5C86D3",
+};
+
+export const lightTheme = createTheme({
     palette: {
+        mode: "light",
         background: {
-            default: "#201f1f",
+            default: commonColors.beige,
+            paper: "#ffffff",
         },
         primary: {
-            main: "#5C86D3",
+            main: commonColors.blue,
         },
         secondary: {
-            main: "#A175BF",
-        },
-        info: {
-            main: "#7AB6D1",
-        },
-        warning: {
-            main: "#CDB557",
+            main: commonColors.purple,
         },
         text: {
-            primary: "#F7F5F3",
-            secondary: "#555555",
+            primary: "#000000",
+            secondary: "#4f4f4f",
         },
     },
     typography: {
@@ -29,24 +34,28 @@ export const theme = createTheme({
     },
 });
 
-// palette: {
-//     background: {
-//     default: "#F7F5F3",
-//     },
-//     primary: {
-//         main: "#5C86D3",
-//     },
-//     secondary: {
-//         main: "#A175BF",
-//     },
-//     info: {
-//         main: "#7AB6D1",
-//     },
-//     warning: {
-//         main: "#CDB557",
-//     },
-//     text: {
-//         primary: "#333333",
-//             secondary: "#555555",
-//     },
-// },
+export const darkTheme = createTheme({
+    palette: {
+        mode: "dark",
+        background: {
+            default: "#121212",
+            paper: "#1f1f1f",
+        },
+        primary: {
+            main: commonColors.blue,
+        },
+        secondary: {
+            main: commonColors.purple,
+        },
+        text: {
+            primary: "#ffffff",
+            secondary: "#b3b3b3",
+        },
+    },
+    typography: {
+        fontFamily: "Roboto, Arial, sans-serif",
+    },
+    shape: {
+        borderRadius: 12,
+    },
+});

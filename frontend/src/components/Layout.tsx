@@ -66,6 +66,7 @@ export function Layout() {
                 <AppBar
                     position="fixed"
                     color="primary"
+                    enableColorOnDark
                     sx={{ ml: `${drawerWidth}px`, width: `calc(100% - ${drawerWidth}px)` }}
                 >
                     <Toolbar sx={{ justifyContent: 'flex-end' }}>
