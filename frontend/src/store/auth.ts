@@ -26,7 +26,7 @@ export const useAuthStore = create<State>()(
                 } catch (e: any) {
                     set({ error: e?.response?.data?.message || 'Błąd logowania',
                         loading: false })
-                    return false
+                    throw e
                 }
             },
             async register(mail: string, password: string, name: string) {
@@ -43,7 +43,7 @@ export const useAuthStore = create<State>()(
                 } catch (e: any) {
                     set({ error: e?.response?.data?.message || 'Błąd rejestracji',
                         loading: false })
-                    return false
+                    throw e
                 }
             },
             logout() {

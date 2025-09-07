@@ -2,10 +2,11 @@ import {Button, Container, TextField, Typography, Paper} from '@mui/material';
 import {useForm} from 'react-hook-form';
 import {useAuthStore} from '../store/auth';
 import {useNavigate} from "react-router-dom";
+import axios from "axios";
 
 function Login() {
     const login = useAuthStore((s) => s.login);
-    const {register, handleSubmit, formState: {errors}} = useForm<{
+    const {register, handleSubmit, formState: {errors}, setError, clearErrors} = useForm<{
         email: string;
         password: string;
     }>();
@@ -15,8 +16,17 @@ function Login() {
         try {
             await login(data.email, data.password);
             navigate("/"); // 👈 Po zalogowaniu przekierowanie do dashboardu
-        } catch (error) {
-            console.error(error);
+        } catch (err) {
+            console.log(err);
+            const isAxios = axios.isAxiosError(err);
+            const status = isAxios ? err.response?.status : undefined;
+            if (status === 400 || status === 403) {
+                setError('root', { type: 'server', message: 'Bad credentials' });
+                setError('email', { type: 'server', message: '' });
+                setError('password', { type: 'server', message: '' });
+            } else {
+                setError('root', { type: 'server', message: 'Wystąpił błąd. Spróbuj ponownie.' });
+            }
         }
     };
 
@@ -29,7 +39,10 @@ function Login() {
                         label="Email"
                         fullWidth
                         margin="normal"
-                        {...register('email')}
+                        {...register('email', {
+                            required: "Podaj email",
+                            onChange: () => clearErrors(['root', 'email', 'password'])
+                        })}
                         error={!!errors.email}
                         helperText={errors.email?.message}
                     />
@@ -38,10 +51,19 @@ function Login() {
                         type="password"
                         fullWidth
                         margin="normal"
-                        {...register('password')}
+                        {...register('password', {
+                            required: "Podaj hasło",
+                            onChange: () => clearErrors(['root', 'email', 'password'])
+                        })}
                         error={!!errors.password}
                         helperText={errors.password?.message}
                     />
+                    {errors.root?.message && (
+                        <Typography color="error" variant="body2" sx={{ mt: 1, textAlign: 'right'
+                        }}>
+                            {errors.root.message}
+                        </Typography>
+                    )}
                     <Button type="submit" variant="contained" color="primary" fullWidth sx={{mt: 2}}>
                         Zaloguj się
                     </Button>

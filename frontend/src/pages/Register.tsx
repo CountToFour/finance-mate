@@ -1,8 +1,9 @@
-import {Button, Container, TextField, Typography, Paper, Alert} from '@mui/material';
+import {Button, Container, TextField, Typography, Paper} from '@mui/material';
 import {useForm} from 'react-hook-form';
 import {useState} from 'react';
 import {useAuthStore} from '../store/auth';
 import {useNavigate} from 'react-router-dom';
+import axios from "axios";
 
 type RegisterForm = {
     username: string;
@@ -13,18 +14,23 @@ type RegisterForm = {
 function Register() {
     const navigate = useNavigate();
     const login = useAuthStore((s) => s.register);
-    const {register, handleSubmit, formState: {errors}} = useForm<RegisterForm>();
+    const {register, handleSubmit, formState: {errors}, setError, clearErrors} = useForm<RegisterForm>();
     const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     const onSubmit = async (data: RegisterForm) => {
         setSubmitting(true);
-        setError(null);
         try {
             await login(data.email, data.password, data.username);
             navigate("/");
-        } catch (error) {
-            console.log(error);
+        } catch (err) {
+            console.log(err);
+            const isAxios = axios.isAxiosError(err);
+            const status = isAxios ? err.response?.status : undefined;
+            if (status === 409) {
+                setError('email', { type: 'server', message: 'Account with this email already exists.' });
+            } else {
+                setError('root', { type: 'server', message: 'Wystąpił błąd. Spróbuj ponownie.' });
+            }
         } finally {
             setSubmitting(false);
         }
@@ -34,8 +40,7 @@ function Register() {
         <Container maxWidth="xs">
             <Paper elevation={3} sx={{p: 4, mt: 8}}>
                 <Typography variant="h5" mb={2}>Rejestracja</Typography>
-                {error && <Alert severity="error" sx={{mb: 2}}>{error}</Alert>}
-                <form onSubmit={handleSubmit(onSubmit)}>
+                <form onSubmit={handleSubmit(onSubmit)} noValidate>
                     <TextField
                         label="Nazwa użytkownika"
                         fullWidth
@@ -49,7 +54,14 @@ function Register() {
                         type="email"
                         fullWidth
                         margin="normal"
-                        {...register('email', { required: 'Podaj email' })}
+                        {...register('email', {
+                            required: 'Podaj email' ,
+                            pattern: {
+                                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                message: 'Podaj poprawny email'
+                            },
+                            onChange: () => clearErrors(['root', 'email', 'password'])
+                        })}
                         error={!!errors.email}
                         helperText={errors.email?.message}
                     />
@@ -62,6 +74,12 @@ function Register() {
                         error={!!errors.password}
                         helperText={errors.password?.message}
                     />
+                    {errors.root?.message && (
+                        <Typography color="error" variant="body2" sx={{ mt: 1, textAlign: 'right'
+                        }}>
+                            {errors.root.message}
+                        </Typography>
+                    )}
                     <Button
                         type="submit"
                         variant="contained"

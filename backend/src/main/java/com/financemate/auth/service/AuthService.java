@@ -3,6 +3,7 @@ package com.financemate.auth.service;
 import com.financemate.auth.dto.AuthResponse;
 import com.financemate.auth.dto.LoginRequest;
 import com.financemate.auth.dto.RegisterRequest;
+import com.financemate.auth.exceptions.EmailAlreadyExistsException;
 import com.financemate.auth.jwt.JwtService;
 import com.financemate.auth.model.token.Token;
 import com.financemate.auth.model.user.Role;
@@ -40,7 +41,7 @@ public class AuthService implements UserDetailsService {
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email already in use");
+            throw new EmailAlreadyExistsException("Email already in use");
         }
         User user = User.builder()
                 .email(request.email())
