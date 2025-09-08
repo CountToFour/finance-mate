@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Register from "./pages/Register.tsx";
+import Expenses from "./pages/expenses/Expenses.tsx";
 
 
 export const router = createBrowserRouter([
@@ -18,6 +19,7 @@ export const router = createBrowserRouter([
         ),
         children: [
             { path: '/', element: <Dashboard /> },
+            { path: '/expenses', element: <Expenses />},
         ],
     },
 ]);

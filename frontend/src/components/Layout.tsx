@@ -11,7 +11,12 @@ import {
 } from '@mui/material';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/auth';
-import {BarChart, Home, PieChart, Settings} from "lucide-react";
+import HomeIcon from '@mui/icons-material/Home';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import SettingsIcon from '@mui/icons-material/Settings';
+import CrisisAlertIcon from '@mui/icons-material/CrisisAlert';
 
 const drawerWidth = 240;
 
@@ -22,12 +27,12 @@ export function Layout() {
     const navigate = useNavigate();
 
     const menuItems = [
-        { text: "Pulpit", icon: <Home />, path: "/" },
-        { text: "Wydatki", icon: <BarChart />, path: "/" },
-        { text: "Przychody", icon: <BarChart />, path: "/" },
-        { text: "Budżet", icon: <PieChart />, path: "/" },
-        { text: "Raporty", icon: <BarChart />, path: "/" },
-        { text: "Ustawienia", icon: <Settings />, path: "/" },
+        { text: "Pulpit", icon: <HomeIcon />, path: "/" },
+        { text: "Wydatki", icon: <ReceiptIcon />, path: "/expenses" },
+        { text: "Przychody", icon: <AccountBalanceWalletIcon />, path: "/" },
+        { text: "Budżet", icon: <CrisisAlertIcon />, path: "/" },
+        { text: "Raporty", icon: <BarChartIcon />, path: "/" },
+        { text: "Ustawienia", icon: <SettingsIcon />, path: "/" },
     ];
 
     const stringAvatar = (displayName: string) => {

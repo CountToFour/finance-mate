@@ -19,6 +19,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ExpenseDto {
+    private String id;
+
     @NotBlank(message = "User ID cannot be empty")
     private String userId;
 
