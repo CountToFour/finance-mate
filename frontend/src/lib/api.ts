@@ -32,8 +32,20 @@ export const register = (email: string, password: string, username: string) => a
     }
 )
 
+//EXPENSES
+
 export const getExpenses = (userId: string | undefined) => axios.get(
     `http://localhost:8080/api/expenses/${userId}`, {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const deleteExpense = (id: string) => axios.delete(
+    `http://localhost:8080/api/expenses/${id}`,
+    {
         withCredentials: true,
         headers: {
             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
