@@ -17,6 +17,7 @@ import {useAuthStore} from "../../store/auth.ts";
 import type {Expense} from "../../lib/types.ts";
 import {DataGrid, type GridColDef} from '@mui/x-data-grid';
 import {useNotification} from "../../components/NotificationContext.tsx";
+import AddExpenseDialog from "./AddExpenseDialog.tsx";
 
 const COLORS = ["#5C86D3", "#A175BF", "#CDB557", "#7AB6D1"];
 
@@ -24,12 +25,13 @@ function ExpensesPage() {
     const user = useAuthStore(s => s.user);
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const {success, error} = useNotification();
+    const [openDialog, setOpenDialog] = useState(false);
     const paginationModel = {page: 0, pageSize: 5};
     const totalSpending = expenses.reduce((acc, e) => acc + e.price, 0);
 
     useEffect(() => {
         getExpenses(user?.id).then((res) => setExpenses(res.data));
-    }, [user?.id]);
+    }, [user?.id, openDialog]);
 
     const handleDeletion = (id: string) => {
         console.log(id)
@@ -103,7 +105,11 @@ function ExpensesPage() {
                     <Typography variant="h5" fontWeight={"bold"} color={"secondary"}>Twoje wydatki</Typography>
                     <Typography variant="body2" sx={{mt:1}}>Zarządzaj swoimi wydatkami i śledź kategorie</Typography>
                 </Box>
-                <Button variant={'contained'} color={"secondary"}>
+                <Button
+                    variant={'contained'}
+                    color={"secondary"}
+                    onClick={() => setOpenDialog(true)}
+                >
                     <Add sx={{mr: 1}}/>
                     Dodaj wydatek
                 </Button>
@@ -167,6 +173,10 @@ function ExpensesPage() {
                         </CardContent>
                     </Card>
                 </Box>
+                <AddExpenseDialog
+                    open={openDialog}
+                    onClose={() => setOpenDialog(false)}
+                />
             </Box>
         </>
     );

@@ -24,3 +24,12 @@ export type Expense = {
     description: string
     expenseDate: string
 }
+
+export type ExpenseDto = {
+    userId: string | undefined
+    category: string
+    price: number
+    description: string
+    expenseDate: string
+    periodType: "NONE"
+}

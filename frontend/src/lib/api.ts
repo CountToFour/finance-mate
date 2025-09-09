@@ -1,5 +1,6 @@
 import axios from 'axios'
 import {useAuthStore} from "../store/auth.ts";
+import type {ExpenseDto} from "./types.ts";
 
 export const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -45,6 +46,17 @@ export const getExpenses = (userId: string | undefined) => axios.get(
 
 export const deleteExpense = (id: string) => axios.delete(
     `http://localhost:8080/api/expenses/${id}`,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const addExpense = (expense: ExpenseDto) => axios.post(
+    'http://localhost:8080/api/expenses',
+    expense,
     {
         withCredentials: true,
         headers: {
