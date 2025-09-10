@@ -35,8 +35,19 @@ export const register = (email: string, password: string, username: string) => a
 
 //EXPENSES
 
-export const getExpenses = (userId: string | undefined) => axios.get(
-    `http://localhost:8080/api/expenses/${userId}`, {
+export const getExpenses = (
+    userId: string | undefined,
+    category: string | null,
+    startDate: string,
+    endDate: string,
+) => axios.get(
+    `http://localhost:8080/api/expenses/${userId}`,
+    {
+        params: {
+            category: category,
+            startDate: startDate,
+            endDate: endDate,
+        },
         withCredentials: true,
         headers: {
             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,

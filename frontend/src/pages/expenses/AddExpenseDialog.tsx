@@ -85,7 +85,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
             category: category,
             price: parseFloat(amount),
             description: description,
-            expenseDate: date?.format("YYYY-MM-DD"), // lub date.toISOString()
+            expenseDate: date?.format("YYYY-MM-DD"),
             periodType: periodType,
         };
 

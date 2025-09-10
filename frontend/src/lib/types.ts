@@ -1,3 +1,5 @@
+//USER
+
 export type User = {
     id: string;
     email: string;
@@ -15,6 +17,8 @@ export type State = {
     register: (email: string, password: string, username: string) => Promise<boolean>
     logout: () => void
 }
+
+//EXPENSES
 
 export type Expense = {
     id: string

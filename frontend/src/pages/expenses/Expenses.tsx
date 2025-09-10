@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {
     Box,
     Card,
@@ -6,11 +6,13 @@ import {
     Typography,
     IconButton,
     Divider,
-    Button,
+    Button, MenuItem, TextField,
 } from "@mui/material";
 import {Add} from "@mui/icons-material";
+import InputAdornment from '@mui/material/InputAdornment';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import {PieChart, Pie, Cell, Tooltip, ResponsiveContainer} from "recharts";
 import {deleteExpense, getExpenses} from "../../lib/api.ts";
 import {useAuthStore} from "../../store/auth.ts";
@@ -18,8 +20,14 @@ import type {Expense} from "../../lib/types.ts";
 import {DataGrid, type GridColDef} from '@mui/x-data-grid';
 import {useNotification} from "../../components/NotificationContext.tsx";
 import AddExpenseDialog from "./AddExpenseDialog.tsx";
+import dayjs, {type Dayjs} from "dayjs";
+import {LocalizationProvider} from "@mui/x-date-pickers";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 
 const COLORS = ["#5C86D3", "#A175BF", "#CDB557", "#7AB6D1"];
+const categories = ["Wszystkie", "Jedzenie", "Transport", "Zakupy", "Rozrywka", "Inne"];
+const currentYear = dayjs();
 
 function ExpensesPage() {
     const user = useAuthStore(s => s.user);
@@ -27,20 +35,32 @@ function ExpensesPage() {
     const {success, error} = useNotification();
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-
+    const [category, setCategory] = useState<string>("Wszystkie");
+    const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
+    const dateFrom = selectedDate.startOf("month").format("YYYY-MM-DD");
+    const dateTo = selectedDate.endOf("month").format("YYYY-MM-DD");
+    
     const paginationModel = {page: 0, pageSize: 5};
     const totalSpending = expenses.reduce((acc, e) => acc + e.price, 0);
 
     useEffect(() => {
-        getExpenses(user?.id).then((res) => setExpenses(res.data));
-    }, [user?.id, openDialog]);
+        if (category === "Wszystkie") {
+            getExpenses(user?.id, null, dateFrom, dateTo).then((res) => setExpenses(res.data));
+        } else {
+            getExpenses(user?.id, category, dateFrom, dateTo).then((res) => setExpenses(res.data));
+        }
+    }, [user?.id, openDialog, category, dateFrom, dateTo]);
 
     const handleDeletion = (id: string) => {
         console.log(id)
         deleteExpense(id)
             .then(() => {
                 success("Wydatek został usunięty")
-                getExpenses(user?.id).then((res) => setExpenses(res.data));
+                if (category === "Wszystkie") {
+                    getExpenses(user?.id, null, dateFrom, dateTo).then((res) => setExpenses(res.data));
+                } else {
+                    getExpenses(user?.id, category, dateFrom, dateTo).then((res) => setExpenses(res.data));
+                }
             })
             .catch(() => {
                 error("Nie udało się usunąć wydatku")
@@ -109,7 +129,7 @@ function ExpensesPage() {
             <Box p={2} display="flex" justifyContent="space-between" alignItems="center">
                 <Box>
                     <Typography variant="h5" fontWeight={"bold"} color={"secondary"}>Twoje wydatki</Typography>
-                    <Typography variant="body2" sx={{mt:1}}>Zarządzaj swoimi wydatkami i śledź kategorie</Typography>
+                    <Typography variant="body2" sx={{mt: 1}}>Zarządzaj swoimi wydatkami i śledź kategorie</Typography>
                 </Box>
                 <Button
                     variant={'contained'}
@@ -127,9 +147,50 @@ function ExpensesPage() {
                 <Box flex={1}>
                     <Card>
                         <CardContent>
-                            <Box>
-                                <Typography variant="subtitle1" fontWeight={"bold"}>Ostatnie wydatki</Typography>
-                                <Typography variant="body2" color={"text.secondary"}>Przegląd najnowszych transakcji</Typography>
+                            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                                <Box>
+                                    <Typography variant="subtitle1" fontWeight={"bold"}>Ostatnie wydatki</Typography>
+                                    <Typography variant="body2" color={"text.secondary"}>Przegląd najnowszych
+                                        transakcji</Typography>
+                                </Box>
+                                <Box display="flex" gap={2} alignItems="center">
+                                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                        <DatePicker
+                                            value={selectedDate}
+                                            yearsOrder="desc"
+                                            maxDate={currentYear}
+                                            onMonthChange={(newMonth) => {
+                                                setSelectedDate(dayjs(newMonth));
+                                            }}
+                                            views={['month', 'year']}
+                                            format={"MMMM YYYY"}
+                                            slotProps={{textField: {size: 'small', sx: {width: 200}}}}
+                                        />
+                                    </LocalizationProvider>
+                                    <TextField
+                                        value={category}
+                                        defaultValue={"Wszystkie"}
+                                        onChange={(e) => setCategory(e.target.value)}
+                                        select
+                                        sx={{width: 200}}
+                                        size="small"
+                                        slotProps={{
+                                            input: {
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <FilterAltOutlinedIcon/>
+                                                    </InputAdornment>
+                                                ),
+                                            },
+                                        }}
+                                    >
+                                        {Object.values(categories).map((cat) => (
+                                            <MenuItem key={cat} value={cat}>
+                                                {cat}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
+                                </Box>
                             </Box>
                             <Divider sx={{my: 1}}/>
                             <DataGrid
