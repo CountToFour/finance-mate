@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {
     Dialog,
     DialogTitle,
@@ -12,8 +12,8 @@ import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import dayjs, {Dayjs} from "dayjs";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import {useAuthStore} from "../../store/auth.ts";
-import type {ExpenseDto} from "../../lib/types.ts";
-import {addExpense} from "../../lib/api.ts";
+import type {Expense, ExpenseDto} from "../../lib/types.ts";
+import {addExpense, editExpense} from "../../lib/api.ts";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 
@@ -21,6 +21,7 @@ import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 interface AddExpenseDialogProps {
     open: boolean;
     onClose: () => void;
+    initialExpense?: Expense | null;
 }
 
 //TODO JAK PONIŻEJ
@@ -34,7 +35,7 @@ const periodTypes = {
     YEARLY: "Yearly"
 }
 
-const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose}) => {
+const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initialExpense}) => {
     const {success, error} = useNotification(); // 🔹 notyfikacje
     const user = useAuthStore(s => s.user);
     const [date, setDate] = useState<Dayjs | null>(dayjs());
@@ -47,6 +48,17 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose}) => {
         amount: "",
         category: "",
     });
+
+    useEffect(() =>
+    {
+        if (initialExpense) {
+            setDescription(initialExpense.description ?? null);
+            setAmount(initialExpense.price.toString());
+            setCategory(initialExpense.category);
+            setDate(dayjs(initialExpense.expenseDate));
+        }
+    }, [initialExpense])
+
 
     const validate = () => {
         let valid = true;
@@ -77,14 +89,26 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose}) => {
             periodType: periodType,
         };
 
-        addExpense(expenseDto)
-            .then(() => {
-                success("Wydatek został pomyślnie dodany!");
-                handleClose();
-            })
-            .catch(() => {
-                error("Nie udało się dodać wydatku. Spróbuj ponownie.");
-            });
+        if (!initialExpense) {
+            addExpense(expenseDto)
+                .then(() => {
+                    success("Wydatek został pomyślnie dodany!");
+                    handleClose();
+                })
+                .catch(() => {
+                    error("Nie udało się dodać wydatku. Spróbuj ponownie.");
+                });
+        } else {
+            editExpense(initialExpense.id, expenseDto)
+                .then(() => {
+                    success("Wydatek został pomyślnie edytowany!");
+                    handleClose();
+                })
+                .catch(() => {
+                    error("Nie udało się edytować wydatku. Spróbuj ponownie.");
+                });
+        }
+
     };
 
     const handleClose = () => {
@@ -99,7 +123,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose}) => {
 
     return (
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
-            <DialogTitle>Dodaj wydatek</DialogTitle>
+            <DialogTitle>{initialExpense ? "Edytuj wydatek" : "Dodaj wydatek"}</DialogTitle>
             <DialogContent dividers>
                 <Box
                     sx={{
@@ -160,7 +184,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose}) => {
                         </MenuItem>
                     ))}
                 </TextField>
-                <TextField
+                {!initialExpense && (<TextField
                     select
                     fullWidth
                     margin="normal"
@@ -176,6 +200,8 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose}) => {
                         </MenuItem>
                     ))}
                 </TextField>
+                    )
+                }
             </DialogContent>
             <DialogActions sx={{mr: 2, mb: 1, mt: 1}}>
                 <Button onClick={handleClose} color="secondary">

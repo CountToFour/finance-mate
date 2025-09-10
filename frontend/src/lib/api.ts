@@ -64,3 +64,14 @@ export const addExpense = (expense: ExpenseDto) => axios.post(
         },
     }
 )
+
+export const editExpense = (id: string, expense: ExpenseDto) => axios.put(
+    `http://localhost:8080/api/expenses/edit/${id}`,
+    expense,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)

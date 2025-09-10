@@ -26,6 +26,8 @@ function ExpensesPage() {
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const {success, error} = useNotification();
     const [openDialog, setOpenDialog] = useState(false);
+    const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+
     const paginationModel = {page: 0, pageSize: 5};
     const totalSpending = expenses.reduce((acc, e) => acc + e.price, 0);
 
@@ -84,6 +86,10 @@ function ExpensesPage() {
                     height: '100%',
                 }}>
                     <IconButton
+                        onClick={() => {
+                            setSelectedExpense(params.row as Expense)
+                            setOpenDialog(true);
+                        }}
                     >
                         <EditOutlinedIcon/>
                     </IconButton>
@@ -108,7 +114,10 @@ function ExpensesPage() {
                 <Button
                     variant={'contained'}
                     color={"secondary"}
-                    onClick={() => setOpenDialog(true)}
+                    onClick={() => {
+                        setSelectedExpense(null);
+                        setOpenDialog(true)
+                    }}
                 >
                     <Add sx={{mr: 1}}/>
                     Dodaj wydatek
@@ -176,6 +185,7 @@ function ExpensesPage() {
                 <AddExpenseDialog
                     open={openDialog}
                     onClose={() => setOpenDialog(false)}
+                    initialExpense={selectedExpense}
                 />
             </Box>
         </>
