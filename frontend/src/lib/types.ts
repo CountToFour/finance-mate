@@ -29,7 +29,7 @@ export type ExpenseDto = {
     userId: string | undefined
     category: string
     price: number
-    description: string
+    description: string | null
     expenseDate: string
-    periodType: "NONE"
+    periodType: string
 }

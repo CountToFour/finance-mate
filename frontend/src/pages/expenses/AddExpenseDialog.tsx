@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import {
     Dialog,
     DialogTitle,
@@ -6,10 +6,10 @@ import {
     DialogActions,
     Button,
     TextField,
-    MenuItem,
+    MenuItem, Box,
 } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import dayjs, { Dayjs } from "dayjs";
+import {DatePicker} from "@mui/x-date-pickers/DatePicker";
+import dayjs, {Dayjs} from "dayjs";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import {useAuthStore} from "../../store/auth.ts";
 import type {ExpenseDto} from "../../lib/types.ts";
@@ -23,30 +23,35 @@ interface AddExpenseDialogProps {
     onClose: () => void;
 }
 
+//TODO JAK PONIŻEJ
 const categories = ["Jedzenie", "Transport", "Zakupy", "Rozrywka", "Inne"];
+//TODO ZROBIĆ Z TEGO ENUM W types.ts I ROZWAŻYĆ CUSTOM PERIOD
+const periodTypes = {
+    NONE: "None",
+    DAILY: "Daily",
+    WEEKLY: "Weekly",
+    MONTHLY: "Monthly",
+    YEARLY: "Yearly"
+}
 
-const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({ open, onClose}) => {
-    const { success, error } = useNotification(); // 🔹 notyfikacje
+const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose}) => {
+    const {success, error} = useNotification(); // 🔹 notyfikacje
     const user = useAuthStore(s => s.user);
     const [date, setDate] = useState<Dayjs | null>(dayjs());
-    const [description, setDescription] = useState("");
+    const [description, setDescription] = useState<string | null>(null);
     const [amount, setAmount] = useState("");
     const [category, setCategory] = useState("");
+    const [periodType, setPeriodType] = useState<keyof typeof periodTypes>("NONE");
 
     const [errors, setErrors] = useState({
-        description: "",
         amount: "",
         category: "",
     });
 
     const validate = () => {
         let valid = true;
-        const newErrors = { description: "", amount: "", category: "" };
+        const newErrors = {description: "", amount: "", category: ""};
 
-        if (!description.trim()) {
-            newErrors.description = "Opis jest wymagany";
-            valid = false;
-        }
         if (!amount || parseFloat(amount) <= 0) {
             newErrors.amount = "Kwota musi być większa od 0";
             valid = false;
@@ -69,7 +74,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({ open, onClose}) => 
             price: parseFloat(amount),
             description: description,
             expenseDate: date?.format("YYYY-MM-DD"), // lub date.toISOString()
-            periodType: "NONE",
+            periodType: periodType,
         };
 
         addExpense(expenseDto)
@@ -83,43 +88,57 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({ open, onClose}) => 
     };
 
     const handleClose = () => {
-        setDescription("");
+        setDescription(null);
         setAmount("");
         setCategory("");
-        setErrors({ description: "", amount: "", category: "" });
+        setPeriodType("NONE");
+        setDate(dayjs());
+        setErrors({amount: "", category: ""});
         onClose();
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
             <DialogTitle>Dodaj wydatek</DialogTitle>
             <DialogContent dividers>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <DatePicker
-                        label="Data"
-                        value={date}
-                        onChange={(newValue) => setDate(newValue)}
-                        slotProps={{ textField: { fullWidth: true, margin: "normal" } }}
+                <Box
+                    sx={{
+                        display: "grid",
+                        gridTemplateColumns: {xs: "1fr", sm: "1fr 1fr"},
+                        gap: 2,
+                    }}
+                >
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DatePicker
+                            label="Data"
+                            value={date}
+                            onChange={(newValue) => setDate(newValue)}
+                            slotProps={{textField: {fullWidth: true}}}
+                            format={"DD-MM-YYYY"}
+                        />
+                    </LocalizationProvider>
+                    <TextField
+                        fullWidth
+                        label="Kwota"
+                        type="number"
+                        value={amount}
+                        onChange={(e) => {
+                            setAmount(e.target.value)
+                            if (e.target.value.length > 0) {
+                                setErrors({...errors, amount: ""})
+                            }
+                        }
+                        }
+                        error={!!errors.amount}
+                        helperText={errors.amount}
                     />
-                </LocalizationProvider>
+                </Box>
                 <TextField
                     fullWidth
                     margin="normal"
                     label="Opis"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    error={!!errors.description}
-                    helperText={errors.description}
-                />
-                <TextField
-                    fullWidth
-                    margin="normal"
-                    label="Kwota"
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    error={!!errors.amount}
-                    helperText={errors.amount}
                 />
                 <TextField
                     select
@@ -127,7 +146,11 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({ open, onClose}) => 
                     margin="normal"
                     label="Kategoria"
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    onChange={(e) => {
+                        setCategory(e.target.value)
+                        setErrors({...errors, category: ""})
+                    }
+                    }
                     error={!!errors.category}
                     helperText={errors.category}
                 >
@@ -137,8 +160,24 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({ open, onClose}) => 
                         </MenuItem>
                     ))}
                 </TextField>
+                <TextField
+                    select
+                    fullWidth
+                    margin="normal"
+                    label="Repeat"
+                    value={periodType}
+                    onChange={(e) => setPeriodType(e.target.value as keyof typeof periodTypes
+                    )}
+                    defaultValue={periodTypes.NONE}
+                >
+                    {Object.entries(periodTypes).map(([key, label]) => (
+                        <MenuItem key={key} value={key}>
+                            {label}
+                        </MenuItem>
+                    ))}
+                </TextField>
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={{mr: 2, mb: 1, mt: 1}}>
                 <Button onClick={handleClose} color="secondary">
                     Anuluj
                 </Button>
