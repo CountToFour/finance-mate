@@ -1,0 +1,97 @@
+{
+  "layout" : {
+    "dashboard" : "Pulpit",
+    "expenses": "Wydatki",
+    "incomes": "Przychody",
+    "budget": "Budżet",
+    "report": "Raporty",
+    "settings": "Ustawienia",
+    "logOut": "Wyloguj"
+  },
+  "logging": {
+    "form": {
+      "label": "Logowanie",
+      "email": "Email",
+      "password": "Password",
+      "createAccount": "Załóż konto",
+      "logIn": "Zaloguj się"
+    },
+    "error": {
+      "badCredentials": "Bad credentials",
+      "error": "Wystąpił błąd. Spróbuj ponownie.",
+      "email": "Podaj email",
+      "password": "Podaj hasło"
+    }
+  },
+  "register": {
+    "form": {
+      "label": "Rejestracja",
+      "username": "Nazwa użytkownika",
+      "logIn": "Mam już konto - zaloguj się",
+      "createAccount": "Załóż konto",
+      "creatingAccount": "Zakładanie konta..."
+    },
+    "error": {
+      "emailTaken": "Konto z tym e-mailem już istnieje",
+      "error": "Wystąpił błąd. Spróbuj ponownie.",
+      "username": "Podaj nazwę użytkownika",
+      "incorrectEmail": "Podaj poprawny email"
+    }
+  },
+  "expenses": {
+    "page": {
+      "label": "Twoje wydatki",
+      "secondLabel": "Zarządzaj swoimi wydatkami i śledź kategorie",
+      "add": "Dodaj wydatek",
+      "expensesTable": {
+        "label": "Ostatnie wydatki",
+        "secondLabel": "Przegląd najnowszych transakcji",
+        "date": "Data wydatku",
+        "description": "Opis",
+        "category": "Kategoria",
+        "price": "Kwota",
+        "actions": "Akcje"
+      },
+      "recurringTable": {
+        "label": "Wydatki okresowe",
+        "secondLabel": "Przegląd wydatków okresowych"
+      }
+    },
+    "notifications": {
+      "delete": {
+        "success": "Wydatek został usunięty",
+        "error": "Nie udało się usunąć wydatku"
+      },
+      "add": {
+        "success": "Wydatek został pomyślnie dodany",
+        "error": "Nie udało się dodać wydatku. Spróbuj ponownie."
+      },
+      "edit": {
+        "success": "Wydatek został pomyślnie edytowany",
+        "error": "Nie udało się edytować wydatku. Spróbuj ponownie."
+      }
+    },
+    "addExpense": {
+      "addLabel": "Dodaj wydatek",
+      "editLabel": "Edytuj wydatek",
+      "date": "Data wydatku",
+      "description": "Opis",
+      "category": {
+        "label": "Kategoria",
+        "required": "Wybierz kategorię"
+      },
+      "price": {
+        "label": "Kwota",
+        "required": "Kwota musi być większa od 0"
+      },
+      "repeat": "Powtarzaj",
+      "save": "Zapisz",
+      "cancel": "Anuluj"
+    },
+    "recurringExpense": {
+      "label": "Edytuj wydatek okresowy",
+      "active": "Aktywny",
+      "inactive": "Nieaktywny"
+    }
+  }
+}

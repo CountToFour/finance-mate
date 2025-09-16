@@ -4,6 +4,7 @@ import {useState} from 'react';
 import {useAuthStore} from '../store/auth';
 import {useNavigate} from 'react-router-dom';
 import axios from "axios";
+import {useTranslation} from "react-i18next";
 
 type RegisterForm = {
     username: string;
@@ -13,6 +14,7 @@ type RegisterForm = {
 
 function Register() {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const login = useAuthStore((s) => s.register);
     const {register, handleSubmit, formState: {errors}, setError, clearErrors} = useForm<RegisterForm>();
     const [submitting, setSubmitting] = useState(false);
@@ -27,9 +29,9 @@ function Register() {
             const isAxios = axios.isAxiosError(err);
             const status = isAxios ? err.response?.status : undefined;
             if (status === 409) {
-                setError('email', { type: 'server', message: 'Account with this email already exists.' });
+                setError('email', { type: 'server', message: t('register.error.emailTaken') });
             } else {
-                setError('root', { type: 'server', message: 'Wystąpił błąd. Spróbuj ponownie.' });
+                setError('root', { type: 'server', message: t('register.error.error') });
             }
         } finally {
             setSubmitting(false);
@@ -39,26 +41,27 @@ function Register() {
     return (
         <Container maxWidth="xs">
             <Paper elevation={3} sx={{p: 4, mt: 8}}>
-                <Typography variant="h5" mb={2}>Rejestracja</Typography>
+                <Typography variant="h5" mb={2}>{t('register.form.label')}</Typography>
                 <form onSubmit={handleSubmit(onSubmit)} noValidate>
                     <TextField
-                        label="Nazwa użytkownika"
+                        label={t('register.form.username')}
                         fullWidth
                         margin="normal"
-                        {...register('username', { required: 'Podaj nazwę użytkownika' })}
+                        {...register('username',
+                            { required: t('register.error.username') })}
                         error={!!errors.username}
                         helperText={errors.username?.message}
                     />
                     <TextField
-                        label="Email"
+                        label={t('logging.form.email')}
                         type="email"
                         fullWidth
                         margin="normal"
                         {...register('email', {
-                            required: 'Podaj email' ,
+                            required: t('logging.error.email') ,
                             pattern: {
                                 value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                message: 'Podaj poprawny email'
+                                message: t('register.error.incorrectEmail')
                             },
                             onChange: () => clearErrors(['root', 'email', 'password'])
                         })}
@@ -66,11 +69,11 @@ function Register() {
                         helperText={errors.email?.message}
                     />
                     <TextField
-                        label="Hasło"
+                        label={t('logging.form.password')}
                         type="password"
                         fullWidth
                         margin="normal"
-                        {...register('password', { required: 'Podaj hasło' })}
+                        {...register('password', { required: t('logging.error.password') })}
                         error={!!errors.password}
                         helperText={errors.password?.message}
                     />
@@ -88,7 +91,7 @@ function Register() {
                         disabled={submitting}
                         sx={{mt: 2}}
                     >
-                        {submitting ? 'Zakładanie konta…' : 'Załóż konto'}
+                        {submitting ? t('register.form.creatingAccount') : t('register.form.createAccount')}
                     </Button>
                     <Button
                         variant="text"
@@ -97,7 +100,7 @@ function Register() {
                         sx={{mt: 1}}
                         onClick={() => navigate('/login')}
                     >
-                        Mam już konto – Zaloguj się
+                        {t('register.form.logIn')}
                     </Button>
                 </form>
             </Paper>

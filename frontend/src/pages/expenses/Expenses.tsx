@@ -27,12 +27,14 @@ import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import RecurringExpenseDialog from "./RecurringExpenseDialog.tsx";
+import {useTranslation} from "react-i18next";
 
 const COLORS = ["#5C86D3", "#A175BF", "#CDB557", "#7AB6D1"];
 const categories = ["Wszystkie", "Jedzenie", "Transport", "Zakupy", "Rozrywka", "Inne"];
 const currentYear = dayjs();
 
 function ExpensesPage() {
+    const { t } = useTranslation();
     const user = useAuthStore(s => s.user);
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
@@ -65,7 +67,7 @@ function ExpensesPage() {
     const handleDeletion = (id: string) => {
         deleteExpense(id)
             .then(() => {
-                success("Wydatek został usunięty")
+                success(t('expenses.notifications.delete.success'))
                 if (category === "Wszystkie") {
                     getExpenses(user?.id, null, dateFrom, dateTo).then((res) => setExpenses(res.data));
                 } else {
@@ -73,48 +75,48 @@ function ExpensesPage() {
                 }
             })
             .catch(() => {
-                error("Nie udało się usunąć wydatku")
+                error(t('expenses.notifications.delete.error'))
             });
     };
 
     const handleRecurringDeletion = (id: string) => {
         deleteRecurringExpense(id)
             .then(() => {
-                success("Wydatek został usunięty")
+                success(t('expenses.notifications.delete.success'))
                 getAllRecurringExpenses(user?.id).then((res) => setRecurringExpenses(res.data));
             })
             .catch(() => {
-                error("Nie udało się usunąć wydatku")
+                error(t('expenses.notifications.delete.error'))
             });
     }
 
     const columns: GridColDef[] = [
         {
             field: 'expenseDate',
-            headerName: 'Data wydatku',
+            headerName: t('expenses.page.expensesTable.date'),
             flex: 1,
         },
         {
             field: 'description',
-            headerName: "Opis",
+            headerName: t('expenses.page.expensesTable.description'),
             flex: 2,
             valueFormatter: value => value ?? '-'
         },
         {
             field: 'category',
-            headerName: 'Kategoria',
+            headerName: t('expenses.page.expensesTable.category'),
             flex: 1.5,
         },
         {
             field: 'price',
-            headerName: 'Kwota',
+            headerName: t('expenses.page.expensesTable.price'),
             flex: 1,
             valueFormatter: value => `-${value} zł`,
             cellClassName: 'priceNegative',
         },
         {
             field: 'actions',
-            headerName: 'Akcje',
+            headerName: t('expenses.page.expensesTable.actions'),
             flex: 0.8,
             sortable: false,
             filterable: false,
@@ -148,30 +150,30 @@ function ExpensesPage() {
     const recurringColumns: GridColDef[] = [
         {
             field: 'expenseDate',
-            headerName: 'Data wydatku',
+            headerName: t('expenses.page.expensesTable.date'),
             flex: 1,
         },
         {
             field: 'description',
-            headerName: "Opis",
+            headerName: t('expenses.page.expensesTable.description'),
             flex: 2,
             valueFormatter: value => value ?? '-'
         },
         {
             field: 'category',
-            headerName: 'Kategoria',
+            headerName: t('expenses.page.expensesTable.category'),
             flex: 1.5,
         },
         {
             field: 'price',
-            headerName: 'Kwota',
+            headerName: t('expenses.page.expensesTable.price'),
             flex: 1,
             valueFormatter: value => `-${value} zł`,
             cellClassName: 'priceNegative',
         },
         {
             field: 'actions',
-            headerName: 'Akcje',
+            headerName: t('expenses.page.expensesTable.actions'),
             flex: 0.8,
             sortable: false,
             filterable: false,
@@ -206,8 +208,8 @@ function ExpensesPage() {
         <>
             <Box p={2} display="flex" justifyContent="space-between" alignItems="center">
                 <Box>
-                    <Typography variant="h5" fontWeight={"bold"} color={"secondary"}>Twoje wydatki</Typography>
-                    <Typography variant="body2" sx={{mt: 1}}>Zarządzaj swoimi wydatkami i śledź kategorie</Typography>
+                    <Typography variant="h5" fontWeight={"bold"} color={"secondary"}>{t('expenses.page.label')}</Typography>
+                    <Typography variant="body2" sx={{mt: 1}}>{t('expenses.page.secondLabel')}</Typography>
                 </Box>
                 <Button
                     variant={'contained'}
@@ -218,7 +220,7 @@ function ExpensesPage() {
                     }}
                 >
                     <Add sx={{mr: 1}}/>
-                    Dodaj wydatek
+                    {t('expenses.page.add')}
                 </Button>
             </Box>
             <Box ml={2} mr={2}>
@@ -226,9 +228,8 @@ function ExpensesPage() {
                     <CardContent>
                         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                             <Box>
-                                <Typography variant="subtitle1" fontWeight={"bold"}>Ostatnie wydatki</Typography>
-                                <Typography variant="body2" color={"text.secondary"}>Przegląd najnowszych
-                                    transakcji</Typography>
+                                <Typography variant="subtitle1" fontWeight={"bold"}>{t('expenses.page.expensesTable.label')}</Typography>
+                                <Typography variant="body2" color={"text.secondary"}>{t('expenses.page.expensesTable.secondLabel')}</Typography>
                             </Box>
                             <Box display="flex" gap={2} alignItems="center">
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -326,9 +327,8 @@ function ExpensesPage() {
                         <CardContent>
                             <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                                 <Box>
-                                    <Typography variant="subtitle1" fontWeight={"bold"}>Wydatki okresowe</Typography>
-                                    <Typography variant="body2" color={"text.secondary"}>Przegląd wydatków
-                                        okresowych</Typography>
+                                    <Typography variant="subtitle1" fontWeight={"bold"}>{t('expenses.page.recurringTable.label')}</Typography>
+                                    <Typography variant="body2" color={"text.secondary"}>{t('expenses.page.recurringTable.secondLabel')}</Typography>
                                 </Box>
                             </Box>
                             <Divider sx={{my: 1}}/>

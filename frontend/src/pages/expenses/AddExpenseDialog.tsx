@@ -16,6 +16,7 @@ import type {Expense, ExpenseDto} from "../../lib/types.ts";
 import {addExpense, addRecurringExpense, editExpense} from "../../lib/api.ts";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {useTranslation} from "react-i18next";
 
 
 interface AddExpenseDialogProps {
@@ -37,6 +38,7 @@ const periodTypes = {
 
 const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initialExpense}) => {
     const {success, error} = useNotification();
+    const {t} = useTranslation();
     const user = useAuthStore(s => s.user);
     const [date, setDate] = useState<Dayjs | null>(dayjs());
     const [description, setDescription] = useState<string | null>(null);
@@ -49,8 +51,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         category: "",
     });
 
-    useEffect(() =>
-    {
+    useEffect(() => {
         if (initialExpense) {
             setDescription(initialExpense.description ?? null);
             setAmount(initialExpense.price.toString());
@@ -65,11 +66,11 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         const newErrors = {description: "", amount: "", category: ""};
 
         if (!amount || parseFloat(amount) <= 0) {
-            newErrors.amount = "Kwota musi być większa od 0";
+            newErrors.amount = t('expenses.addExpense.price.required');
             valid = false;
         }
         if (!category) {
-            newErrors.category = "Wybierz kategorię";
+            newErrors.category = t('expenses.addExpense.category.required');
             valid = false;
         }
 
@@ -93,30 +94,30 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
             if (periodType !== periodTypes.NONE) {
                 addRecurringExpense(expenseDto)
                     .then(() => {
-                        success("Wydatek został pomyślnie dodany!");
+                        success(t('expenses.notifications.add.success'));
                         handleClose();
                     })
                     .catch(() => {
-                        error("Nie udało się dodać wydatku. Spróbuj ponownie.");
+                        error(t('expenses.notifications.add.error'));
                     });
             } else {
                 addExpense(expenseDto)
                     .then(() => {
-                        success("Wydatek został pomyślnie dodany!");
+                        success(t('expenses.notifications.add.success'));
                         handleClose();
                     })
                     .catch(() => {
-                        error("Nie udało się dodać wydatku. Spróbuj ponownie.");
+                        error(t('expenses.notifications.add.error'));
                     });
             }
         } else {
             editExpense(initialExpense.id, expenseDto)
                 .then(() => {
-                    success("Wydatek został pomyślnie edytowany!");
+                    success(t('expenses.notifications.edit.success'));
                     handleClose();
                 })
                 .catch(() => {
-                    error("Nie udało się edytować wydatku. Spróbuj ponownie.");
+                    error(t('expenses.notifications.edit.error'));
                 });
         }
 
@@ -134,7 +135,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
 
     return (
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
-            <DialogTitle>{initialExpense ? "Edytuj wydatek" : "Dodaj wydatek"}</DialogTitle>
+            <DialogTitle>{initialExpense ? t('expenses.addExpense.editLabel') : t('expenses.addExpense.addLabel')}</DialogTitle>
             <DialogContent dividers>
                 <Box
                     sx={{
@@ -145,7 +146,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                 >
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <DatePicker
-                            label="Data"
+                            label={t('expenses.addExpense.date')}
                             value={date}
                             onChange={(newValue) => setDate(newValue)}
                             slotProps={{textField: {fullWidth: true}}}
@@ -154,7 +155,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     </LocalizationProvider>
                     <TextField
                         fullWidth
-                        label="Kwota"
+                        label={t('expenses.addExpense.price.label')}
                         type="number"
                         value={amount}
                         onChange={(e) => {
@@ -171,7 +172,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                 <TextField
                     fullWidth
                     margin="normal"
-                    label="Opis"
+                    label={t('expenses.addExpense.description')}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                 />
@@ -179,7 +180,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     select
                     fullWidth
                     margin="normal"
-                    label="Kategoria"
+                    label={t('expenses.addExpense.category.label')}
                     value={category}
                     onChange={(e) => {
                         setCategory(e.target.value)
@@ -196,30 +197,30 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     ))}
                 </TextField>
                 {!initialExpense && (<TextField
-                    select
-                    fullWidth
-                    margin="normal"
-                    label="Repeat"
-                    value={periodType}
-                    onChange={(e) => setPeriodType(e.target.value as keyof typeof periodTypes
-                    )}
-                    defaultValue={periodTypes.NONE}
-                >
-                    {Object.entries(periodTypes).map(([key, label]) => (
-                        <MenuItem key={key} value={key}>
-                            {label}
-                        </MenuItem>
-                    ))}
-                </TextField>
-                    )
+                        select
+                        fullWidth
+                        margin="normal"
+                        label={t('expenses.addExpense.repeat')}
+                        value={periodType}
+                        onChange={(e) => setPeriodType(e.target.value as keyof typeof periodTypes
+                        )}
+                        defaultValue={periodTypes.NONE}
+                    >
+                        {Object.entries(periodTypes).map(([key, label]) => (
+                            <MenuItem key={key} value={key}>
+                                {label}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                )
                 }
             </DialogContent>
             <DialogActions sx={{mr: 2, mb: 1, mt: 1}}>
                 <Button onClick={handleClose} color="secondary">
-                    Anuluj
+                    {t('expenses.addExpense.cancel')}
                 </Button>
                 <Button onClick={handleSave} variant="contained" color="primary">
-                    Zapisz
+                    {t('expenses.addExpense.save')}
                 </Button>
             </DialogActions>
         </Dialog>

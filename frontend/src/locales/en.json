@@ -1,0 +1,97 @@
+{
+  "layout": {
+    "dashboard": "Dashboard",
+    "expenses": "Expenses",
+    "incomes": "Income",
+    "budget": "Budget",
+    "report": "Reports",
+    "settings": "Settings",
+    "logOut": "Log out"
+  },
+  "logging": {
+    "form": {
+      "label": "Log in",
+      "email": "Email",
+      "password": "Password",
+      "createAccount": "Create account",
+      "logIn": "Log in"
+    },
+    "error": {
+      "badCredentials": "Bad credentials",
+      "error": "An error occurred. Please try again.",
+      "email": "Enter email",
+      "password": "Enter password"
+    }
+  },
+  "register": {
+    "form": {
+      "label": "Sign up",
+      "username": "Username",
+      "logIn": "I already have an account - log in",
+      "createAccount": "Create account",
+      "creatingAccount": "Creating account..."
+    },
+    "error": {
+      "emailTaken": "An account with this email already exists",
+      "error": "An error occurred. Please try again.",
+      "username": "Enter username",
+      "incorrectEmail": "Enter a valid email"
+    }
+  },
+  "expenses": {
+    "page": {
+      "label": "Your expenses",
+      "secondLabel": "Manage your expenses and track categories",
+      "add": "Add expense",
+      "expensesTable": {
+        "label": "Latest expenses",
+        "secondLabel": "Overview of recent transactions",
+        "date": "Expense date",
+        "description": "Description",
+        "category": "Category",
+        "price": "Amount",
+        "actions": "Actions"
+      },
+      "recurringTable": {
+        "label": "Recurring expenses",
+        "secondLabel": "Overview of recurring expenses"
+      }
+    },
+    "notifications": {
+      "delete": {
+        "success": "Expense has been deleted",
+        "error": "Failed to delete expense"
+      },
+      "add": {
+        "success": "Expense has been added successfully",
+        "error": "Failed to add expense. Please try again."
+      },
+      "edit": {
+        "success": "Expense has been updated successfully",
+        "error": "Failed to update expense. Please try again."
+      }
+    },
+    "addExpense": {
+      "addLabel": "Add expense",
+      "editLabel": "Edit expense",
+      "date": "Expense date",
+      "description": "Description",
+      "category": {
+        "label": "Category",
+        "required": "Select a category"
+      },
+      "price": {
+        "label": "Amount",
+        "required": "Amount must be greater than 0"
+      },
+      "repeat": "Repeat",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "recurringExpense": {
+      "label": "Edit recurring expense",
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  }
+}

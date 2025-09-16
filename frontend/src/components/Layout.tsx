@@ -17,22 +17,24 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CrisisAlertIcon from '@mui/icons-material/CrisisAlert';
+import {useTranslation} from "react-i18next";
 
 const drawerWidth = 240;
 
 export function Layout() {
+    const { t } = useTranslation();
     const logout = useAuthStore(s => s.logout);
     const user = useAuthStore(s => s.user);
     const name = user?.username || 'User';
     const navigate = useNavigate();
 
     const menuItems = [
-        { text: "Pulpit", icon: <HomeIcon />, path: "/" },
-        { text: "Wydatki", icon: <ReceiptIcon />, path: "/expenses" },
-        { text: "Przychody", icon: <AccountBalanceWalletIcon />, path: "/" },
-        { text: "Budżet", icon: <CrisisAlertIcon />, path: "/" },
-        { text: "Raporty", icon: <BarChartIcon />, path: "/" },
-        { text: "Ustawienia", icon: <SettingsIcon />, path: "/" },
+        { text: t('layout.dashboard'), icon: <HomeIcon />, path: "/" },
+        { text: t('layout.expenses'), icon: <ReceiptIcon />, path: "/expenses" },
+        { text: t('layout.incomes'), icon: <AccountBalanceWalletIcon />, path: "/" },
+        { text: t('layout.budget'), icon: <CrisisAlertIcon />, path: "/" },
+        { text: t('layout.report'), icon: <BarChartIcon />, path: "/" },
+        { text: t('layout.settings'), icon: <SettingsIcon />, path: "/" },
     ];
 
     const stringAvatar = (displayName: string) => {
@@ -87,7 +89,7 @@ export function Layout() {
                         color="secondary"
                         onClick={() => { logout(); navigate('/login'); }}
                     >
-                        Wyloguj
+                        {t('layout.logOut')}
                     </Button>
                 </Box>
 
