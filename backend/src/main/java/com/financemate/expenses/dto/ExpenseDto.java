@@ -34,9 +34,11 @@ public class ExpenseDto {
     @Size(max = 255, message = "Description must have max 255 characters")
     private String description;
 
-    @PastOrPresent(message = "Date cannot be in the future")
+    @NotNull(message = "Expense date cannot be null")
     private LocalDate expenseDate;
 
     @NotNull(message = "Period type cannot be null")
     private PeriodType periodType;
+
+    private boolean active;
 }

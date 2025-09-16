@@ -6,14 +6,14 @@ import {
     DialogActions,
     Button,
     TextField,
-    MenuItem, Box,
+    MenuItem, Box, FormControlLabel, Switch,
 } from "@mui/material";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import dayjs, {Dayjs} from "dayjs";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import {useAuthStore} from "../../store/auth.ts";
-import type {Expense, ExpenseDto} from "../../lib/types.ts";
-import {addExpense, addRecurringExpense, editExpense} from "../../lib/api.ts";
+import type {ExpenseDto, RecurringExpense} from "../../lib/types.ts";
+import {editExpense} from "../../lib/api.ts";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 
@@ -21,43 +21,45 @@ import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 interface AddExpenseDialogProps {
     open: boolean;
     onClose: () => void;
-    initialExpense?: Expense | null;
+    recurringExpense?: RecurringExpense;
 }
 
 //TODO JAK PONIŻEJ
 const categories = ["Jedzenie", "Transport", "Zakupy", "Rozrywka", "Inne"];
 //TODO ZROBIĆ Z TEGO ENUM W types.ts I ROZWAŻYĆ CUSTOM PERIOD
 const periodTypes = {
-    NONE: "None",
     DAILY: "Daily",
     WEEKLY: "Weekly",
     MONTHLY: "Monthly",
     YEARLY: "Yearly"
 }
 
-const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initialExpense}) => {
+type PeriodType = keyof typeof periodTypes;
+
+const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, recurringExpense}) => {
     const {success, error} = useNotification();
     const user = useAuthStore(s => s.user);
-    const [date, setDate] = useState<Dayjs | null>(dayjs());
-    const [description, setDescription] = useState<string | null>(null);
+    const [date, setDate] = useState<Dayjs>();
+    const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");
     const [category, setCategory] = useState("");
-    const [periodType, setPeriodType] = useState<keyof typeof periodTypes>("NONE");
+    const [periodType, setPeriodType] = useState<PeriodType | "">(recurringExpense?.periodType as PeriodType ?? "");
+    const [active, setActive] = useState<boolean>();
 
     const [errors, setErrors] = useState({
         amount: "",
         category: "",
     });
 
-    useEffect(() =>
-    {
-        if (initialExpense) {
-            setDescription(initialExpense.description ?? null);
-            setAmount(initialExpense.price.toString());
-            setCategory(initialExpense.category);
-            setDate(dayjs(initialExpense.expenseDate));
+    useEffect(() => {
+        if (recurringExpense) {
+            setDescription(recurringExpense.description ?? null);
+            setAmount(recurringExpense.price.toString());
+            setCategory(recurringExpense.category);
+            setDate(dayjs(recurringExpense.expenseDate));
+            setActive(recurringExpense.active);
         }
-    }, [initialExpense])
+    }, [recurringExpense])
 
 
     const validate = () => {
@@ -87,30 +89,11 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
             description: description,
             expenseDate: date?.format("YYYY-MM-DD"),
             periodType: periodType,
+            active: active
         };
 
-        if (!initialExpense) {
-            if (periodType !== periodTypes.NONE) {
-                addRecurringExpense(expenseDto)
-                    .then(() => {
-                        success("Wydatek został pomyślnie dodany!");
-                        handleClose();
-                    })
-                    .catch(() => {
-                        error("Nie udało się dodać wydatku. Spróbuj ponownie.");
-                    });
-            } else {
-                addExpense(expenseDto)
-                    .then(() => {
-                        success("Wydatek został pomyślnie dodany!");
-                        handleClose();
-                    })
-                    .catch(() => {
-                        error("Nie udało się dodać wydatku. Spróbuj ponownie.");
-                    });
-            }
-        } else {
-            editExpense(initialExpense.id, expenseDto)
+        if (recurringExpense) {
+            editExpense(recurringExpense?.id, expenseDto)
                 .then(() => {
                     success("Wydatek został pomyślnie edytowany!");
                     handleClose();
@@ -119,22 +102,16 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     error("Nie udało się edytować wydatku. Spróbuj ponownie.");
                 });
         }
-
     };
 
     const handleClose = () => {
-        setDescription(null);
-        setAmount("");
-        setCategory("");
-        setPeriodType("NONE");
-        setDate(dayjs());
         setErrors({amount: "", category: ""});
         onClose();
     };
 
     return (
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
-            <DialogTitle>{initialExpense ? "Edytuj wydatek" : "Dodaj wydatek"}</DialogTitle>
+            <DialogTitle>{"Edytuj wydatekek okresowy"}</DialogTitle>
             <DialogContent dividers>
                 <Box
                     sx={{
@@ -150,6 +127,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                             onChange={(newValue) => setDate(newValue)}
                             slotProps={{textField: {fullWidth: true}}}
                             format={"DD-MM-YYYY"}
+                            disablePast={true}
                         />
                     </LocalizationProvider>
                     <TextField
@@ -195,24 +173,35 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                         </MenuItem>
                     ))}
                 </TextField>
-                {!initialExpense && (<TextField
-                    select
-                    fullWidth
-                    margin="normal"
-                    label="Repeat"
-                    value={periodType}
-                    onChange={(e) => setPeriodType(e.target.value as keyof typeof periodTypes
-                    )}
-                    defaultValue={periodTypes.NONE}
-                >
-                    {Object.entries(periodTypes).map(([key, label]) => (
-                        <MenuItem key={key} value={key}>
-                            {label}
-                        </MenuItem>
-                    ))}
-                </TextField>
-                    )
-                }
+                <Box display="flex" gap={2}>
+                    <TextField
+                        select
+                        fullWidth
+                        margin="normal"
+                        label="Repeat"
+                        value={periodType}
+                        onChange={(e) => setPeriodType(
+                            e.target.value as keyof typeof periodTypes
+                        )}
+                    >
+                        {Object.entries(periodTypes).map(([key, label]) => (
+                            <MenuItem key={key} value={key}>
+                                {label}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                    <FormControlLabel control={
+                        <Switch
+                            checked={active}
+                            onChange={(e) => setActive(e.target.checked)}
+                            color="secondary"
+                        />
+
+                    }
+                        label={active ? "Active" : "Inactive"}
+                        sx={{ minWidth: "110px"}}
+                    />
+                </Box>
             </DialogContent>
             <DialogActions sx={{mr: 2, mb: 1, mt: 1}}>
                 <Button onClick={handleClose} color="secondary">

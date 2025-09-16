@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -27,14 +28,6 @@ public class ExpenseService {
     private final UserRepository userRepository;
 
     public Expense addExpense(ExpenseDto expense) {
-
-        if (expense.getPeriodType() != PeriodType.NONE) {
-            RecurringExpense recurringExpense = expenseMapper.recurringExpenseToEntity(expense);
-            recurringExpense.setActive(true);
-            recurringExpense.setLastGeneratedDate(expense.getExpenseDate());
-            recurringExpenseRepository.save(recurringExpense);
-        }
-
         Expense expense1 = expenseMapper.expenseToEntity(expense);
         userRepository.findById(expense.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + expense.getUserId()));
@@ -43,6 +36,21 @@ public class ExpenseService {
         }
 
         return expenseRepository.save(expense1);
+    }
+
+    public void addRecurringExpense(ExpenseDto expenseDto) {
+        if (expenseDto.getPeriodType() != PeriodType.NONE) {
+            RecurringExpense recurringExpense = expenseMapper.recurringExpenseToEntity(expenseDto);
+            recurringExpense.setActive(true);
+
+            if (recurringExpense.getExpenseDate() != null && !recurringExpense.getExpenseDate().isAfter(LocalDate.now())) {
+                addExpense(expenseDto);
+                recurringExpense.setExpenseDate(calculateNextDate(recurringExpense.getExpenseDate(), recurringExpense.getPeriodType()));
+            }
+            recurringExpenseRepository.save(recurringExpense);
+        } else {
+            throw new IllegalArgumentException("Period type must be specified for recurring expenses.");
+        }
     }
 
     public List<ExpenseDto> getExpensesByUser(String userId, String category, BigDecimal minPrice, BigDecimal maxPrice,
@@ -71,6 +79,13 @@ public class ExpenseService {
 
     public void deleteExpense(String id) {
         expenseRepository.deleteById(id);
+    }
+
+    public void deleteRecurringExpense(String id) {
+        if (!recurringExpenseRepository.existsById(id)) {
+            throw new IllegalArgumentException("Recurring expense not found with id: " + id);
+        }
+        recurringExpenseRepository.deleteById(id);
     }
 
     public void deactivateRecurringExpense(String id) {
@@ -119,7 +134,20 @@ public class ExpenseService {
         if (expenseDto.getPeriodType() != null && expenseDto.getPeriodType() != PeriodType.NONE) {
             existingRecurringExpense.setPeriodType(expenseDto.getPeriodType());
         }
+        if (expenseDto.isActive() != existingRecurringExpense.isActive()) {
+            existingRecurringExpense.setActive(expenseDto.isActive());
+        }
 
         return recurringExpenseRepository.save(existingRecurringExpense);
+    }
+
+    private LocalDate calculateNextDate(LocalDate baseDate, PeriodType type) {
+        return switch (type) {
+            case DAILY -> baseDate.plusDays(1);
+            case WEEKLY -> baseDate.plusWeeks(1);
+            case MONTHLY -> baseDate.plusMonths(1);
+            case YEARLY -> baseDate.plusYears(1);
+            default -> baseDate;
+        };
     }
 }

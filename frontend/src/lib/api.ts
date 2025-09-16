@@ -55,6 +55,15 @@ export const getExpenses = (
     }
 )
 
+export const getAllRecurringExpenses = (userId: string | undefined) => axios.get(
+    `http://localhost:8080/api/expenses/recurring/${userId}`,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    })
+
 export const deleteExpense = (id: string) => axios.delete(
     `http://localhost:8080/api/expenses/${id}`,
     {
@@ -65,8 +74,29 @@ export const deleteExpense = (id: string) => axios.delete(
     }
 )
 
+export const deleteRecurringExpense = (id: string) => axios.delete(
+    `http://localhost:8080/api/expenses/recurring/${id}`,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
 export const addExpense = (expense: ExpenseDto) => axios.post(
     'http://localhost:8080/api/expenses',
+    expense,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const addRecurringExpense = (expense: ExpenseDto) => axios.post(
+    'http://localhost:8080/api/expenses/recurring',
     expense,
     {
         withCredentials: true,

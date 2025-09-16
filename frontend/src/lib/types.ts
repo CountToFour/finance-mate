@@ -36,4 +36,16 @@ export type ExpenseDto = {
     description: string | null
     expenseDate: string
     periodType: string
+    active: boolean
+}
+
+export type RecurringExpense = {
+    id: string
+    userId: string
+    category: string
+    price: number
+    description: string
+    expenseDate: string
+    active: boolean
+    periodType: string
 }

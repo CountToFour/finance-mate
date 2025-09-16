@@ -41,6 +41,16 @@ public class ExpenseController {
         }
     }
 
+    @PostMapping("/recurring")
+    public ResponseEntity<Void> addRecurringExpense(@Valid @RequestBody ExpenseDto expense) {
+        try {
+            expenseService.addRecurringExpense(expense);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @GetMapping("/{userId}")
     public ResponseEntity<List<ExpenseDto>> getExpensesByUser(
             @PathVariable String userId,
@@ -69,6 +79,16 @@ public class ExpenseController {
     public ResponseEntity<Void> deleteExpense(@PathVariable String id) {
         expenseService.deleteExpense(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/recurring/{id}")
+    public ResponseEntity<Void> deleteRecurringExpense(@PathVariable String id) {
+        try {
+            expenseService.deleteRecurringExpense(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/deactivate/{id}")

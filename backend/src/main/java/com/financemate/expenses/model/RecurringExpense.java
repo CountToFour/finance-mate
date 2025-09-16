@@ -31,6 +31,5 @@ public class RecurringExpense {
     private PeriodType periodType;
     private LocalDate expenseDate;
     private boolean active;
-    private LocalDate lastGeneratedDate;
-
+//    private LocalDate lastGeneratedDate;
 }

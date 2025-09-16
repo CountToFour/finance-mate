@@ -26,14 +26,13 @@ public class RecurringExpenseService {
     @Scheduled(cron = "0 0 2 * * ?")
     @Transactional
     public void generateRecurringExpenses() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now().plusDays(1);
 
         for (RecurringExpense recurring : recurringExpenseRepository.findAllByActive(true)) {
 
-            LocalDate lastGenerated = recurring.getLastGeneratedDate();
-            LocalDate nextDate = calculateNextDate(lastGenerated == null ? recurring.getExpenseDate() : lastGenerated, recurring.getPeriodType());
+            LocalDate nextDate = recurring.getExpenseDate();
 
-            if (!nextDate.isAfter(today)) {
+            if (today.isAfter(nextDate) || today.equals(nextDate)) {
                 Expense expense = new Expense();
                 expense.setUserId(recurring.getUserId());
                 expense.setCategory(recurring.getCategory());
@@ -42,7 +41,7 @@ public class RecurringExpenseService {
                 expense.setDescription(recurring.getDescription());
                 expenseRepository.save(expense);
 
-                recurring.setLastGeneratedDate(nextDate);
+                recurring.setExpenseDate(calculateNextDate(nextDate, recurring.getPeriodType()));
                 recurringExpenseRepository.save(recurring);
             }
         }
