@@ -1,6 +1,7 @@
 package com.financemate.expenses.service;
 
 import com.financemate.auth.repository.UserRepository;
+import com.financemate.expenses.dto.CategoryDto;
 import com.financemate.expenses.dto.ExpenseDto;
 import com.financemate.expenses.mapper.ExpenseMapper;
 import com.financemate.expenses.model.Expense;
@@ -17,6 +18,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -55,8 +58,7 @@ public class ExpenseService {
 
     public List<ExpenseDto> getExpensesByUser(String userId, String category, BigDecimal minPrice, BigDecimal maxPrice,
                                               LocalDate startDate, LocalDate endDate) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+        checkUserExists(userId);
 
         Specification<Expense> spec = Specification.allOf(ExpenseSpecifications.hasUserId(userId))
                 .and(ExpenseSpecifications.hasCategory(category))
@@ -69,8 +71,7 @@ public class ExpenseService {
     }
 
     public List<ExpenseDto> getAllRecurringExpenses(String userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+        checkUserExists(userId);
 
         return recurringExpenseRepository.findAllByUserId(userId).stream()
                 .map(expenseMapper::recurringExpenseToDto)
@@ -141,6 +142,28 @@ public class ExpenseService {
         return recurringExpenseRepository.save(existingRecurringExpense);
     }
 
+    public List<CategoryDto> getAllCategoriesAmount(String userId, LocalDate startDate, LocalDate endDate) {
+        checkUserExists(userId);
+
+        Specification<Expense> spec = Specification.allOf(ExpenseSpecifications.hasUserId(userId))
+                .and(ExpenseSpecifications.dateBetween(startDate, endDate));
+
+        Set<String> categories = expenseRepository.findAll(spec).stream()
+                .map(Expense::getCategory)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        return categories.stream()
+                .map(category -> {
+                    BigDecimal totalAmount = expenseRepository.findAll(spec.and(ExpenseSpecifications.hasCategory(category))).stream()
+                            .map(Expense::getPrice)
+                            .filter(Objects::nonNull)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    return new CategoryDto(category, totalAmount);
+                })
+                .toList();
+    }
+
     private LocalDate calculateNextDate(LocalDate baseDate, PeriodType type) {
         return switch (type) {
             case DAILY -> baseDate.plusDays(1);
@@ -149,5 +172,11 @@ public class ExpenseService {
             case YEARLY -> baseDate.plusYears(1);
             default -> baseDate;
         };
+    }
+
+    private void checkUserExists(String userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("User not found with id: " + userId);
+        }
     }
 }

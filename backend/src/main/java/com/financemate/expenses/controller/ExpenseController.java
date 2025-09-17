@@ -1,5 +1,6 @@
 package com.financemate.expenses.controller;
 
+import com.financemate.expenses.dto.CategoryDto;
 import com.financemate.expenses.dto.ExpenseDto;
 import com.financemate.expenses.model.Expense;
 import com.financemate.expenses.model.PeriodType;
@@ -112,6 +113,17 @@ public class ExpenseController {
                 return ResponseEntity.ok(updatedExpense);
             }
 
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/categories/{userId}")
+    public ResponseEntity<List<CategoryDto>> getAllCategoriesAmount(@PathVariable String userId,
+                                                                    @RequestParam(required = false) LocalDate startDate,
+                                                                    @RequestParam(required = false) LocalDate endDate) {
+        try {
+            return ResponseEntity.ok(expenseService.getAllCategoriesAmount(userId, startDate, endDate));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
