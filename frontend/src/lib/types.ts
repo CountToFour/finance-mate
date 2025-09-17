@@ -49,3 +49,10 @@ export type RecurringExpense = {
     active: boolean
     periodType: string
 }
+
+export type CategoryAmount = {
+    category: string
+    amount: number
+    transactions: number
+    percentage: number
+}

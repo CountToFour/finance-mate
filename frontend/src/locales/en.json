@@ -55,6 +55,11 @@
       "recurringTable": {
         "label": "Recurring expenses",
         "secondLabel": "Overview of recurring expenses"
+      },
+      "categories" : {
+        "label" : "Expenses by category",
+        "secondLabel" : "Breakdown of expenses into categories in a given month",
+        "transaction" : "transactions"
       }
     },
     "notifications": {

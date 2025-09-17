@@ -55,6 +55,11 @@
       "recurringTable": {
         "label": "Wydatki okresowe",
         "secondLabel": "Przegląd wydatków okresowych"
+      },
+      "categories" : {
+        "label" : "Wydatki według kategorii",
+        "secondLabel" : "Podział wydatków na kategorie w danym miesiącu",
+        "transaction" : "transakcji"
       }
     },
     "notifications": {

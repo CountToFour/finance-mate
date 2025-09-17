@@ -116,3 +116,21 @@ export const editExpense = (id: string, expense: ExpenseDto) => axios.put(
         },
     }
 )
+
+export const getAllCategoriesAmount = (
+    userId: string | undefined,
+    startDate: string,
+    endDate: string,
+) => axios.get(
+    `http://localhost:8080/api/expenses/categories/${userId}`,
+    {
+        params: {
+            startDate: startDate,
+            endDate: endDate,
+        },
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)

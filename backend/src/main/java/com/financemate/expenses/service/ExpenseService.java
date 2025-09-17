@@ -155,11 +155,13 @@ public class ExpenseService {
 
         return categories.stream()
                 .map(category -> {
+                    int transactions = expenseRepository.findAll(spec.and(ExpenseSpecifications.hasCategory(category))).size();
+                    double percentage = transactions / (double) expenseRepository.findAll(spec).size();
                     BigDecimal totalAmount = expenseRepository.findAll(spec.and(ExpenseSpecifications.hasCategory(category))).stream()
                             .map(Expense::getPrice)
                             .filter(Objects::nonNull)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
-                    return new CategoryDto(category, totalAmount);
+                    return new CategoryDto(category, totalAmount, transactions, percentage);
                 })
                 .toList();
     }

@@ -14,9 +14,15 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import {PieChart, Pie, Cell, Tooltip, ResponsiveContainer} from "recharts";
-import {deleteExpense, deleteRecurringExpense, getAllRecurringExpenses, getExpenses} from "../../lib/api.ts";
+import {
+    deleteExpense,
+    deleteRecurringExpense,
+    getAllCategoriesAmount,
+    getAllRecurringExpenses,
+    getExpenses
+} from "../../lib/api.ts";
 import {useAuthStore} from "../../store/auth.ts";
-import type {Expense, RecurringExpense} from "../../lib/types.ts";
+import type {CategoryAmount, Expense, RecurringExpense} from "../../lib/types.ts";
 import {DataGrid, type GridColDef} from '@mui/x-data-grid';
 import {useNotification} from "../../components/NotificationContext.tsx";
 import AddExpenseDialog from "./AddExpenseDialog.tsx";
@@ -28,13 +34,14 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import RecurringExpenseDialog from "./RecurringExpenseDialog.tsx";
 import {useTranslation} from "react-i18next";
+import CategoryExpense from "./CategoryExpense.tsx";
 
 const COLORS = ["#5C86D3", "#A175BF", "#CDB557", "#7AB6D1"];
 const categories = ["Wszystkie", "Jedzenie", "Transport", "Zakupy", "Rozrywka", "Inne"];
 const currentYear = dayjs();
 
 function ExpensesPage() {
-    const { t } = useTranslation();
+    const {t} = useTranslation();
     const user = useAuthStore(s => s.user);
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
@@ -47,6 +54,11 @@ function ExpensesPage() {
     const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
     const dateFrom = selectedDate.startOf("month").format("YYYY-MM-DD");
     const dateTo = selectedDate.endOf("month").format("YYYY-MM-DD");
+    const [categoriesExpenses, setCategoriesExpenses] = useState<CategoryAmount[]>([])
+    const [categorySelectedDate, setCategorySelectedDate] = useState<Dayjs>(dayjs());
+    const categoryDateFrom = selectedDate.startOf("month").format("YYYY-MM-DD");
+    const categoryDateTo = selectedDate.endOf("month").format("YYYY-MM-DD");
+
 
     const paginationModel = {page: 0, pageSize: 5};
     const totalSpending = expenses.reduce((acc, e) => acc + e.price, 0);
@@ -63,6 +75,10 @@ function ExpensesPage() {
     useEffect(() => {
         getAllRecurringExpenses(user?.id).then((res) => setRecurringExpenses(res.data));
     }, [editRecurringExpense, user?.id])
+
+    useEffect(() => {
+        getAllCategoriesAmount(user?.id, categoryDateFrom, categoryDateTo).then((res) => setCategoriesExpenses(res.data));
+    }, [user?.id, openDialog, categoryDateFrom, categoryDateTo])
 
     const handleDeletion = (id: string) => {
         deleteExpense(id)
@@ -208,7 +224,8 @@ function ExpensesPage() {
         <>
             <Box p={2} display="flex" justifyContent="space-between" alignItems="center">
                 <Box>
-                    <Typography variant="h5" fontWeight={"bold"} color={"secondary"}>{t('expenses.page.label')}</Typography>
+                    <Typography variant="h5" fontWeight={"bold"}
+                                color={"secondary"}>{t('expenses.page.label')}</Typography>
                     <Typography variant="body2" sx={{mt: 1}}>{t('expenses.page.secondLabel')}</Typography>
                 </Box>
                 <Button
@@ -228,8 +245,10 @@ function ExpensesPage() {
                     <CardContent>
                         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                             <Box>
-                                <Typography variant="subtitle1" fontWeight={"bold"}>{t('expenses.page.expensesTable.label')}</Typography>
-                                <Typography variant="body2" color={"text.secondary"}>{t('expenses.page.expensesTable.secondLabel')}</Typography>
+                                <Typography variant="subtitle1"
+                                            fontWeight={"bold"}>{t('expenses.page.expensesTable.label')}</Typography>
+                                <Typography variant="body2"
+                                            color={"text.secondary"}>{t('expenses.page.expensesTable.secondLabel')}</Typography>
                             </Box>
                             <Box display="flex" gap={2} alignItems="center">
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -321,14 +340,43 @@ function ExpensesPage() {
                     </CardContent>
                 </Card>
             </Box>
+            <Box p={2}>
+                <Card>
+                    <CardContent>
+                        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                            <Box>
+                                <Typography variant="subtitle1"
+                                            fontWeight={"bold"}>{t('expenses.page.categories.label')}</Typography>
+                                <Typography variant="body2"
+                                            color={"text.secondary"}>{t('expenses.page.categories.secondLabel')}</Typography>
+                            </Box>
+                        </Box>
+                        <Box
+                            sx={{
+                                display: 'grid',
+                                gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'},
+                                gap: 2,
+                            }}
+                        >
+                            {Object.values(categoriesExpenses).map((cat) => (
+                                <CategoryExpense
+                                    categoryAmount={cat}
+                                />
+                            ))}
+                        </Box>
+                    </CardContent>
+                </Card>
+            </Box>
             <Box p={2} display="flex" gap={3}>
                 <Box flex={1}>
                     <Card>
                         <CardContent>
                             <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                                 <Box>
-                                    <Typography variant="subtitle1" fontWeight={"bold"}>{t('expenses.page.recurringTable.label')}</Typography>
-                                    <Typography variant="body2" color={"text.secondary"}>{t('expenses.page.recurringTable.secondLabel')}</Typography>
+                                    <Typography variant="subtitle1"
+                                                fontWeight={"bold"}>{t('expenses.page.recurringTable.label')}</Typography>
+                                    <Typography variant="body2"
+                                                color={"text.secondary"}>{t('expenses.page.recurringTable.secondLabel')}</Typography>
                                 </Box>
                             </Box>
                             <Divider sx={{my: 1}}/>

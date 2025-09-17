@@ -12,4 +12,6 @@ import java.math.BigDecimal;
 public class CategoryDto {
     String category;
     BigDecimal amount;
+    int transactions;
+    double percentage;
 }
