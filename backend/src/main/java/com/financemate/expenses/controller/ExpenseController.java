@@ -128,4 +128,15 @@ public class ExpenseController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @GetMapping("/overview/{userId}")
+    public ResponseEntity<?> getExpenseOverview(@PathVariable String userId,
+                                                @RequestParam LocalDate startDate,
+                                                @RequestParam LocalDate endDate) {
+        try {
+            return ResponseEntity.ok(expenseService.getExpenseOverview(userId, startDate, endDate));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }

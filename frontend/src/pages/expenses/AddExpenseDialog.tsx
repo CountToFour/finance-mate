@@ -91,7 +91,11 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         };
 
         if (!initialExpense) {
-            if (periodType !== periodTypes.NONE) {
+            console.log("GOWNO")
+            console.log(periodType);
+            console.log(periodTypes.NONE);
+            if (periodType !== 'NONE') {
+                console.log("GOWNO2")
                 addRecurringExpense(expenseDto)
                     .then(() => {
                         success(t('expenses.notifications.add.success'));
@@ -101,6 +105,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                         error(t('expenses.notifications.add.error'));
                     });
             } else {
+                console.log("GOWNO3")
                 addExpense(expenseDto)
                     .then(() => {
                         success(t('expenses.notifications.add.success'));

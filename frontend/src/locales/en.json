@@ -50,7 +50,11 @@
         "description": "Description",
         "category": "Category",
         "price": "Amount",
-        "actions": "Actions"
+        "actions": "Actions",
+        "tooltip" : {
+          "edit" : "Edit",
+          "delete" : "Delete"
+        }
       },
       "recurringTable": {
         "label": "Recurring expenses",

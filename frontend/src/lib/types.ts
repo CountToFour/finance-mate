@@ -56,3 +56,11 @@ export type CategoryAmount = {
     transactions: number
     percentage: number
 }
+
+export type ExpenseOverview = {
+    totalAmount: number
+    averageAmount: number
+    expenseCount: number
+    totalAmountChangePercentage: number
+    expenseCountChangePercentage: number
+}

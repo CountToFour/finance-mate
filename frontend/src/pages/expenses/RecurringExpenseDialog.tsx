@@ -129,7 +129,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, recur
                             onChange={(newValue) => setDate(newValue)}
                             slotProps={{textField: {fullWidth: true}}}
                             format={"DD-MM-YYYY"}
-                            disablePast={true}
+                            // disablePast={true}
                         />
                     </LocalizationProvider>
                     <TextField

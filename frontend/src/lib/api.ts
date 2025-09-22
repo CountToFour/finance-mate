@@ -134,3 +134,21 @@ export const getAllCategoriesAmount = (
         },
     }
 )
+
+export const getExpenseOverview = (
+    userId: string | undefined,
+    startDate: string,
+    endDate: string,
+) => axios.get(
+    `http://localhost:8080/api/expenses/overview/${userId}`,
+    {
+        params: {
+            startDate: startDate,
+            endDate: endDate,
+        },
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)

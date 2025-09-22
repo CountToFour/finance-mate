@@ -3,6 +3,7 @@ package com.financemate.expenses.service;
 import com.financemate.auth.repository.UserRepository;
 import com.financemate.expenses.dto.CategoryDto;
 import com.financemate.expenses.dto.ExpenseDto;
+import com.financemate.expenses.dto.ExpenseOverviewDto;
 import com.financemate.expenses.mapper.ExpenseMapper;
 import com.financemate.expenses.model.Expense;
 import com.financemate.expenses.model.PeriodType;
@@ -140,6 +141,38 @@ public class ExpenseService {
         }
 
         return recurringExpenseRepository.save(existingRecurringExpense);
+    }
+
+    public ExpenseOverviewDto getExpenseOverview(String userId, LocalDate startDate, LocalDate endDate) {
+        checkUserExists(userId);
+
+        List<Object> actualTotalOverview = getMonthlyExpenseOverview(userId, startDate, endDate);
+        List<Object> previousTotalOverview = getMonthlyExpenseOverview(userId, startDate.minusMonths(1), endDate.minusMonths(1));
+
+        double totalAmountChangePercentage = ((double) actualTotalOverview.get(0) / (double) previousTotalOverview.get(0)) * 100;
+        totalAmountChangePercentage = Math.round(totalAmountChangePercentage * 10.0) / 10.0 - 100;
+        int expenseCountChangePercentage = (int) actualTotalOverview.get(2) - (int) previousTotalOverview.get(2);
+
+        return new ExpenseOverviewDto(
+                (double) actualTotalOverview.get(0),
+                (double) actualTotalOverview.get(1),
+                (int) actualTotalOverview.get(2),
+                totalAmountChangePercentage,
+                expenseCountChangePercentage
+        );
+    }
+
+    private List<Object> getMonthlyExpenseOverview(String userId, LocalDate startDate, LocalDate endDate) {
+        Specification<Expense> spec = Specification.allOf(ExpenseSpecifications.hasUserId(userId))
+                .and(ExpenseSpecifications.dateBetween(startDate, endDate));
+
+        List<Expense> expenses = expenseRepository.findAll(spec);
+        double totalAmount = expenses.stream().map(Expense::getPrice).filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add).doubleValue();
+        double averageAmount = totalAmount / 30;
+        int expensesCount = expenses.size();
+
+        return List.of(totalAmount, averageAmount, expensesCount);
     }
 
     public List<CategoryDto> getAllCategoriesAmount(String userId, LocalDate startDate, LocalDate endDate) {

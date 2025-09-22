@@ -50,7 +50,11 @@
         "description": "Opis",
         "category": "Kategoria",
         "price": "Kwota",
-        "actions": "Akcje"
+        "actions": "Akcje",
+        "tooltip" : {
+          "edit" : "Edytuj",
+          "delete" : "Usuń"
+        }
       },
       "recurringTable": {
         "label": "Wydatki okresowe",

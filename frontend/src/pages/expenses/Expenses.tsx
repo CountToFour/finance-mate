@@ -8,21 +8,24 @@ import {
     Divider,
     Button, MenuItem, TextField,
 } from "@mui/material";
-import {Add} from "@mui/icons-material";
+import {Add, AttachMoneyOutlined} from "@mui/icons-material";
 import InputAdornment from '@mui/material/InputAdornment';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
-import {PieChart, Pie, Cell, Tooltip, ResponsiveContainer} from "recharts";
+import {
+    PieChart, Pie, Cell, Tooltip as RechartsTooltip
+    , ResponsiveContainer
+} from "recharts";
 import {
     deleteExpense,
     deleteRecurringExpense,
     getAllCategoriesAmount,
-    getAllRecurringExpenses,
+    getAllRecurringExpenses, getExpenseOverview,
     getExpenses
 } from "../../lib/api.ts";
 import {useAuthStore} from "../../store/auth.ts";
-import type {CategoryAmount, Expense, RecurringExpense} from "../../lib/types.ts";
+import type {CategoryAmount, Expense, ExpenseOverview, RecurringExpense} from "../../lib/types.ts";
 import {DataGrid, type GridColDef} from '@mui/x-data-grid';
 import {useNotification} from "../../components/NotificationContext.tsx";
 import AddExpenseDialog from "./AddExpenseDialog.tsx";
@@ -35,6 +38,10 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import RecurringExpenseDialog from "./RecurringExpenseDialog.tsx";
 import {useTranslation} from "react-i18next";
 import CategoryExpense from "./CategoryExpense.tsx";
+import Tooltip from '@mui/material/Tooltip';
+import ExpenseSummaryCard from "./ExpenseSummaryCard.tsx";
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 const COLORS = ["#5C86D3", "#A175BF", "#CDB557", "#7AB6D1"];
 const categories = ["Wszystkie", "Jedzenie", "Transport", "Zakupy", "Rozrywka", "Inne"];
@@ -43,22 +50,25 @@ const currentYear = dayjs();
 function ExpensesPage() {
     const {t} = useTranslation();
     const user = useAuthStore(s => s.user);
+
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
-    const {success, error} = useNotification();
-    const [openDialog, setOpenDialog] = useState(false);
-    const [editRecurringExpense, setEditRecurringExpense] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
     const [selectedRecurringExpense, setSelectedRecurringExpense] = useState<RecurringExpense>();
     const [category, setCategory] = useState<string>("Wszystkie");
+    const [categoriesExpenses, setCategoriesExpenses] = useState<CategoryAmount[]>([])
+    const [overview, setOverview] = useState<ExpenseOverview>();
+
+    const {success, error} = useNotification();
+    const [openDialog, setOpenDialog] = useState(false);
+    const [editRecurringExpense, setEditRecurringExpense] = useState(false);
+
     const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
     const dateFrom = selectedDate.startOf("month").format("YYYY-MM-DD");
     const dateTo = selectedDate.endOf("month").format("YYYY-MM-DD");
-    const [categoriesExpenses, setCategoriesExpenses] = useState<CategoryAmount[]>([])
     const [categorySelectedDate, setCategorySelectedDate] = useState<Dayjs>(dayjs());
-    const categoryDateFrom = selectedDate.startOf("month").format("YYYY-MM-DD");
-    const categoryDateTo = selectedDate.endOf("month").format("YYYY-MM-DD");
-
+    const categoryDateFrom = categorySelectedDate.startOf("month").format("YYYY-MM-DD");
+    const categoryDateTo = categorySelectedDate.endOf("month").format("YYYY-MM-DD");
 
     const paginationModel = {page: 0, pageSize: 5};
     const totalSpending = expenses.reduce((acc, e) => acc + e.price, 0);
@@ -69,7 +79,8 @@ function ExpensesPage() {
         } else {
             getExpenses(user?.id, category, dateFrom, dateTo).then((res) => setExpenses(res.data));
         }
-
+        getExpenseOverview(user?.id, dayjs().startOf("month").format("YYYY-MM-DD"),
+            dayjs().endOf("month").format("YYYY-MM-DD")).then((res) => setOverview(res.data));
     }, [user?.id, openDialog, category, dateFrom, dateTo]);
 
     useEffect(() => {
@@ -144,20 +155,24 @@ function ExpensesPage() {
                     width: '100%',
                     height: '100%',
                 }}>
-                    <IconButton
-                        onClick={() => {
-                            setSelectedExpense(params.row as Expense)
-                            setOpenDialog(true);
-                        }}
-                    >
-                        <EditOutlinedIcon/>
-                    </IconButton>
-                    <IconButton
-                        color="error"
-                        onClick={() => handleDeletion(params.row.id)}
-                    >
-                        <DeleteIcon/>
-                    </IconButton>
+                    <Tooltip title={t("expenses.page.expensesTable.tooltip.edit")} arrow>
+                        <IconButton
+                            onClick={() => {
+                                setSelectedExpense(params.row as Expense)
+                                setOpenDialog(true);
+                            }}
+                        >
+                            <EditOutlinedIcon/>
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title={t("expenses.page.expensesTable.tooltip.delete")} arrow>
+                        <IconButton
+                            color="error"
+                            onClick={() => handleDeletion(params.row.id)}
+                        >
+                            <DeleteIcon/>
+                        </IconButton>
+                    </Tooltip>
                 </Box>
             ),
         },
@@ -201,20 +216,24 @@ function ExpensesPage() {
                     width: '100%',
                     height: '100%',
                 }}>
-                    <IconButton
-                        onClick={() => {
-                            setSelectedRecurringExpense(params.row as RecurringExpense)
-                            setEditRecurringExpense(true);
-                        }}
-                    >
-                        <EditOutlinedIcon/>
-                    </IconButton>
-                    <IconButton
-                        color="error"
-                        onClick={() => handleRecurringDeletion(params.row.id)}
-                    >
-                        <DeleteIcon/>
-                    </IconButton>
+                    <Tooltip title={t("expenses.page.expensesTable.tooltip.edit")} arrow>
+                        <IconButton
+                            onClick={() => {
+                                setSelectedRecurringExpense(params.row as RecurringExpense)
+                                setEditRecurringExpense(true);
+                            }}
+                        >
+                            <EditOutlinedIcon/>
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title={t("expenses.page.expensesTable.tooltip.delete")} arrow>
+                        <IconButton
+                            color="error"
+                            onClick={() => handleRecurringDeletion(params.row.id)}
+                        >
+                            <DeleteIcon/>
+                        </IconButton>
+                    </Tooltip>
                 </Box>
             ),
         },
@@ -239,6 +258,38 @@ function ExpensesPage() {
                     <Add sx={{mr: 1}}/>
                     {t('expenses.page.add')}
                 </Button>
+            </Box>
+            <Box p={2} display="grid" gap={2} sx={{gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'}}}>
+                <ExpenseSummaryCard
+                    type="totalExpenses"
+                    title="Całkowite wydatki"
+                    description=" względem poprzedniego miesiąca"
+                    amount={overview?.totalAmount}
+                    change={overview?.totalAmountChangePercentage}
+                    currency="zł"
+                    accentColor="#E53935" // czerwony jak na podglądzie; możesz też użyć 'error.main'
+                    icon={<AttachMoneyOutlined fontSize="medium" />}
+                />
+                <ExpenseSummaryCard
+                    type="totalTransactions"
+                    title="Transakcje"
+                    description=" transakcji w tym miesiącu"
+                    amount={overview?.expenseCount}
+                    change={overview?.expenseCountChangePercentage}
+                    currency="zł"
+                    accentColor="#70B2B1"
+                    icon={<ReceiptIcon fontSize="medium" />}
+                />
+                <ExpenseSummaryCard
+                    type="Average"
+                    title="Średnia dzienna"
+                    description="na podstawie 30 dni"
+                    amount={overview?.averageAmount}
+                    currency="zł"
+                    accentColor="#5C86D3" // czerwony jak na podglądzie; możesz też użyć 'error.main'
+                    icon={<TrendingUpIcon fontSize="medium" />}
+                />
+
             </Box>
             <Box ml={2} mr={2}>
                 <Card>
@@ -350,6 +401,51 @@ function ExpensesPage() {
                                 <Typography variant="body2"
                                             color={"text.secondary"}>{t('expenses.page.categories.secondLabel')}</Typography>
                             </Box>
+                            <Box display="flex" gap={2} alignItems="center">
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                    <DatePicker
+                                        value={categorySelectedDate}
+                                        yearsOrder="desc"
+                                        maxDate={currentYear}
+                                        onMonthChange={(newMonth) => {
+                                            setCategorySelectedDate(dayjs(newMonth));
+                                        }}
+                                        views={['month', 'year']}
+                                        format={"MMMM YYYY"}
+                                        slotProps={{
+                                            textField: {
+                                                size: 'small',
+                                                sx: {width: 250},
+                                                InputProps: {
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <IconButton
+                                                                aria-label="Poprzedni miesiąc"
+                                                                size="small"
+                                                                edge="start"
+                                                                onClick={() => setCategorySelectedDate(prev => prev.subtract(1, 'month'))}
+                                                                tabIndex={-1}
+                                                            >
+                                                                <ChevronLeftIcon fontSize="small"/>
+                                                            </IconButton>
+                                                            <IconButton
+                                                                aria-label="Następny miesiąc"
+                                                                size="small"
+                                                                edge="start"
+                                                                onClick={() => setCategorySelectedDate(prev => prev.add(1, 'month'))}
+                                                                disabled={categorySelectedDate.add(1, 'month').isAfter(currentYear, 'month')}
+                                                                tabIndex={-1}
+                                                            >
+                                                                <ChevronRightIcon fontSize="small"/>
+                                                            </IconButton>
+                                                        </InputAdornment>
+                                                    ),
+                                                },
+                                            },
+                                        }}
+                                    />
+                                </LocalizationProvider>
+                            </Box>
                         </Box>
                         <Box
                             sx={{
@@ -358,9 +454,10 @@ function ExpensesPage() {
                                 gap: 2,
                             }}
                         >
-                            {Object.values(categoriesExpenses).map((cat) => (
+                            {Object.values(categoriesExpenses).map((cat, i) => (
                                 <CategoryExpense
                                     categoryAmount={cat}
+                                    color={COLORS[i % COLORS.length]}
                                 />
                             ))}
                         </Box>
@@ -420,7 +517,7 @@ function ExpensesPage() {
                                             <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]}/>
                                         ))}
                                     </Pie>
-                                    <Tooltip/>
+                                    <RechartsTooltip/>
                                 </PieChart>
                             </ResponsiveContainer>
                             <Typography variant="subtitle1" align="center" mt={2}>
