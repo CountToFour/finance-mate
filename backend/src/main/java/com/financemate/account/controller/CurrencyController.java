@@ -19,12 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/currency")
 @CrossOrigin("*")
 public class CurrencyController {
-    private final CurrencyService currencyService;
+    private final CurrencyService standardCurrencyService;
 
     @GetMapping
     public ResponseEntity<?> findAllCurrencies() {
         try {
-            return ResponseEntity.ok(currencyService.findAllCurrencies());
+            return ResponseEntity.ok(standardCurrencyService.findAllCurrencies());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -33,7 +33,7 @@ public class CurrencyController {
     @PostMapping
     public ResponseEntity<?> addCurrency(@RequestBody Currency currency) {
         try {
-            currencyService.addCurrency(currency);
+            standardCurrencyService.addCurrency(currency);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
@@ -45,7 +45,7 @@ public class CurrencyController {
     @DeleteMapping("/{code}")
     public ResponseEntity<?> deleteCurrency(@PathVariable String code) {
         try {
-            currencyService.deleteCurrency(code);
+            standardCurrencyService.deleteCurrency(code);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -58,7 +58,18 @@ public class CurrencyController {
     @GetMapping("/{code}")
     public ResponseEntity<?> getCurrencyByCode(@PathVariable String code) {
         try {
-            return ResponseEntity.ok(currencyService.getCurrencyByCode(code));
+            return ResponseEntity.ok(standardCurrencyService.getCurrencyByCode(code));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/exchange-rate/{fromCurrency}/{toCurrency}")
+    public ResponseEntity<?> getExchangeRateByPair(@PathVariable String fromCurrency, @PathVariable String toCurrency) {
+        try {
+            return ResponseEntity.ok(standardCurrencyService.getExchangeRateByPair(fromCurrency, toCurrency));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
