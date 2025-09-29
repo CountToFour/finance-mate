@@ -276,7 +276,6 @@ function ExpensesPage() {
                     description=" transakcji w tym miesiącu"
                     amount={overview?.expenseCount}
                     change={overview?.expenseCountChangePercentage}
-                    currency="zł"
                     accentColor="#70B2B1"
                     icon={<ReceiptIcon fontSize="medium" />}
                 />

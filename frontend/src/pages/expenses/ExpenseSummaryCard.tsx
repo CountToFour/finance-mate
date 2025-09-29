@@ -1,4 +1,3 @@
-// ExpenseSummaryCard.tsx
 import React from 'react';
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
@@ -8,11 +7,11 @@ type Props = {
     title: string;
     description?: string;
     amount: number;
-    change?: number;     // np. 3 dla +3%, -2.5 dla -2.5%
-    currency?: string;          // domyślnie "zł"
-    accentColor?: string;       // kolor paska i akcentu, np. '#E53935' albo 'error.main'
-    icon?: React.ReactNode;     // np. <AttachMoneyOutlined />
-    sx?: SxProps<Theme>;        // opcjonalne dodatkowe style
+    change?: number;
+    currency?: string;
+    accentColor?: string;
+    icon?: React.ReactNode;
+    sx?: SxProps<Theme>;
 };
 
 const ExpenseSummaryCard: React.FC<Props> = ({
@@ -21,8 +20,8 @@ const ExpenseSummaryCard: React.FC<Props> = ({
                                                  description,
                                                  amount,
                                                  change,
-                                                 currency = 'zł',
-                                                 accentColor = 'error.main',
+                                                 currency,
+                                                 accentColor,
                                                  icon,
                                                  sx,
                                              }) => {
@@ -77,7 +76,7 @@ const ExpenseSummaryCard: React.FC<Props> = ({
                         <Typography
                             variant="body2"
                             sx={{
-                                color: accentColor, // lub changeIsPositive ? 'success.main' : 'error.main'
+                                color: accentColor,
                             }}
                         >
                             {changeText()}

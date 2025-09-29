@@ -48,6 +48,7 @@ public class AuthService implements UserDetailsService {
                 .username(request.username())
                 .password(passwordEncoder.encode(request.password()))
                 .role(Role.USER)
+                .locale("en")
                 .build();
         userRepository.save(user);
         return issueTokens(user);
@@ -92,6 +93,6 @@ public class AuthService implements UserDetailsService {
                 .revoked(false)
                 .build());
 
-        return new AuthResponse(access, refresh, user.getUsername(), user.getEmail(), user.getId());
+        return new AuthResponse(access, refresh, user.getUsername(), user.getEmail(), user.getId(), user.getLocale());
     }
 }

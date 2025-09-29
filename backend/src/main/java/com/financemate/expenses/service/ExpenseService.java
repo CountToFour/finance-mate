@@ -154,8 +154,8 @@ public class ExpenseService {
         int expenseCountChangePercentage = (int) actualTotalOverview.get(2) - (int) previousTotalOverview.get(2);
 
         return new ExpenseOverviewDto(
-                (double) actualTotalOverview.get(0),
-                (double) actualTotalOverview.get(1),
+                 Math.round((double) actualTotalOverview.get(0) * 100.0) / 100.0,
+                Math.round((double) actualTotalOverview.get(1) * 100.0) / 100.0,
                 (int) actualTotalOverview.get(2),
                 totalAmountChangePercentage,
                 expenseCountChangePercentage
