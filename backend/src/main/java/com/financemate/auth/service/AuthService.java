@@ -1,5 +1,6 @@
 package com.financemate.auth.service;
 
+import com.financemate.account.service.CurrencyService;
 import com.financemate.auth.dto.AuthResponse;
 import com.financemate.auth.dto.LoginRequest;
 import com.financemate.auth.dto.RegisterRequest;
@@ -31,6 +32,7 @@ public class AuthService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final CurrencyService currencyService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -49,6 +51,7 @@ public class AuthService implements UserDetailsService {
                 .password(passwordEncoder.encode(request.password()))
                 .role(Role.USER)
                 .locale("en")
+                .mainCurrency(currencyService.getCurrencyByCode("PLN"))
                 .build();
         userRepository.save(user);
         return issueTokens(user);
