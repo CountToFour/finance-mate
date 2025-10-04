@@ -2,6 +2,11 @@ package com.financemate.account.controller;
 
 import com.financemate.account.dto.AccountDto;
 import com.financemate.account.dto.TransferDto;
+import com.financemate.account.exception.AccessException;
+import com.financemate.account.exception.AccountNotFoundException;
+import com.financemate.account.exception.CurrencyNotFoundException;
+import com.financemate.account.exception.IllegalOperationException;
+import com.financemate.account.exception.UserNotFoundException;
 import com.financemate.account.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +34,7 @@ public class AccountController {
     public ResponseEntity<?> getAccountForUser(@PathVariable String userId) {
         try {
             return ResponseEntity.ok(accountService.getAccountForUser(userId));
-        } catch (IllegalArgumentException e) {
+        } catch (UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
@@ -41,7 +46,7 @@ public class AccountController {
                                            @PathVariable String userId) {
         try {
             return ResponseEntity.ok(accountService.createAccount(dto, userId));
-        } catch (IllegalArgumentException e) {
+        } catch (UserNotFoundException | CurrencyNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
@@ -54,8 +59,12 @@ public class AccountController {
                                            @PathVariable String userId) {
         try {
             return ResponseEntity.ok(accountService.updateAccount(accountId, dto, userId));
-        } catch (IllegalArgumentException e) {
+        } catch (AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalOperationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (AccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
         }
@@ -67,8 +76,10 @@ public class AccountController {
         try {
             accountService.deleteAccount(accountId, userId);
             return ResponseEntity.ok("Account deleted successfully");
-        } catch (IllegalArgumentException e) {
+        } catch (AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (AccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
         }
@@ -79,8 +90,10 @@ public class AccountController {
                                             @PathVariable String userId) {
         try {
             return ResponseEntity.ok(accountService.getAccountById(accountId, userId));
-        } catch (IllegalArgumentException e) {
+        } catch (AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (AccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
         }
@@ -92,8 +105,10 @@ public class AccountController {
         try {
             accountService.archiveAccount(accountId, userId);
             return ResponseEntity.ok("Account archived successfully");
-        } catch (IllegalArgumentException e) {
+        } catch (AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (AccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
         }
@@ -105,8 +120,10 @@ public class AccountController {
         try {
             accountService.includeInStats(accountId, userId);
             return ResponseEntity.ok("Account includeInStats toggled successfully");
-        } catch (IllegalArgumentException e) {
+        } catch (AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (AccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
         }
@@ -118,8 +135,10 @@ public class AccountController {
         try {
             accountService.transferBetweenAccounts(request.fromAccountId(), request.toAccountId(), request.amount(), userId);
             return ResponseEntity.ok("Transfer completed successfully");
-        } catch (IllegalArgumentException e) {
+        } catch (AccountNotFoundException | UserNotFoundException | CurrencyNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (AccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
         }
@@ -130,7 +149,7 @@ public class AccountController {
         try {
             double balance = accountService.getUserBalance(userId);
             return ResponseEntity.ok(balance);
-        } catch (IllegalArgumentException e) {
+        } catch (UserNotFoundException | CurrencyNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
