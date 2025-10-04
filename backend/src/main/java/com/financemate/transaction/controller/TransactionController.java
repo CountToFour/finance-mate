@@ -1,11 +1,12 @@
-package com.financemate.expenses.controller;
+package com.financemate.transaction.controller;
 
-import com.financemate.expenses.dto.CategoryDto;
-import com.financemate.expenses.dto.ExpenseDto;
-import com.financemate.expenses.model.Expense;
-import com.financemate.expenses.model.PeriodType;
-import com.financemate.expenses.model.RecurringExpense;
-import com.financemate.expenses.service.ExpenseService;
+import com.financemate.transaction.dto.CategoryDto;
+import com.financemate.transaction.dto.TransactionDto;
+import com.financemate.transaction.model.Transaction;
+import com.financemate.transaction.model.PeriodType;
+import com.financemate.transaction.model.RecurringTransaction;
+import com.financemate.transaction.model.TransactionType;
+import com.financemate.transaction.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,16 +27,16 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/expenses")
+@RequestMapping("/api/transactions")
 @CrossOrigin("*")
-public class ExpenseController {
+public class TransactionController {
 
-    private final ExpenseService expenseService;
+    private final TransactionService transactionService;
 
     @PostMapping
-    public ResponseEntity<Expense> addExpense(@Valid @RequestBody ExpenseDto expense) {
+    public ResponseEntity<Transaction> addTransaction(@Valid @RequestBody TransactionDto transaction) {
         try {
-            Expense saved = expenseService.addExpense(expense);
+            Transaction saved = transactionService.addTransaction(transaction);
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -43,49 +44,51 @@ public class ExpenseController {
     }
 
     @PostMapping("/recurring")
-    public ResponseEntity<Void> addRecurringExpense(@Valid @RequestBody ExpenseDto expense) {
+    public ResponseEntity<Void> addRecurringTransaction(@Valid @RequestBody TransactionDto transaction) {
         try {
-            expenseService.addRecurringExpense(expense);
+            transactionService.addRecurringTransaction(transaction);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<ExpenseDto>> getExpensesByUser(
+    @GetMapping("/{userId}/type/{type}")
+    public ResponseEntity<List<TransactionDto>> getTransactionsByUser(
             @PathVariable String userId,
+            @PathVariable TransactionType type,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate) {
         try {
-            return ResponseEntity.ok(expenseService.getExpensesByUser(userId, category, minPrice, maxPrice, startDate, endDate));
+            return ResponseEntity.ok(transactionService.getTransactionsByUser(userId, category, minPrice, maxPrice, startDate, endDate, type));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
-    @GetMapping("/recurring/{userId}")
-    public ResponseEntity<List<ExpenseDto>> getAllRecurringExpenses(@PathVariable String userId) {
+    @GetMapping("/recurring/{userId}/type/{type}")
+    public ResponseEntity<List<TransactionDto>> getAllRecurringTransactions(@PathVariable String userId,
+                                                                        @PathVariable TransactionType type) {
         try {
-            return ResponseEntity.ok(expenseService.getAllRecurringExpenses(userId));
+            return ResponseEntity.ok(transactionService.getAllRecurringTransactions(userId, type));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteExpense(@PathVariable String id) {
-        expenseService.deleteExpense(id);
+    public ResponseEntity<Void> deleteTransaction(@PathVariable String id) {
+        transactionService.deleteTransaction(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/recurring/{id}")
-    public ResponseEntity<Void> deleteRecurringExpense(@PathVariable String id) {
+    public ResponseEntity<Void> deleteRecurringTransaction(@PathVariable String id) {
         try {
-            expenseService.deleteRecurringExpense(id);
+            transactionService.deleteRecurringTransaction(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
@@ -93,9 +96,9 @@ public class ExpenseController {
     }
 
     @PutMapping("/deactivate/{id}")
-    public ResponseEntity<Void> deactivateRecurringExpense(@PathVariable String id) {
+    public ResponseEntity<Void> deactivateRecurringTransaction(@PathVariable String id) {
         try {
-            expenseService.deactivateRecurringExpense(id);
+            transactionService.deactivateRecurringTransaction(id);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
@@ -103,14 +106,14 @@ public class ExpenseController {
     }
 
     @PutMapping("/edit/{id}")
-    public ResponseEntity<?> editExpense(@PathVariable String id, @Valid @RequestBody ExpenseDto expenseDto) {
+    public ResponseEntity<?> editTransaction(@PathVariable String id, @Valid @RequestBody TransactionDto transactionDto) {
         try {
-            if (expenseDto.getPeriodType() != PeriodType.NONE) {
-                RecurringExpense updatedRecurring = expenseService.editRecurringExpense(id, expenseDto);
+            if (transactionDto.getPeriodType() != PeriodType.NONE) {
+                RecurringTransaction updatedRecurring = transactionService.editRecurringTransaction(id, transactionDto);
                 return ResponseEntity.ok(updatedRecurring);
             } else {
-                Expense updatedExpense = expenseService.editExpense(id, expenseDto);
-                return ResponseEntity.ok(updatedExpense);
+                Transaction updatedTransaction = transactionService.editTransaction(id, transactionDto);
+                return ResponseEntity.ok(updatedTransaction);
             }
 
         } catch (Exception e) {
@@ -118,23 +121,25 @@ public class ExpenseController {
         }
     }
 
-    @GetMapping("/categories/{userId}")
+    @GetMapping("/categories/{userId}/type/{type}")
     public ResponseEntity<List<CategoryDto>> getAllCategoriesAmount(@PathVariable String userId,
+                                                                    @PathVariable TransactionType type,
                                                                     @RequestParam(required = false) LocalDate startDate,
                                                                     @RequestParam(required = false) LocalDate endDate) {
         try {
-            return ResponseEntity.ok(expenseService.getAllCategoriesAmount(userId, startDate, endDate));
+            return ResponseEntity.ok(transactionService.getAllCategoriesAmount(userId, startDate, endDate, type));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
-    @GetMapping("/overview/{userId}")
-    public ResponseEntity<?> getExpenseOverview(@PathVariable String userId,
+    @GetMapping("/overview/{userId}/type/{type}")
+    public ResponseEntity<?> getTransactionOverview(@PathVariable String userId,
+                                                @PathVariable TransactionType type,
                                                 @RequestParam LocalDate startDate,
                                                 @RequestParam LocalDate endDate) {
         try {
-            return ResponseEntity.ok(expenseService.getExpenseOverview(userId, startDate, endDate));
+            return ResponseEntity.ok(transactionService.getTransactionOverview(userId, startDate, endDate, type));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

@@ -12,6 +12,7 @@ import com.financemate.account.repository.AccountRepository;
 import com.financemate.account.repository.CurrencyRepository;
 import com.financemate.account.repository.ExchangeRateRepository;
 import com.financemate.auth.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -66,6 +67,7 @@ public class StandardAccountService implements AccountService {
     }
 
     @Override
+    @Transactional
     public Account updateAccount(String accountId, AccountDto dto, String userId) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
         if (!account.getUserId().equals(userId)) {
@@ -88,6 +90,7 @@ public class StandardAccountService implements AccountService {
     }
 
     @Override
+    @Transactional
     public void deleteAccount(String accountId, String userId) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
         if (!account.getUserId().equals(userId)) {
@@ -107,6 +110,7 @@ public class StandardAccountService implements AccountService {
     }
 
     @Override
+    @Transactional
     public void archiveAccount(String accountId, String userId) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
         if (!account.getUserId().equals(userId)) {
@@ -117,6 +121,7 @@ public class StandardAccountService implements AccountService {
     }
 
     @Override
+    @Transactional
     public void includeInStats(String accountId, String userId) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
         if (!account.getUserId().equals(userId)) {
@@ -127,6 +132,7 @@ public class StandardAccountService implements AccountService {
     }
 
     @Override
+    @Transactional
     public Account changeBalance(String accountId, double amount, String userId) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
         if (!account.getUserId().equals(userId)) {
@@ -139,6 +145,7 @@ public class StandardAccountService implements AccountService {
     }
 
     @Override
+    @Transactional
     public void transferBetweenAccounts(String fromAccountId, String toAccountId, double amount, String userId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));

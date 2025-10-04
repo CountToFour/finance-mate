@@ -1,4 +1,4 @@
-package com.financemate.expenses.exception;
+package com.financemate.transaction.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

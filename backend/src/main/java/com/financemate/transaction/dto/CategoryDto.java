@@ -1,4 +1,4 @@
-package com.financemate.expenses.dto;
+package com.financemate.transaction.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

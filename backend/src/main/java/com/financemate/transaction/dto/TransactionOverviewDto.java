@@ -1,4 +1,4 @@
-package com.financemate.expenses.dto;
+package com.financemate.transaction.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class ExpenseOverviewDto {
+public class TransactionOverviewDto {
     private double totalAmount;
     private double averageAmount;
     private int expenseCount;

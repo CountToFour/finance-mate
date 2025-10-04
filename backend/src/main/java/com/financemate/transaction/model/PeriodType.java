@@ -1,7 +1,8 @@
-package com.financemate.expenses.model;
+package com.financemate.transaction.model;
 
 public enum PeriodType {
     NONE,
+    ONCE,
     DAILY,
     WEEKLY,
     MONTHLY,
