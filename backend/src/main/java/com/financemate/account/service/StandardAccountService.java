@@ -39,7 +39,10 @@ public class StandardAccountService implements AccountService {
     public List<Account> getAccountForUser(String userId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        return accountRepository.findAllByUserId(userId);
+
+        List<Account> accounts = accountRepository.findAllByUserId(userId);
+        accounts.forEach(account -> account.setBalance(round(account.getBalance())));
+        return accounts;
     }
 
     @Override
@@ -99,6 +102,7 @@ public class StandardAccountService implements AccountService {
         if (!account.getUserId().equals(userId)) {
             throw new AccessException("Account does not belong to user");
         }
+        account.setBalance(round(account.getBalance()));
         return account;
     }
 
@@ -129,7 +133,9 @@ public class StandardAccountService implements AccountService {
             throw new AccessException("Account does not belong to user");
         }
         account.setBalance(account.getBalance() + amount);
-        return accountRepository.save(account);
+        accountRepository.save(account);
+        account.setBalance(round(account.getBalance()));
+        return account;
     }
 
     @Override
@@ -175,7 +181,7 @@ public class StandardAccountService implements AccountService {
         Currency mainCurrency = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found")).getMainCurrency();
         List<Account> accounts = accountRepository.findAllByUserIdAndIncludeInStatsIsTrue(userId);
-        return accounts.stream()
+        double result = accounts.stream()
                 .mapToDouble(account -> {
                     if (account.getCurrencyCode().equals(mainCurrency.getCode())) {
                         return account.getBalance();
@@ -187,6 +193,11 @@ public class StandardAccountService implements AccountService {
                     }
                 })
                 .sum();
+        return round(result);
+    }
+
+    private double round(double value) {
+        return Math.round(value * 100.0) / 100.0;
     }
 
 }
