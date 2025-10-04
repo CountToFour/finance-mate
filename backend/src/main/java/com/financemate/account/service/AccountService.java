@@ -15,5 +15,6 @@ public interface AccountService {
     void archiveAccount(String accountId, String userId);
     void includeInStats(String accountId, String userId);
     Account changeBalance(String accountId, double amount, String userId);
-//    void transferBetweenAccounts(String fromAccountId, String toAccountId, double amount, String userId);
+    void transferBetweenAccounts(String fromAccountId, String toAccountId, double amount, String userId);
+    double getUserBalance(String userId);
 }

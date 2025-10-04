@@ -2,8 +2,10 @@ package com.financemate.account.service;
 
 import com.financemate.account.dto.AccountDto;
 import com.financemate.account.model.Account;
+import com.financemate.account.model.Currency;
 import com.financemate.account.repository.AccountRepository;
 import com.financemate.account.repository.CurrencyRepository;
+import com.financemate.account.repository.ExchangeRateRepository;
 import com.financemate.auth.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +18,13 @@ public class StandardAccountService implements AccountService {
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final CurrencyRepository currencyRepository;
+    private final ExchangeRateRepository exchangeRateRepository;
 
     public StandardAccountService(AccountRepository accountRepository,
                                   UserRepository userRepository,
-                                  CurrencyRepository currencyRepository) {
+                                  CurrencyRepository currencyRepository,
+                                  ExchangeRateRepository exchangeRateRepository) {
+        this.exchangeRateRepository = exchangeRateRepository;
         this.currencyRepository = currencyRepository;
         this.userRepository = userRepository;
         this.accountRepository = accountRepository;
@@ -120,6 +125,63 @@ public class StandardAccountService implements AccountService {
         }
         account.setBalance(account.getBalance() + amount);
         return accountRepository.save(account);
+    }
+
+    @Override
+    public void transferBetweenAccounts(String fromAccountId, String toAccountId, double amount, String userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (fromAccountId.equals(toAccountId)) {
+            throw new IllegalArgumentException("Cannot transfer to the same account");
+        }
+        Account fromAccount = accountRepository.findById(fromAccountId).orElseThrow(()
+                -> new IllegalArgumentException("Source account not found"));
+        Account toAccount = accountRepository.findById(toAccountId).orElseThrow(()
+                -> new IllegalArgumentException("Destination account not found"));
+
+        if (!fromAccount.getUserId().equals(userId) || !toAccount.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("One or both accounts do not belong to user");
+        }
+
+        if (fromAccount.getBalance() < amount) {
+            throw new IllegalArgumentException("Insufficient funds in source account");
+        }
+
+        double finalAmount;
+        if (!fromAccount.getCurrencyCode().equals(toAccount.getCurrencyCode())) {
+            String currency = toAccount.getCurrencyCode();
+            double rate = exchangeRateRepository.findByFromCurrencyAndToCurrency(fromAccount.getCurrencyCode(), currency)
+                    .orElseThrow(() -> new IllegalArgumentException("Exchange rate not found"))
+                    .getRate();
+            finalAmount = amount * rate;
+        } else {
+            finalAmount = amount;
+        }
+
+        fromAccount.setBalance(fromAccount.getBalance() - amount);
+        toAccount.setBalance(toAccount.getBalance() + finalAmount);
+        accountRepository.save(fromAccount);
+        accountRepository.save(toAccount);
+    }
+
+    @Override
+    public double getUserBalance(String userId) {
+        Currency mainCurrency = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found")).getMainCurrency();
+        List<Account> accounts = accountRepository.findAllByUserIdAndIncludeInStatsIsTrue(userId);
+        return accounts.stream()
+                .mapToDouble(account -> {
+                    if (account.getCurrencyCode().equals(mainCurrency.getCode())) {
+                        return account.getBalance();
+                    } else {
+                        double rate = exchangeRateRepository.findByFromCurrencyAndToCurrency(account.getCurrencyCode(), mainCurrency.getCode())
+                                .orElseThrow(() -> new IllegalArgumentException("Exchange rate not found"))
+                                .getRate();
+                        return account.getBalance() * rate;
+                    }
+                })
+                .sum();
     }
 
 }

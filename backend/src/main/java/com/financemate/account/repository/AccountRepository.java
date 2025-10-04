@@ -8,4 +8,5 @@ import java.util.List;
 public interface AccountRepository extends JpaRepository<Account, String> {
 
     List<Account> findAllByUserId(String userId);
+    List<Account> findAllByUserIdAndIncludeInStatsIsTrue(String userId);
 }

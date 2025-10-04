@@ -1,6 +1,7 @@
 package com.financemate.account.controller;
 
 import com.financemate.account.dto.AccountDto;
+import com.financemate.account.dto.TransferDto;
 import com.financemate.account.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -104,6 +105,31 @@ public class AccountController {
         try {
             accountService.includeInStats(accountId, userId);
             return ResponseEntity.ok("Account includeInStats toggled successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
+        }
+    }
+
+    @PutMapping("/transfer/{userId}")
+    public ResponseEntity<?> transferBetweenAccounts(@RequestBody TransferDto request,
+                                                     @PathVariable String userId) {
+        try {
+            accountService.transferBetweenAccounts(request.fromAccountId(), request.toAccountId(), request.amount(), userId);
+            return ResponseEntity.ok("Transfer completed successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
+        }
+    }
+
+    @GetMapping("/balance/{userId}")
+    public ResponseEntity<?> getUserBalance(@PathVariable String userId) {
+        try {
+            double balance = accountService.getUserBalance(userId);
+            return ResponseEntity.ok(balance);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
