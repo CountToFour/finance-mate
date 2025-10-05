@@ -30,7 +30,7 @@ public class RecurringTransactionService {
 
         for (RecurringTransaction recurring : recurringTransactionRepository.findAllByActive(true)) {
 
-            LocalDate nextDate = recurring.getExpenseDate();
+            LocalDate nextDate = recurring.getCreatedAt();
 
             if (today.isAfter(nextDate) || today.equals(nextDate)) {
                 Transaction transaction = new Transaction();
@@ -39,13 +39,14 @@ public class RecurringTransactionService {
                 transaction.setPrice(recurring.getPrice());
                 transaction.setCreatedAt(nextDate);
                 transaction.setDescription(recurring.getDescription());
-                transaction.setTransactionType(recurring.getType());
+                transaction.setTransactionType(recurring.getTransactionType());
+                transaction.setAccount(recurring.getAccount());
                 transactionRepository.save(transaction);
 
                 if (recurring.getPeriodType() == PeriodType.ONCE) {
                     recurringTransactionRepository.delete(recurring);
                 } else {
-                    recurring.setExpenseDate(calculateNextDate(nextDate, recurring.getPeriodType()));
+                    recurring.setCreatedAt(calculateNextDate(nextDate, recurring.getPeriodType()));
                     recurringTransactionRepository.save(recurring);
                 }
             }

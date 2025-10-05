@@ -9,5 +9,5 @@ import java.util.List;
 public interface RecurringTransactionRepository extends JpaRepository<RecurringTransaction, String> {
     List<RecurringTransaction> findAllByActive(boolean active);
     List<RecurringTransaction> findAllByUserId(String userId);
-    List<RecurringTransaction> findAllByUserIdAndType(String userId, TransactionType type);
+    List<RecurringTransaction> findAllByUserIdAndTransactionType(String userId, TransactionType type);
 }

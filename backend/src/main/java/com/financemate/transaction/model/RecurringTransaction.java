@@ -34,14 +34,14 @@ public class RecurringTransaction {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
     @Enumerated(EnumType.STRING)
-    private TransactionType type;
+    private TransactionType transactionType;
     private String category;
     private double price;
     @Nullable
     private String description;
     @Enumerated(EnumType.STRING)
     private PeriodType periodType;
-    private LocalDate expenseDate;
+    private LocalDate createdAt;
     private boolean active;
 //    private LocalDate lastGeneratedDate;
 }

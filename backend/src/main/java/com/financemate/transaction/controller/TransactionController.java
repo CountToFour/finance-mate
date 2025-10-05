@@ -1,9 +1,11 @@
 package com.financemate.transaction.controller;
 
 import com.financemate.transaction.dto.CategoryDto;
+import com.financemate.transaction.dto.RecurringTransactionResponse;
 import com.financemate.transaction.dto.TransactionRequest;
 import com.financemate.transaction.dto.TransactionResponse;
 import com.financemate.transaction.exception.AccountNotFoundException;
+import com.financemate.transaction.exception.InvalidPeriodTypeException;
 import com.financemate.transaction.exception.UserNotFoundException;
 import com.financemate.transaction.model.Transaction;
 import com.financemate.transaction.model.PeriodType;
@@ -50,10 +52,13 @@ public class TransactionController {
     }
 
     @PostMapping("/recurring")
-    public ResponseEntity<Void> addRecurringTransaction(@Valid @RequestBody TransactionRequest transaction) {
+    public ResponseEntity<?> addRecurringTransaction(@Valid @RequestBody TransactionRequest transaction) {
         try {
-            transactionService.addRecurringTransaction(transaction);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(transactionService.addRecurringTransaction(transaction));
+        } catch (UserNotFoundException | AccountNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (InvalidPeriodTypeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -76,8 +81,8 @@ public class TransactionController {
     }
 
     @GetMapping("/recurring/{userId}/type/{type}")
-    public ResponseEntity<List<TransactionRequest>> getAllRecurringTransactions(@PathVariable String userId,
-                                                                                @PathVariable TransactionType type) {
+    public ResponseEntity<List<RecurringTransactionResponse>> getAllRecurringTransactions(@PathVariable String userId,
+                                                                                          @PathVariable TransactionType type) {
         try {
             return ResponseEntity.ok(transactionService.getAllRecurringTransactions(userId, type));
         } catch (Exception e) {

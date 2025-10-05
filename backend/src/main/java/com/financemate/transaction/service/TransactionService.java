@@ -6,10 +6,12 @@ import com.financemate.account.service.AccountService;
 import com.financemate.auth.model.user.User;
 import com.financemate.auth.repository.UserRepository;
 import com.financemate.transaction.dto.CategoryDto;
+import com.financemate.transaction.dto.RecurringTransactionResponse;
 import com.financemate.transaction.dto.TransactionRequest;
 import com.financemate.transaction.dto.TransactionOverviewDto;
 import com.financemate.transaction.dto.TransactionResponse;
 import com.financemate.transaction.exception.AccountNotFoundException;
+import com.financemate.transaction.exception.InvalidPeriodTypeException;
 import com.financemate.transaction.exception.UserNotFoundException;
 import com.financemate.transaction.mapper.TransactionMapper;
 import com.financemate.transaction.model.RecurringTransaction;
@@ -69,18 +71,35 @@ public class TransactionService {
     }
 
     @Transactional
-    public void addRecurringTransaction(TransactionRequest transactionRequest) {
+    public RecurringTransactionResponse addRecurringTransaction(TransactionRequest transactionRequest) {
         if (transactionRequest.getPeriodType() != PeriodType.NONE) {
+            User user = userRepository.findById(transactionRequest.getUserId())
+                    .orElseThrow(() -> new UserNotFoundException("User not found with id: " + transactionRequest.getUserId()));
+            Account account = accountRepository.findById(transactionRequest.getAccountId())
+                    .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + transactionRequest.getAccountId()));
+
             RecurringTransaction recurringTransaction = transactionMapper.recurringTransactionToEntity(transactionRequest);
             recurringTransaction.setActive(true);
 
-            if (recurringTransaction.getExpenseDate() != null && !recurringTransaction.getExpenseDate().isAfter(LocalDate.now())) {
-                addTransaction(transactionRequest);
-                recurringTransaction.setExpenseDate(calculateNextDate(recurringTransaction.getExpenseDate(), recurringTransaction.getPeriodType()));
+            if (recurringTransaction.getTransactionType() == TransactionType.EXPENSE) {
+                recurringTransaction.setPrice(-Math.abs(recurringTransaction.getPrice()));
+            } else {
+                recurringTransaction.setPrice(Math.abs(recurringTransaction.getPrice()));
             }
+
+            if (recurringTransaction.getCreatedAt() != null && !recurringTransaction.getCreatedAt().isAfter(LocalDate.now())) {
+                addTransaction(transactionRequest);
+                recurringTransaction.setCreatedAt(calculateNextDate(recurringTransaction.getCreatedAt(), recurringTransaction.getPeriodType()));
+            }
+
+            recurringTransaction.setAccount(account);
+            recurringTransaction.setUser(user);
             recurringTransactionRepository.save(recurringTransaction);
+            RecurringTransactionResponse savedDto = transactionMapper.recurringTransactionToDto(recurringTransaction);
+            savedDto.setAccountName(account.getName());
+            return savedDto;
         } else {
-            throw new IllegalArgumentException("Period type must be specified for recurring expenses.");
+            throw new InvalidPeriodTypeException("Period type must be specified for recurring expenses.");
         }
     }
 
@@ -99,10 +118,10 @@ public class TransactionService {
                 .toList();
     }
 
-    public List<TransactionRequest> getAllRecurringTransactions(String userId, TransactionType type) {
+    public List<RecurringTransactionResponse> getAllRecurringTransactions(String userId, TransactionType type) {
         checkUserExists(userId);
 
-        return recurringTransactionRepository.findAllByUserIdAndType(userId, type).stream()
+        return recurringTransactionRepository.findAllByUserIdAndTransactionType(userId, type).stream()
                 .map(transactionMapper::recurringTransactionToDto)
                 .toList();
     }
@@ -160,7 +179,7 @@ public class TransactionService {
             existingRecurringTransaction.setDescription(transactionRequest.getDescription());
         }
         if (transactionRequest.getCreatedAt() != null) {
-            existingRecurringTransaction.setExpenseDate(transactionRequest.getCreatedAt());
+            existingRecurringTransaction.setCreatedAt(transactionRequest.getCreatedAt());
         }
         if (transactionRequest.getPeriodType() != null && transactionRequest.getPeriodType() != PeriodType.NONE) {
             existingRecurringTransaction.setPeriodType(transactionRequest.getPeriodType());
