@@ -1,7 +1,10 @@
 package com.financemate.transaction.controller;
 
 import com.financemate.transaction.dto.CategoryDto;
-import com.financemate.transaction.dto.TransactionDto;
+import com.financemate.transaction.dto.TransactionRequest;
+import com.financemate.transaction.dto.TransactionResponse;
+import com.financemate.transaction.exception.AccountNotFoundException;
+import com.financemate.transaction.exception.UserNotFoundException;
 import com.financemate.transaction.model.Transaction;
 import com.financemate.transaction.model.PeriodType;
 import com.financemate.transaction.model.RecurringTransaction;
@@ -9,6 +12,7 @@ import com.financemate.transaction.model.TransactionType;
 import com.financemate.transaction.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,17 +38,19 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     @PostMapping
-    public ResponseEntity<Transaction> addTransaction(@Valid @RequestBody TransactionDto transaction) {
+    public ResponseEntity<?> addTransaction(@Valid @RequestBody TransactionRequest transaction) {
         try {
-            Transaction saved = transactionService.addTransaction(transaction);
+            TransactionResponse saved = transactionService.addTransaction(transaction);
             return ResponseEntity.ok(saved);
+        } catch (UserNotFoundException | AccountNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred");
         }
     }
 
     @PostMapping("/recurring")
-    public ResponseEntity<Void> addRecurringTransaction(@Valid @RequestBody TransactionDto transaction) {
+    public ResponseEntity<Void> addRecurringTransaction(@Valid @RequestBody TransactionRequest transaction) {
         try {
             transactionService.addRecurringTransaction(transaction);
             return ResponseEntity.ok().build();
@@ -54,7 +60,7 @@ public class TransactionController {
     }
 
     @GetMapping("/{userId}/type/{type}")
-    public ResponseEntity<List<TransactionDto>> getTransactionsByUser(
+    public ResponseEntity<List<TransactionResponse>> getTransactionsByUser(
             @PathVariable String userId,
             @PathVariable TransactionType type,
             @RequestParam(required = false) String category,
@@ -70,8 +76,8 @@ public class TransactionController {
     }
 
     @GetMapping("/recurring/{userId}/type/{type}")
-    public ResponseEntity<List<TransactionDto>> getAllRecurringTransactions(@PathVariable String userId,
-                                                                        @PathVariable TransactionType type) {
+    public ResponseEntity<List<TransactionRequest>> getAllRecurringTransactions(@PathVariable String userId,
+                                                                                @PathVariable TransactionType type) {
         try {
             return ResponseEntity.ok(transactionService.getAllRecurringTransactions(userId, type));
         } catch (Exception e) {
@@ -106,13 +112,13 @@ public class TransactionController {
     }
 
     @PutMapping("/edit/{id}")
-    public ResponseEntity<?> editTransaction(@PathVariable String id, @Valid @RequestBody TransactionDto transactionDto) {
+    public ResponseEntity<?> editTransaction(@PathVariable String id, @Valid @RequestBody TransactionRequest transactionRequest) {
         try {
-            if (transactionDto.getPeriodType() != PeriodType.NONE) {
-                RecurringTransaction updatedRecurring = transactionService.editRecurringTransaction(id, transactionDto);
+            if (transactionRequest.getPeriodType() != PeriodType.NONE) {
+                RecurringTransaction updatedRecurring = transactionService.editRecurringTransaction(id, transactionRequest);
                 return ResponseEntity.ok(updatedRecurring);
             } else {
-                Transaction updatedTransaction = transactionService.editTransaction(id, transactionDto);
+                Transaction updatedTransaction = transactionService.editTransaction(id, transactionRequest);
                 return ResponseEntity.ok(updatedTransaction);
             }
 

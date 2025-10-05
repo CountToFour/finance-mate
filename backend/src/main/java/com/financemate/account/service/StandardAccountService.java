@@ -133,15 +133,13 @@ public class StandardAccountService implements AccountService {
 
     @Override
     @Transactional
-    public Account changeBalance(String accountId, double amount, String userId) {
+    public void changeBalance(String accountId, double amount, String userId) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
         if (!account.getUserId().equals(userId)) {
             throw new AccessException("Account does not belong to user");
         }
         account.setBalance(account.getBalance() + amount);
         accountRepository.save(account);
-        account.setBalance(round(account.getBalance()));
-        return account;
     }
 
     @Override

@@ -1,14 +1,15 @@
 package com.financemate.transaction.mapper;
 
-import com.financemate.transaction.dto.TransactionDto;
+import com.financemate.transaction.dto.TransactionRequest;
+import com.financemate.transaction.dto.TransactionResponse;
 import com.financemate.transaction.model.Transaction;
 import com.financemate.transaction.model.RecurringTransaction;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface TransactionMapper {
-    Transaction transactionToEntity(TransactionDto dto);
-    TransactionDto transactionToDto(Transaction entity);
-    RecurringTransaction recurringTransactionToEntity(TransactionDto dto);
-    TransactionDto recurringTransactionToDto(RecurringTransaction entity);
+    Transaction transactionToEntity(TransactionRequest dto);
+    TransactionResponse transactionToDto(Transaction entity);
+    RecurringTransaction recurringTransactionToEntity(TransactionRequest dto);
+    TransactionRequest recurringTransactionToDto(RecurringTransaction entity);
 }

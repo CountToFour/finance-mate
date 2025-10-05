@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class CategoryDto {
     String category;
-    BigDecimal amount;
+    double amount;
     int transactions;
     double percentage;
 }

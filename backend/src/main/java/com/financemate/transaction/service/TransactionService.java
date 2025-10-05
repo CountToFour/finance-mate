@@ -2,11 +2,15 @@ package com.financemate.transaction.service;
 
 import com.financemate.account.model.Account;
 import com.financemate.account.repository.AccountRepository;
+import com.financemate.account.service.AccountService;
 import com.financemate.auth.model.user.User;
 import com.financemate.auth.repository.UserRepository;
 import com.financemate.transaction.dto.CategoryDto;
-import com.financemate.transaction.dto.TransactionDto;
+import com.financemate.transaction.dto.TransactionRequest;
 import com.financemate.transaction.dto.TransactionOverviewDto;
+import com.financemate.transaction.dto.TransactionResponse;
+import com.financemate.transaction.exception.AccountNotFoundException;
+import com.financemate.transaction.exception.UserNotFoundException;
 import com.financemate.transaction.mapper.TransactionMapper;
 import com.financemate.transaction.model.RecurringTransaction;
 import com.financemate.transaction.model.Transaction;
@@ -15,6 +19,7 @@ import com.financemate.transaction.model.TransactionType;
 import com.financemate.transaction.repository.TransactionRepository;
 import com.financemate.transaction.repository.RecurringTransactionRepository;
 import com.financemate.transaction.utils.TransactionSpecifications;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -35,31 +40,42 @@ public class TransactionService {
     private final TransactionMapper transactionMapper;
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
+    private final AccountService accountService;
 
-    public Transaction addTransaction(TransactionDto dto) {
-        //TODO SPRAWDŹ NA DEBUGERZE CZY USER I ACCOUNT SIE USTAWIAJĄ I CZY TRANSACTION TYPE PRAWIDLOWO SIE USTAWIA
+    @Transactional
+    public TransactionResponse addTransaction(TransactionRequest dto) {
         Transaction transaction = transactionMapper.transactionToEntity(dto);
         User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getUserId()));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + dto.getUserId()));
         Account account = accountRepository.findById(dto.getAccountId())
-                .orElseThrow(() -> new IllegalArgumentException("Account not found with id: " + dto.getAccountId()));
+                .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + dto.getAccountId()));
         if (transaction.getCreatedAt() == null) {
             transaction.setCreatedAt(LocalDate.now());
+        }
+        if (transaction.getTransactionType() == TransactionType.EXPENSE) {
+            transaction.setPrice(-Math.abs(transaction.getPrice()));
+        } else {
+            transaction.setPrice(Math.abs(transaction.getPrice()));
         }
 
         transaction.setUser(user);
         transaction.setAccount(account);
 
-        return transactionRepository.save(transaction);
+        transactionRepository.save(transaction);
+        accountService.changeBalance(account.getId(), transaction.getPrice(), user.getId());
+        TransactionResponse savedDto = transactionMapper.transactionToDto(transaction);
+        savedDto.setAccountName(account.getName());
+        return savedDto;
     }
 
-    public void addRecurringTransaction(TransactionDto transactionDto) {
-        if (transactionDto.getPeriodType() != PeriodType.NONE) {
-            RecurringTransaction recurringTransaction = transactionMapper.recurringTransactionToEntity(transactionDto);
+    @Transactional
+    public void addRecurringTransaction(TransactionRequest transactionRequest) {
+        if (transactionRequest.getPeriodType() != PeriodType.NONE) {
+            RecurringTransaction recurringTransaction = transactionMapper.recurringTransactionToEntity(transactionRequest);
             recurringTransaction.setActive(true);
 
             if (recurringTransaction.getExpenseDate() != null && !recurringTransaction.getExpenseDate().isAfter(LocalDate.now())) {
-                addTransaction(transactionDto);
+                addTransaction(transactionRequest);
                 recurringTransaction.setExpenseDate(calculateNextDate(recurringTransaction.getExpenseDate(), recurringTransaction.getPeriodType()));
             }
             recurringTransactionRepository.save(recurringTransaction);
@@ -68,8 +84,8 @@ public class TransactionService {
         }
     }
 
-    public List<TransactionDto> getTransactionsByUser(String userId, String category, BigDecimal minPrice, BigDecimal maxPrice,
-                                                      LocalDate startDate, LocalDate endDate, TransactionType type) {
+    public List<TransactionResponse> getTransactionsByUser(String userId, String category, BigDecimal minPrice, BigDecimal maxPrice,
+                                                          LocalDate startDate, LocalDate endDate, TransactionType type) {
         checkUserExists(userId);
 
         Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(userId))
@@ -83,7 +99,7 @@ public class TransactionService {
                 .toList();
     }
 
-    public List<TransactionDto> getAllRecurringTransactions(String userId, TransactionType type) {
+    public List<TransactionRequest> getAllRecurringTransactions(String userId, TransactionType type) {
         checkUserExists(userId);
 
         return recurringTransactionRepository.findAllByUserIdAndType(userId, type).stream()
@@ -110,47 +126,47 @@ public class TransactionService {
         recurringTransactionRepository.save(recurringTransaction);
     }
 
-    public Transaction editTransaction(String id, TransactionDto transactionDto) {
+    public Transaction editTransaction(String id, TransactionRequest transactionRequest) {
         Transaction existingTransaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Expense not found with id: " + id));
 
-        if (transactionDto.getCategory() != null) {
-            existingTransaction.setCategory(transactionDto.getCategory());
+        if (transactionRequest.getCategory() != null) {
+            existingTransaction.setCategory(transactionRequest.getCategory());
         }
-        if (transactionDto.getPrice() != null) {
-            existingTransaction.setPrice(transactionDto.getPrice());
+        if (transactionRequest.getPrice() == 0.00) {
+            existingTransaction.setPrice(transactionRequest.getPrice());
         }
-        if (transactionDto.getDescription() != null) {
-            existingTransaction.setDescription(transactionDto.getDescription());
+        if (transactionRequest.getDescription() != null) {
+            existingTransaction.setDescription(transactionRequest.getDescription());
         }
-        if (transactionDto.getExpenseDate() != null) {
-            existingTransaction.setCreatedAt(transactionDto.getExpenseDate());
+        if (transactionRequest.getCreatedAt() != null) {
+            existingTransaction.setCreatedAt(transactionRequest.getCreatedAt());
         }
 
         return transactionRepository.save(existingTransaction);
     }
 
-    public RecurringTransaction editRecurringTransaction(String id, TransactionDto transactionDto) {
+    public RecurringTransaction editRecurringTransaction(String id, TransactionRequest transactionRequest) {
         RecurringTransaction existingRecurringTransaction = recurringTransactionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Recurring expense not found with id: " + id));
 
-        if (transactionDto.getCategory() != null) {
-            existingRecurringTransaction.setCategory(transactionDto.getCategory());
+        if (transactionRequest.getCategory() != null) {
+            existingRecurringTransaction.setCategory(transactionRequest.getCategory());
         }
-        if (transactionDto.getPrice() != null) {
-            existingRecurringTransaction.setPrice(transactionDto.getPrice());
+        if (transactionRequest.getPrice() == 0.00) {
+            existingRecurringTransaction.setPrice(transactionRequest.getPrice());
         }
-        if (transactionDto.getDescription() != null) {
-            existingRecurringTransaction.setDescription(transactionDto.getDescription());
+        if (transactionRequest.getDescription() != null) {
+            existingRecurringTransaction.setDescription(transactionRequest.getDescription());
         }
-        if (transactionDto.getExpenseDate() != null) {
-            existingRecurringTransaction.setExpenseDate(transactionDto.getExpenseDate());
+        if (transactionRequest.getCreatedAt() != null) {
+            existingRecurringTransaction.setExpenseDate(transactionRequest.getCreatedAt());
         }
-        if (transactionDto.getPeriodType() != null && transactionDto.getPeriodType() != PeriodType.NONE) {
-            existingRecurringTransaction.setPeriodType(transactionDto.getPeriodType());
+        if (transactionRequest.getPeriodType() != null && transactionRequest.getPeriodType() != PeriodType.NONE) {
+            existingRecurringTransaction.setPeriodType(transactionRequest.getPeriodType());
         }
-        if (transactionDto.isActive() != existingRecurringTransaction.isActive()) {
-            existingRecurringTransaction.setActive(transactionDto.isActive());
+        if (transactionRequest.isActive() != existingRecurringTransaction.isActive()) {
+            existingRecurringTransaction.setActive(transactionRequest.isActive());
         }
 
         return recurringTransactionRepository.save(existingRecurringTransaction);
@@ -181,8 +197,8 @@ public class TransactionService {
                 .and(TransactionSpecifications.type(type));
 
         List<Transaction> transactions = transactionRepository.findAll(spec);
-        double totalAmount = transactions.stream().map(Transaction::getPrice).filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add).doubleValue();
+        double totalAmount = transactions.stream().map(Transaction::getPrice)
+                .mapToDouble(Double::doubleValue).sum();
         double averageAmount = totalAmount / 30;
         int expensesCount = transactions.size();
 
@@ -205,10 +221,9 @@ public class TransactionService {
                 .map(category -> {
                     int transactions = transactionRepository.findAll(spec.and(TransactionSpecifications.hasCategory(category))).size();
                     double percentage = transactions / (double) transactionRepository.findAll(spec).size();
-                    BigDecimal totalAmount = transactionRepository.findAll(spec.and(TransactionSpecifications.hasCategory(category))).stream()
+                    double totalAmount = transactionRepository.findAll(spec.and(TransactionSpecifications.hasCategory(category))).stream()
                             .map(Transaction::getPrice)
-                            .filter(Objects::nonNull)
-                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                            .mapToDouble(Double::doubleValue).sum();
                     return new CategoryDto(category, totalAmount, transactions, percentage);
                 })
                 .toList();

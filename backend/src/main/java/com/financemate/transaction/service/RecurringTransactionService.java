@@ -39,7 +39,7 @@ public class RecurringTransactionService {
                 transaction.setPrice(recurring.getPrice());
                 transaction.setCreatedAt(nextDate);
                 transaction.setDescription(recurring.getDescription());
-                transaction.setType(recurring.getType());
+                transaction.setTransactionType(recurring.getType());
                 transactionRepository.save(transaction);
 
                 if (recurring.getPeriodType() == PeriodType.ONCE) {

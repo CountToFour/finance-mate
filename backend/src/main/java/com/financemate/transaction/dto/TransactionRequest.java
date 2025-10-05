@@ -11,20 +11,19 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TransactionDto {
+public class TransactionRequest {
     private String id;
 
     @NotBlank(message = "User ID cannot be empty")
     private String userId;
 
-    @NotBlank(message = "ACcount ID cannot be empty")
+    @NotBlank(message = "Account ID cannot be empty")
     private String accountId;
 
     @NotBlank(message = "Category cannot be empty")
@@ -32,13 +31,13 @@ public class TransactionDto {
 
     @NotNull(message = "Price cannot be null")
     @Positive(message = "Price must be greater than 0")
-    private BigDecimal price;
+    private double price;
 
     @Size(max = 255, message = "Description must have max 255 characters")
     private String description;
 
     @NotNull(message = "Expense date cannot be null")
-    private LocalDate expenseDate;
+    private LocalDate createdAt;
 
     @NotNull(message = "Period type cannot be null")
     private PeriodType periodType;
