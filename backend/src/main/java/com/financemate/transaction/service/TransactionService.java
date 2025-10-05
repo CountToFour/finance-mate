@@ -12,6 +12,7 @@ import com.financemate.transaction.dto.TransactionOverviewDto;
 import com.financemate.transaction.dto.TransactionResponse;
 import com.financemate.transaction.exception.AccountNotFoundException;
 import com.financemate.transaction.exception.InvalidPeriodTypeException;
+import com.financemate.transaction.exception.TransactionNotFoundException;
 import com.financemate.transaction.exception.UserNotFoundException;
 import com.financemate.transaction.mapper.TransactionMapper;
 import com.financemate.transaction.model.RecurringTransaction;
@@ -137,14 +138,17 @@ public class TransactionService {
                 .toList();
     }
 
+    @Transactional
     public void deleteTransaction(String id) {
-        //TODO SPRAWDZ NAJPIERW CZY ISTNIEJE I RZUĆ WYJĄTEK JEŚLI NIE
+        transactionRepository.findById(id)
+                .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
         transactionRepository.deleteById(id);
     }
 
+    @Transactional
     public void deleteRecurringTransaction(String id) {
         if (!recurringTransactionRepository.existsById(id)) {
-            throw new IllegalArgumentException("Recurring expense not found with id: " + id);
+            throw new TransactionNotFoundException("Recurring transaction not found with id: " + id);
         }
         recurringTransactionRepository.deleteById(id);
     }

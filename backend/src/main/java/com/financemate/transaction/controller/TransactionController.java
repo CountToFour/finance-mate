@@ -6,6 +6,7 @@ import com.financemate.transaction.dto.TransactionRequest;
 import com.financemate.transaction.dto.TransactionResponse;
 import com.financemate.transaction.exception.AccountNotFoundException;
 import com.financemate.transaction.exception.InvalidPeriodTypeException;
+import com.financemate.transaction.exception.TransactionNotFoundException;
 import com.financemate.transaction.exception.UserNotFoundException;
 import com.financemate.transaction.model.Transaction;
 import com.financemate.transaction.model.PeriodType;
@@ -97,18 +98,27 @@ public class TransactionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTransaction(@PathVariable String id) {
-        transactionService.deleteTransaction(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deleteTransaction(@PathVariable String id) {
+        try {
+            transactionService.deleteTransaction(id);
+            return ResponseEntity.ok().build();
+        } catch (TransactionNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred");
+        }
+
     }
 
     @DeleteMapping("/recurring/{id}")
-    public ResponseEntity<Void> deleteRecurringTransaction(@PathVariable String id) {
+    public ResponseEntity<?> deleteRecurringTransaction(@PathVariable String id) {
         try {
             transactionService.deleteRecurringTransaction(id);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok().build();
+        } catch (TransactionNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred");
         }
     }
 
