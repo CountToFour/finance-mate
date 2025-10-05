@@ -26,8 +26,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -103,26 +103,37 @@ public class TransactionService {
         }
     }
 
-    public List<TransactionResponse> getTransactionsByUser(String userId, String category, BigDecimal minPrice, BigDecimal maxPrice,
-                                                          LocalDate startDate, LocalDate endDate, TransactionType type) {
+    public List<TransactionResponse> getTransactionsByUser(String userId, String category, Double minPrice, Double maxPrice,
+                                                           LocalDate startDate, LocalDate endDate, TransactionType type,
+                                                           String accountName) throws UserNotFoundException {
         checkUserExists(userId);
 
         Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(userId))
                 .and(TransactionSpecifications.hasCategory(category))
                 .and(TransactionSpecifications.amountBetween(minPrice, maxPrice))
                 .and(TransactionSpecifications.dateBetween(startDate, endDate))
-                .and(TransactionSpecifications.type(type));
+                .and(TransactionSpecifications.type(type))
+                .and(TransactionSpecifications.accountName(accountName));
 
         return transactionRepository.findAll(spec).stream()
-                .map(transactionMapper::transactionToDto)
+                .map(transaction -> {
+                    TransactionResponse dto = transactionMapper.transactionToDto(transaction);
+                    dto.setAccountName(transaction.getAccount().getName());
+                    return dto;
+                })
                 .toList();
     }
 
-    public List<RecurringTransactionResponse> getAllRecurringTransactions(String userId, TransactionType type) {
+    public List<RecurringTransactionResponse> getAllRecurringTransactions(String userId, TransactionType type)
+            throws UserNotFoundException {
         checkUserExists(userId);
 
         return recurringTransactionRepository.findAllByUserIdAndTransactionType(userId, type).stream()
-                .map(transactionMapper::recurringTransactionToDto)
+                .map(transaction -> {
+                    RecurringTransactionResponse dto = transactionMapper.recurringTransactionToDto(transaction);
+                    dto.setAccountName(transaction.getAccount().getName());
+                    return dto;
+                })
                 .toList();
     }
 
@@ -202,7 +213,7 @@ public class TransactionService {
         int expenseCountChangePercentage = (int) actualTotalOverview.get(2) - (int) previousTotalOverview.get(2);
 
         return new TransactionOverviewDto(
-                 Math.round((double) actualTotalOverview.get(0) * 100.0) / 100.0,
+                Math.round((double) actualTotalOverview.get(0) * 100.0) / 100.0,
                 Math.round((double) actualTotalOverview.get(1) * 100.0) / 100.0,
                 (int) actualTotalOverview.get(2),
                 totalAmountChangePercentage,
@@ -260,7 +271,7 @@ public class TransactionService {
 
     private void checkUserExists(String userId) {
         if (!userRepository.existsById(userId)) {
-            throw new IllegalArgumentException("User not found with id: " + userId);
+            throw new UserNotFoundException("User not found with id: " + userId);
         }
     }
 }

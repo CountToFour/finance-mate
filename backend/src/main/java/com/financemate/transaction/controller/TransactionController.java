@@ -64,29 +64,35 @@ public class TransactionController {
         }
     }
 
-    @GetMapping("/{userId}/type/{type}")
-    public ResponseEntity<List<TransactionResponse>> getTransactionsByUser(
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getTransactionsByUser(
             @PathVariable String userId,
-            @PathVariable TransactionType type,
+            @RequestParam TransactionType type,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
             @RequestParam(required = false) LocalDate startDate,
-            @RequestParam(required = false) LocalDate endDate) {
+            @RequestParam(required = false) LocalDate endDate,
+            @RequestParam(required = false) String accountName) {
         try {
-            return ResponseEntity.ok(transactionService.getTransactionsByUser(userId, category, minPrice, maxPrice, startDate, endDate, type));
+            return ResponseEntity.ok(transactionService.getTransactionsByUser(userId, category, minPrice, maxPrice,
+                    startDate, endDate, type, accountName));
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred");
         }
     }
 
-    @GetMapping("/recurring/{userId}/type/{type}")
-    public ResponseEntity<List<RecurringTransactionResponse>> getAllRecurringTransactions(@PathVariable String userId,
-                                                                                          @PathVariable TransactionType type) {
+    @GetMapping("/recurring/{userId}")
+    public ResponseEntity<?> getAllRecurringTransactions(@PathVariable String userId,
+                                                         @RequestParam TransactionType type) {
         try {
             return ResponseEntity.ok(transactionService.getAllRecurringTransactions(userId, type));
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred");
         }
     }
 
@@ -146,9 +152,9 @@ public class TransactionController {
 
     @GetMapping("/overview/{userId}/type/{type}")
     public ResponseEntity<?> getTransactionOverview(@PathVariable String userId,
-                                                @PathVariable TransactionType type,
-                                                @RequestParam LocalDate startDate,
-                                                @RequestParam LocalDate endDate) {
+                                                    @PathVariable TransactionType type,
+                                                    @RequestParam LocalDate startDate,
+                                                    @RequestParam LocalDate endDate) {
         try {
             return ResponseEntity.ok(transactionService.getTransactionOverview(userId, startDate, endDate, type));
         } catch (Exception e) {
