@@ -1,6 +1,7 @@
 package com.financemate.transaction.controller;
 
 import com.financemate.transaction.dto.CategoryDto;
+import com.financemate.transaction.dto.EditTransactionDto;
 import com.financemate.transaction.dto.RecurringTransactionResponse;
 import com.financemate.transaction.dto.TransactionRequest;
 import com.financemate.transaction.dto.TransactionResponse;
@@ -123,28 +124,31 @@ public class TransactionController {
     }
 
     @PutMapping("/deactivate/{id}")
-    public ResponseEntity<Void> deactivateRecurringTransaction(@PathVariable String id) {
+    public ResponseEntity<?> deactivateRecurringTransaction(@PathVariable String id) {
         try {
             transactionService.deactivateRecurringTransaction(id);
             return ResponseEntity.ok().build();
+        } catch (TransactionNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred");
         }
     }
 
     @PutMapping("/edit/{id}")
-    public ResponseEntity<?> editTransaction(@PathVariable String id, @Valid @RequestBody TransactionRequest transactionRequest) {
+    public ResponseEntity<?> editTransaction(@PathVariable String id, @Valid @RequestBody EditTransactionDto transactionRequest) {
         try {
-            if (transactionRequest.getPeriodType() != PeriodType.NONE) {
-                RecurringTransaction updatedRecurring = transactionService.editRecurringTransaction(id, transactionRequest);
+            if (transactionRequest.periodType() != PeriodType.NONE) {
+                RecurringTransactionResponse updatedRecurring = transactionService.editRecurringTransaction(id, transactionRequest);
                 return ResponseEntity.ok(updatedRecurring);
             } else {
-                Transaction updatedTransaction = transactionService.editTransaction(id, transactionRequest);
+                TransactionResponse updatedTransaction = transactionService.editTransaction(id, transactionRequest);
                 return ResponseEntity.ok(updatedTransaction);
             }
-
+        } catch (TransactionNotFoundException | AccountNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred");
         }
     }
 
