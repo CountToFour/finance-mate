@@ -11,6 +11,9 @@ import com.financemate.auth.model.user.Role;
 import com.financemate.auth.model.user.User;
 import com.financemate.auth.repository.TokenRepository;
 import com.financemate.auth.repository.UserRepository;
+import com.financemate.category.model.Category;
+import com.financemate.category.model.CategoryLocale;
+import com.financemate.category.repository.CategoryRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,6 +24,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -33,6 +37,7 @@ public class AuthService implements UserDetailsService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final CurrencyService currencyService;
+    private final CategoryRepository categoryRepository;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -53,6 +58,7 @@ public class AuthService implements UserDetailsService {
                 .locale("en")
                 .mainCurrency(currencyService.getCurrencyByCode("PLN"))
                 .build();
+        assignDefaultCategoriesToUser(user);
         userRepository.save(user);
         return issueTokens(user);
     }
@@ -97,5 +103,22 @@ public class AuthService implements UserDetailsService {
                 .build());
 
         return new AuthResponse(access, refresh, user.getUsername(), user.getEmail(), user.getId(), user.getLocale());
+    }
+
+    public void assignDefaultCategoriesToUser(User user) {
+        CategoryLocale userLocale = user.getLocale().equals("pl") ? CategoryLocale.PL : CategoryLocale.EN;
+        List<Category> defaultCategories = categoryRepository.findByIsDefaultTrueAndLocale(userLocale);
+
+        for (Category defaultCategory : defaultCategories) {
+            Category userCategory = Category.builder()
+                    .name(defaultCategory.getName())
+                    .color(defaultCategory.getColor())
+                    .transactionType(defaultCategory.getTransactionType())
+                    .isDefault(false)
+                    .user(user)
+                    .locale(userLocale)
+                    .build();
+            categoryRepository.save(userCategory);
+        }
     }
 }
