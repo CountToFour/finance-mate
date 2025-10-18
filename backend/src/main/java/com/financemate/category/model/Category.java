@@ -2,6 +2,7 @@ package com.financemate.category.model;
 
 import com.financemate.auth.model.user.User;
 import com.financemate.transaction.model.TransactionType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -55,6 +56,6 @@ public class Category {
     @Enumerated(EnumType.STRING)
     private CategoryLocale locale;
 
-    @OneToMany(mappedBy = "parent")
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Category> subcategories;
 }
