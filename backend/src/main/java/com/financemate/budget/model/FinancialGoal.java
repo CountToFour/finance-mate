@@ -31,6 +31,7 @@ public class FinancialGoal {
 
     private boolean completed = false;
     private LocalDate deadline;
+    private boolean lockedFunds;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
