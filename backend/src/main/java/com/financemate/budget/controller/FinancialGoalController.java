@@ -27,7 +27,7 @@ public class FinancialGoalController {
 
     private final GoalService financialGoalService;
     private final UserService userService;
-    
+
     @PostMapping
     public ResponseEntity<FinancialGoalResponseDto> createGoal(@Valid @RequestBody FinancialGoalDto goalDto,
                                                                Authentication authentication) {
