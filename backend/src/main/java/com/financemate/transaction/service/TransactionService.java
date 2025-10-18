@@ -5,6 +5,7 @@ import com.financemate.account.repository.AccountRepository;
 import com.financemate.account.service.AccountService;
 import com.financemate.auth.model.user.User;
 import com.financemate.auth.repository.UserRepository;
+import com.financemate.budget.service.BudgetService;
 import com.financemate.category.model.Category;
 import com.financemate.category.repository.CategoryRepository;
 import com.financemate.transaction.dto.CategoryDto;
@@ -47,6 +48,7 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final AccountService accountService;
     private final CategoryRepository categoryRepository;
+    private final BudgetService budgetService;
 
     @Transactional
     public TransactionResponse addTransaction(TransactionRequest dto, User user) {
@@ -68,6 +70,8 @@ public class TransactionService {
         transaction.setUser(user);
         transaction.setAccount(account);
         transaction.setCategory(category.getName());
+
+        budgetService.updateSpentAmount(category, Math.abs(transaction.getPrice()));
 
         transactionRepository.save(transaction);
         accountService.changeBalance(account.getId(), transaction.getPrice(), user.getId());

@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 public record BudgetDto (
         @NotBlank(message = "Category cannot be empty") String categoryId,
-        @Positive(message = "Limit amount is demand") double limitAmount,
+        @Positive(message = "Limit amount must be a number greater than 0") double limitAmount,
         BudgetPeriodType periodType,
         LocalDate startDate,
         LocalDate endDate

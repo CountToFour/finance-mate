@@ -5,6 +5,7 @@ import com.financemate.auth.service.UserService;
 import com.financemate.budget.dto.BudgetDto;
 import com.financemate.budget.dto.BudgetResponseDto;
 import com.financemate.budget.service.BudgetService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -29,7 +29,7 @@ public class BudgetController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<BudgetResponseDto> createBudget(@RequestBody BudgetDto budgetDto,
+    public ResponseEntity<BudgetResponseDto> createBudget(@Valid @RequestBody BudgetDto budgetDto,
                                                           Authentication authentication) {
         User user = userService.getUserFromAuthentication(authentication);
         BudgetResponseDto createdBudget = budgetService.createBudget(user, budgetDto);
@@ -51,7 +51,7 @@ public class BudgetController {
 
     @PutMapping("/{id}")
     public ResponseEntity<BudgetResponseDto> updateBudget(@PathVariable String id,
-                                                          @RequestBody BudgetDto budgetDto) {
+                                                          @Valid @RequestBody BudgetDto budgetDto) {
         BudgetResponseDto updatedBudget = budgetService.updateBudget(id, budgetDto);
         return ResponseEntity.ok(updatedBudget);
     }

@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @Setter
 public class BudgetResponseDto {
         private String id;
-        private double amount;
+        private double limitAmount;
         private double spentAmount;
         private boolean active;
         private LocalDate startDate;

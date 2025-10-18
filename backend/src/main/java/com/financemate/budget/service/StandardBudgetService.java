@@ -35,13 +35,14 @@ public class StandardBudgetService implements BudgetService {
             throw new IllegalStateException("Budżet dla tej kategorii już istnieje");
         }
 
-
         LocalDate start = dto.startDate() != null ? dto.startDate() : LocalDate.now();
         LocalDate end = start.plusMonths(1);
 
         Budget budget = budgetMapper.mapDtoToBudget(dto);
+        budget.setSpentAmount(0);
         budget.setUser(user);
         budget.setCategory(category);
+        budget.setStartDate(start);
         budget.setEndDate(end);
 
         budgetRepository.save(budget);
@@ -61,14 +62,20 @@ public class StandardBudgetService implements BudgetService {
 
     @Override
     public List<BudgetResponseDto> getBudgetsForUser(User user) {
-        return budgetRepository.findAllByUser(user).stream().map(budgetMapper::mapBudgetToResponseDto).toList();
+        return budgetRepository.findAllByUser(user).stream().map(budget -> {
+            BudgetResponseDto dto = budgetMapper.mapBudgetToResponseDto(budget);
+            dto.setCategoryName(budget.getCategory().getName());
+            return dto;
+        }).toList();
     }
 
     @Override
     public BudgetResponseDto getBudgetById(String id) {
         Budget budget = budgetRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Budget not found with id: " + id));
-        return budgetMapper.mapBudgetToResponseDto(budget);
+        BudgetResponseDto dto = budgetMapper.mapBudgetToResponseDto(budget);
+        dto.setCategoryName(budget.getCategory().getName());
+        return dto;
     }
 
     @Transactional
