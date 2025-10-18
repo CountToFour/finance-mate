@@ -10,7 +10,7 @@ import java.time.LocalDate;
 
 public record EditTransactionDto(
         @Nullable String accountId,
-        @Nullable String category,
+        @Nullable String categoryId,
         @Nullable @Positive(message = "Price must be greater than 0") Double price,
         @Nullable @Size(max = 255, message = "Description must have max 255 characters") String description,
         @Nullable LocalDate createdAt,

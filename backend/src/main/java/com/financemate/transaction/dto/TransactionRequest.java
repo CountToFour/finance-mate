@@ -20,14 +20,11 @@ import java.time.LocalDate;
 public class TransactionRequest {
     private String id;
 
-    @NotBlank(message = "User ID cannot be empty")
-    private String userId;
-
     @NotBlank(message = "Account ID cannot be empty")
     private String accountId;
 
     @NotBlank(message = "Category cannot be empty")
-    private String category;
+    private String categoryId;
 
     @NotNull(message = "Price cannot be null")
     @Positive(message = "Price must be greater than 0")

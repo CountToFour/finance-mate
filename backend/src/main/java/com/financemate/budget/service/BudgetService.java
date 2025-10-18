@@ -1,4 +1,4 @@
-package com.financemate.budget;
+package com.financemate.budget.service;
 
 import com.financemate.auth.model.user.User;
 import com.financemate.auth.repository.UserRepository;
@@ -15,9 +15,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -50,17 +48,17 @@ public class BudgetService {
         return budgetMapper.mapToDto(budgetRepository.save(budget));
     }
 
-    @Transactional
-    public Budget addExpense(String userId, String categoryId, double expenseAmount, LocalDate when) {
-        Budget budget = budgetRepository
-                .findFirstByUserIdAndCategoryIdAndPeriodTypeAndStatusAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqual(
-                        userId, categoryId, BudgetPeriodType.MONTHLY, BudgetStatus.OPEN, when, when
-                )
-                .orElseGet(() -> createMonthlyBudget(userId, categoryId, 0, when)); // fallback: tworzy budżet 0 zł, by nie zgubić wydatku
-
-        budget.addExpense(expenseAmount);
-        return budgetRepository.save(budget);
-    }
+//    @Transactional
+//    public Budget addExpense(String userId, String categoryId, double expenseAmount, LocalDate when) {
+//        Budget budget = budgetRepository
+//                .findFirstByUserIdAndCategoryIdAndPeriodTypeAndStatusAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqual(
+//                        userId, categoryId, BudgetPeriodType.MONTHLY, BudgetStatus.OPEN, when, when
+//                )
+//                .orElseGet(() -> createMonthlyBudget(userId, categoryId, 0, when)); // fallback: tworzy budżet 0 zł, by nie zgubić wydatku
+//
+//        budget.addExpense(expenseAmount);
+//        return budgetRepository.save(budget);
+//    }
 
 //    @Transactional
 //    public int rolloverDueBudgets(String userId, LocalDate today) {

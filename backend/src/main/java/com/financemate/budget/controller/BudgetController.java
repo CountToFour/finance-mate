@@ -1,6 +1,6 @@
 package com.financemate.budget.controller;
 
-import com.financemate.budget.BudgetService;
+import com.financemate.budget.service.BudgetService;
 import com.financemate.budget.dto.BudgetDto;
 import com.financemate.budget.repository.BudgetRepository;
 import lombok.RequiredArgsConstructor;

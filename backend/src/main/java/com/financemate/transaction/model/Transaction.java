@@ -2,6 +2,7 @@ package com.financemate.transaction.model;
 
 import com.financemate.account.model.Account;
 import com.financemate.auth.model.user.User;
+import com.financemate.category.model.Category;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

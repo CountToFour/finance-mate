@@ -1,8 +1,10 @@
 package com.financemate.category.service;
 
+import com.financemate.category.exceptions.CategoryTypeMismatchException;
 import com.financemate.auth.model.user.User;
 import com.financemate.auth.repository.UserRepository;
 import com.financemate.category.dto.CategoryDto;
+import com.financemate.category.exceptions.CategoryNotFoundExcpetion;
 import com.financemate.category.mapper.CategoryMapper;
 import com.financemate.category.model.Category;
 import com.financemate.category.model.CategoryLocale;
@@ -102,27 +104,22 @@ public class StandardCategoryService implements  CategoryService {
 
     @Override
     @Transactional
-    public CategoryDto createCategory(CategoryDto dto, String userId) {
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new RuntimeException("User not found"));
-
+    public CategoryDto createCategory(CategoryDto dto, User user) {
         Category category = categoryMapper.mapToEntity(dto);
         category.setUser(user);
 
         if (dto.getParentId() != null) {
             Category parent = categoryRepository.findById(dto.getParentId())
-                    .orElseThrow(() -> new RuntimeException("Parent category not found"));
+                    .orElseThrow(() -> new CategoryNotFoundExcpetion("Parent category not found"));
             if (parent.getTransactionType() != dto.getTransactionType()) {
-                throw new RuntimeException("Parent category transaction type mismatch");
+                throw new CategoryTypeMismatchException("Parent category transaction type mismatch");
             }
             category.setParent(parent);
             category.setColor(parent.getColor());
         }
 
         Category saved = categoryRepository.save(category);
-        CategoryDto savedDto = categoryMapper.mapToDto(saved);
-        savedDto.setParentId(saved.getParent().getId());
-        return savedDto;
+        return categoryMapper.mapToDto(saved);
     }
 
     @Override

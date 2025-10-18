@@ -1,5 +1,7 @@
 package com.financemate.transaction.controller;
 
+import com.financemate.auth.model.user.User;
+import com.financemate.auth.service.UserService;
 import com.financemate.transaction.dto.CategoryDto;
 import com.financemate.transaction.dto.EditTransactionDto;
 import com.financemate.transaction.dto.RecurringTransactionResponse;
@@ -9,15 +11,14 @@ import com.financemate.transaction.exception.AccountNotFoundException;
 import com.financemate.transaction.exception.InvalidPeriodTypeException;
 import com.financemate.transaction.exception.TransactionNotFoundException;
 import com.financemate.transaction.exception.UserNotFoundException;
-import com.financemate.transaction.model.Transaction;
 import com.financemate.transaction.model.PeriodType;
-import com.financemate.transaction.model.RecurringTransaction;
 import com.financemate.transaction.model.TransactionType;
 import com.financemate.transaction.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,11 +41,14 @@ import java.util.List;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<?> addTransaction(@Valid @RequestBody TransactionRequest transaction) {
+    public ResponseEntity<?> addTransaction(@Valid @RequestBody TransactionRequest transaction,
+                                            Authentication authentication) {
         try {
-            TransactionResponse saved = transactionService.addTransaction(transaction);
+            User user = userService.getUserFromAuthentication(authentication);
+            TransactionResponse saved = transactionService.addTransaction(transaction, user);
             return ResponseEntity.ok(saved);
         } catch (UserNotFoundException | AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -54,9 +58,11 @@ public class TransactionController {
     }
 
     @PostMapping("/recurring")
-    public ResponseEntity<?> addRecurringTransaction(@Valid @RequestBody TransactionRequest transaction) {
+    public ResponseEntity<?> addRecurringTransaction(@Valid @RequestBody TransactionRequest transaction,
+                                                     Authentication authentication) {
         try {
-            return ResponseEntity.ok(transactionService.addRecurringTransaction(transaction));
+            User user = userService.getUserFromAuthentication(authentication);
+            return ResponseEntity.ok(transactionService.addRecurringTransaction(transaction, user));
         } catch (UserNotFoundException | AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (InvalidPeriodTypeException e) {

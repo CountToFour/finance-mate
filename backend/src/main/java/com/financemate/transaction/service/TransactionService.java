@@ -5,6 +5,8 @@ import com.financemate.account.repository.AccountRepository;
 import com.financemate.account.service.AccountService;
 import com.financemate.auth.model.user.User;
 import com.financemate.auth.repository.UserRepository;
+import com.financemate.category.model.Category;
+import com.financemate.category.repository.CategoryRepository;
 import com.financemate.transaction.dto.CategoryDto;
 import com.financemate.transaction.dto.EditTransactionDto;
 import com.financemate.transaction.dto.RecurringTransactionResponse;
@@ -44,14 +46,16 @@ public class TransactionService {
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
     private final AccountService accountService;
+    private final CategoryRepository categoryRepository;
 
     @Transactional
-    public TransactionResponse addTransaction(TransactionRequest dto) {
+    public TransactionResponse addTransaction(TransactionRequest dto, User user) {
         Transaction transaction = transactionMapper.transactionToEntity(dto);
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + dto.getUserId()));
-        Account account = accountRepository.findByIdAndUserId(dto.getAccountId(), dto.getUserId())
+        Account account = accountRepository.findByIdAndUserId(dto.getAccountId(), user.getId())
                 .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + dto.getAccountId()));
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + dto.getCategoryId()));
+
         if (transaction.getCreatedAt() == null) {
             transaction.setCreatedAt(LocalDate.now());
         }
@@ -63,6 +67,7 @@ public class TransactionService {
 
         transaction.setUser(user);
         transaction.setAccount(account);
+        transaction.setCategory(category.getName());
 
         transactionRepository.save(transaction);
         accountService.changeBalance(account.getId(), transaction.getPrice(), user.getId());
@@ -72,14 +77,14 @@ public class TransactionService {
     }
 
     @Transactional
-    public RecurringTransactionResponse addRecurringTransaction(TransactionRequest transactionRequest) {
-        if (transactionRequest.getPeriodType() != PeriodType.NONE) {
-            User user = userRepository.findById(transactionRequest.getUserId())
-                    .orElseThrow(() -> new UserNotFoundException("User not found with id: " + transactionRequest.getUserId()));
-            Account account = accountRepository.findByIdAndUserId(transactionRequest.getAccountId(), transactionRequest.getUserId())
-                    .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + transactionRequest.getAccountId()));
+    public RecurringTransactionResponse addRecurringTransaction(TransactionRequest dto, User user) {
+        if (dto.getPeriodType() != PeriodType.NONE) {
+            Account account = accountRepository.findByIdAndUserId(dto.getAccountId(), user.getId())
+                    .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + dto.getAccountId()));
+            Category category = categoryRepository.findById(dto.getCategoryId())
+                    .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + dto.getCategoryId()));
 
-            RecurringTransaction recurringTransaction = transactionMapper.recurringTransactionToEntity(transactionRequest);
+            RecurringTransaction recurringTransaction = transactionMapper.recurringTransactionToEntity(dto);
             recurringTransaction.setActive(true);
 
             if (recurringTransaction.getTransactionType() == TransactionType.EXPENSE) {
@@ -89,12 +94,13 @@ public class TransactionService {
             }
 
             if (recurringTransaction.getCreatedAt() != null && !recurringTransaction.getCreatedAt().isAfter(LocalDate.now())) {
-                addTransaction(transactionRequest);
+                addTransaction(dto, user);
                 recurringTransaction.setCreatedAt(calculateNextDate(recurringTransaction.getCreatedAt(), recurringTransaction.getPeriodType()));
             }
 
             recurringTransaction.setAccount(account);
             recurringTransaction.setUser(user);
+            recurringTransaction.setCategory(category.getName());
             recurringTransactionRepository.save(recurringTransaction);
             RecurringTransactionResponse savedDto = transactionMapper.recurringTransactionToDto(recurringTransaction);
             savedDto.setAccountName(account.getName());
@@ -166,8 +172,12 @@ public class TransactionService {
         Transaction existingTransaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
 
-        if (Objects.nonNull(dto.category()) && !dto.category().equals(existingTransaction.getCategory())) {
-            existingTransaction.setCategory(dto.category());
+        if (Objects.nonNull(dto.categoryId())) {
+            Category category = categoryRepository.findById(dto.categoryId())
+                    .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + dto.categoryId()));
+            if (!category.getName().equals(existingTransaction.getCategory())) {
+                existingTransaction.setCategory(category.getName());
+            }
         }
         if (Objects.nonNull(dto.price()) && dto.price() != Math.abs(existingTransaction.getPrice())) {
             double change;
@@ -196,8 +206,12 @@ public class TransactionService {
         RecurringTransaction transaction = recurringTransactionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Recurring transaction not found with id: " + id));
 
-        if (Objects.nonNull(dto.category()) && !dto.category().equals(transaction.getCategory())) {
-            transaction.setCategory(dto.category());
+        if (Objects.nonNull(dto.categoryId())) {
+            Category category = categoryRepository.findById(dto.categoryId())
+                    .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + dto.categoryId()));
+            if (!category.getName().equals(transaction.getCategory())) {
+                transaction.setCategory(category.getName());
+            }
         }
         if (Objects.nonNull(dto.price()) && dto.price() != Math.abs(transaction.getPrice())) {
             transaction.setPrice(dto.price());
