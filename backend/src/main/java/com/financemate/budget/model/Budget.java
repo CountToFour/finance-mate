@@ -28,9 +28,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "budgets", indexes = {
-        @Index(name = "idx_budget_user_category_period", columnList = "userId, categoryId, periodStart, periodEnd, status")
-})
+@Table(name = "budgets")
 public class Budget {
 
     @Id
@@ -43,50 +41,18 @@ public class Budget {
 
     @ManyToOne
     @JoinColumn(name = "category_id")
-    private Category categoryId;
+    private Category category;
 
     @Enumerated(EnumType.STRING)
-    private BudgetPeriodType periodType;
+    private BudgetPeriodType periodType = BudgetPeriodType.MONTHLY;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private boolean active = true;
+    private double limitAmount;
+    private double spentAmount;
 
-    @Column(nullable = false)
-    private LocalDate periodStart;
-
-    @Column(nullable = false)
-    private LocalDate periodEnd;
-
-    private double amount;
-
-    private double spent;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private BudgetStatus status;
-
-    public boolean isActiveOn(LocalDate date) {
-        return status == BudgetStatus.OPEN && (date.isEqual(periodStart) || date.isAfter(periodStart)) && (date.isEqual(periodEnd) || date.isBefore(periodEnd));
+    public boolean isExceeded() {
+        return spentAmount - limitAmount > 0;
     }
 
-    public void addExpense(double expense) {
-        if (expense <= 0) {
-            throw new IllegalArgumentException("Kwota wydatku musi być dodatnia");
-        }
-        if (spent == 0) spent = 0;
-        spent += expense;
-    }
-
-    public double getRemaining() {
-        return amount - spent;
-    }
-
-    public void close() {
-        this.status = BudgetStatus.CLOSED;
-    }
-
-    public static LocalDate startOfMonth(LocalDate date) {
-        return date.withDayOfMonth(1);
-    }
-
-    public static LocalDate endOfMonth(LocalDate date) {
-        return date.withDayOfMonth(date.lengthOfMonth());
-    }
 }
