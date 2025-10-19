@@ -7,6 +7,7 @@ import com.financemate.budget.dto.FinancialGoalResponseDto;
 import com.financemate.budget.service.GoalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,11 +30,15 @@ public class FinancialGoalController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<FinancialGoalResponseDto> createGoal(@Valid @RequestBody FinancialGoalDto goalDto,
+    public ResponseEntity<?> createGoal(@Valid @RequestBody FinancialGoalDto goalDto,
                                                                Authentication authentication) {
-        User user = userService.getUserFromAuthentication(authentication);
-        FinancialGoalResponseDto createdGoal = financialGoalService.createGoal(user, goalDto);
-        return ResponseEntity.ok(createdGoal);
+        try {
+            User user = userService.getUserFromAuthentication(authentication);
+            FinancialGoalResponseDto createdGoal = financialGoalService.createGoal(user, goalDto);
+            return ResponseEntity.ok(createdGoal);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error. Please try again later.");
+        }
     }
 
     @GetMapping

@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/financedb
+    username: user
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+ml:
+  service:
+    url: http://ml-service:5000/predict/recommendations
+
+server:
+  port: 8080
+
+
+app:
+  jwt:
+    secret: 6C5970337336763979244226452948404D635166546A576E5A723475377821412
+    access-token-minutes: 900000
+    refresh-token-days: 604800000
+
+exchange:
+  api:
+    key: ${EXCHANGE_RATE_API_KEY}
+
+logging:
+  level:
+    org:
+      springframework:
+        web : DEBUG
+        security : DEBUG
