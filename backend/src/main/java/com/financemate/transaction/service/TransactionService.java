@@ -9,6 +9,7 @@ import com.financemate.budget.service.BudgetService;
 import com.financemate.category.model.Category;
 import com.financemate.category.repository.CategoryRepository;
 import com.financemate.transaction.dto.CategoryDto;
+import com.financemate.transaction.dto.CategorySpentDto;
 import com.financemate.transaction.dto.EditTransactionDto;
 import com.financemate.transaction.dto.RecurringTransactionResponse;
 import com.financemate.transaction.dto.TransactionRequest;
@@ -237,6 +238,28 @@ public class TransactionService {
         recurringTransactionRepository.save(transaction);
         return transactionMapper.recurringTransactionToDto(transaction);
     }
+
+//    public List<CategorySpentDto> getCategorySpentAmounts(List<String> categoriesId, LocalDate startDate, LocalDate endDate) {
+//        checkUserExists(userId);
+//
+//        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(userId))
+//                .and(TransactionSpecifications.dateBetween(startDate, endDate))
+//                .and(TransactionSpecifications.type(TransactionType.EXPENSE));
+//
+//        Set<String> categories = transactionRepository.findAll(spec).stream()
+//                .map(Transaction::getCategory)
+//                .filter(Objects::nonNull)
+//                .collect(Collectors.toSet());
+//
+//        return categories.stream()
+//                .map(category -> {
+//                    double totalSpent = transactionRepository.findAll(spec.and(TransactionSpecifications.hasCategory(category))).stream()
+//                            .map(Transaction::getPrice)
+//                            .mapToDouble(Double::doubleValue).sum();
+//                    return new CategorySpentDto(category, Math.abs(totalSpent));
+//                })
+//                .toList();
+//    }
 
     public TransactionOverviewDto getTransactionOverview(String userId, LocalDate startDate, LocalDate endDate, TransactionType type) {
         checkUserExists(userId);

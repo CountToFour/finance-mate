@@ -1,6 +1,7 @@
 package com.financemate.recommendation.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.financemate.recommendation.dto.BudgetRecommendationResponse;
 import com.financemate.recommendation.dto.RecommendationRequest;
 import com.financemate.recommendation.dto.RecommendationResponse;
 import com.financemate.recommendation.model.RecommendationEntity;
@@ -27,6 +28,10 @@ public class RecommendationService {
 
     @Value("${ml.service.url:http://ml-service:5000/predict/recommendations}")
     private String mlServiceUrl;
+
+//    public BudgetRecommendationResponse getBudgetRecommendations(List<String> categories, double totalSpent) {
+//
+//    }
 
     public RecommendationResponse getRecommendations(RecommendationRequest request) {
         HttpHeaders headers = new HttpHeaders();
