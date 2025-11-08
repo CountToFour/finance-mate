@@ -12,6 +12,7 @@ public class FinanceMateApplication {
 	public static void main(String[] args) {
         Dotenv dotenv = Dotenv.load();
         System.setProperty("EXCHANGE_RATE_API_KEY", dotenv.get("EXCHANGE_RATE_API_KEY"));
+        System.setProperty("TWELVE_DATA_API_KEY", dotenv.get("TWELVE_DATA_API_KEY"));
 
 		SpringApplication.run(FinanceMateApplication.class, args);
 	}
