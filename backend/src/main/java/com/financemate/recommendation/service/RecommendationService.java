@@ -1,8 +1,10 @@
 package com.financemate.recommendation.service;
 
 
-import com.financemate.recommendation.model.dto.TwelveDataTimeSeriesResponse;
+import com.financemate.recommendation.model.RsiRecommendation;
+
+import java.util.List;
 
 public interface RecommendationService {
-    TwelveDataTimeSeriesResponse getRecommendation();
+    List<RsiRecommendation> getRecommendation();
 }

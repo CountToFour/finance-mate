@@ -1,6 +1,6 @@
 package com.financemate.recommendation.controller;
 
-import com.financemate.recommendation.model.dto.TwelveDataTimeSeriesResponse;
+import com.financemate.recommendation.model.RsiRecommendation;
 import com.financemate.recommendation.service.RecommendationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,7 +21,11 @@ public class RecommendationController {
 
     @GetMapping
     public ResponseEntity<?> getRecommendation() {
-        TwelveDataTimeSeriesResponse recommendation = recommendationService.getRecommendation();
-        return ResponseEntity.ok().body(recommendation);
+        try {
+            List<RsiRecommendation> recommendation = recommendationService.getRecommendation();
+            return ResponseEntity.ok().body(recommendation);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching recommendation: " + e.getMessage());
+        }
     }
 }
