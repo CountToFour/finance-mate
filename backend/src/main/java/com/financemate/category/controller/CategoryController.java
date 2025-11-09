@@ -46,26 +46,26 @@ public class CategoryController {
         }
     }
 
-    @PutMapping("/{id}/{userId}")
+    @PutMapping("/{id}")
     public ResponseEntity<CategoryDto> updateCategory(@PathVariable String id,
-                                                      @PathVariable String userId,
-                                                      @Valid @RequestBody CategoryDto categoryDto) {
-//        User user = userService.getUserFromAuthentication(authentication);
-        return ResponseEntity.ok(categoryService.updateCategory(id, categoryDto, userId));
+                                                      @Valid @RequestBody CategoryDto categoryDto,
+                                                      Authentication authentication) {
+        User user = userService.getUserFromAuthentication(authentication);
+        return ResponseEntity.ok(categoryService.updateCategory(id, categoryDto, user));
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<CategoryDto>> getUserCategories(@PathVariable String userId,
-                                                               @RequestParam TransactionType type) {
-//        User user = userService.getUserFromAuthentication(authentication);
-        return ResponseEntity.ok(categoryService.getUserCategories(userId, type));
+    @GetMapping
+    public ResponseEntity<List<CategoryDto>> getUserCategories(@RequestParam TransactionType type,
+                                                               Authentication authentication) {
+        User user = userService.getUserFromAuthentication(authentication);
+        return ResponseEntity.ok(categoryService.getUserCategories(user, type));
     }
 
-    @DeleteMapping("/{id}/{userId}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCategory(@PathVariable String id,
-                                               @PathVariable String userId) {
-//        User user = userService.getUserFromAuthentication(authentication);
-        categoryService.deleteCategory(id, userId);
+                                               Authentication authentication) {
+        User user = userService.getUserFromAuthentication(authentication);
+        categoryService.deleteCategory(id, user);
         return ResponseEntity.ok().build();
     }
 }

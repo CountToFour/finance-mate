@@ -74,7 +74,7 @@ public class TransactionService {
         budgetService.updateSpentAmount(category, Math.abs(transaction.getPrice()));
 
         transactionRepository.save(transaction);
-        accountService.changeBalance(account.getId(), transaction.getPrice(), user.getId());
+        accountService.changeBalance(account.getId(), transaction.getPrice(), user);
         TransactionResponse savedDto = transactionMapper.transactionToDto(transaction);
         savedDto.setAccountName(account.getName());
         return savedDto;
@@ -114,12 +114,12 @@ public class TransactionService {
         }
     }
 
-    public List<TransactionResponse> getTransactionsByUser(String userId, String category, Double minPrice, Double maxPrice,
+    public List<TransactionResponse> getTransactionsByUser(User user, String category, Double minPrice, Double maxPrice,
                                                            LocalDate startDate, LocalDate endDate, TransactionType type,
                                                            String accountName) throws UserNotFoundException {
-        checkUserExists(userId);
+        checkUserExists(user);
 
-        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(userId))
+        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(user.getId()))
                 .and(TransactionSpecifications.hasCategory(category))
                 .and(TransactionSpecifications.amountBetween(minPrice, maxPrice))
                 .and(TransactionSpecifications.dateBetween(startDate, endDate))
@@ -135,11 +135,11 @@ public class TransactionService {
                 .toList();
     }
 
-    public List<RecurringTransactionResponse> getAllRecurringTransactions(String userId, TransactionType type)
+    public List<RecurringTransactionResponse> getAllRecurringTransactions(User user, TransactionType type)
             throws UserNotFoundException {
-        checkUserExists(userId);
+        checkUserExists(user);
 
-        return recurringTransactionRepository.findAllByUserIdAndTransactionType(userId, type).stream()
+        return recurringTransactionRepository.findAllByUserIdAndTransactionType(user.getId(), type).stream()
                 .map(transaction -> {
                     RecurringTransactionResponse dto = transactionMapper.recurringTransactionToDto(transaction);
                     dto.setAccountName(transaction.getAccount().getName());
@@ -193,7 +193,7 @@ public class TransactionService {
                 existingTransaction.setPrice(Math.abs(dto.price()));
                 change = Math.abs(dto.price()) - existingTransaction.getPrice();
             }
-            accountService.changeBalance(existingTransaction.getAccount().getId(), change, existingTransaction.getUser().getId());
+            accountService.changeBalance(existingTransaction.getAccount().getId(), change, existingTransaction.getUser());
         }
         if (dto.description() != null && !dto.description().equals(existingTransaction.getDescription())) {
             existingTransaction.setDescription(dto.description());
@@ -238,11 +238,11 @@ public class TransactionService {
         return transactionMapper.recurringTransactionToDto(transaction);
     }
 
-    public TransactionOverviewDto getTransactionOverview(String userId, LocalDate startDate, LocalDate endDate, TransactionType type) {
-        checkUserExists(userId);
+    public TransactionOverviewDto getTransactionOverview(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
+        checkUserExists(user);
 
-        List<Object> actualTotalOverview = getMonthlyTransactionOverview(userId, startDate, endDate, type);
-        List<Object> previousTotalOverview = getMonthlyTransactionOverview(userId, startDate.minusMonths(1), endDate.minusMonths(1), type);
+        List<Object> actualTotalOverview = getMonthlyTransactionOverview(user, startDate, endDate, type);
+        List<Object> previousTotalOverview = getMonthlyTransactionOverview(user, startDate.minusMonths(1), endDate.minusMonths(1), type);
 
         double totalAmountChangePercentage = ((double) actualTotalOverview.get(0) / (double) previousTotalOverview.get(0)) * 100;
         totalAmountChangePercentage = Math.round(totalAmountChangePercentage * 10.0) / 10.0 - 100;
@@ -257,8 +257,8 @@ public class TransactionService {
         );
     }
 
-    private List<Object> getMonthlyTransactionOverview(String userId, LocalDate startDate, LocalDate endDate, TransactionType type) {
-        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(userId))
+    private List<Object> getMonthlyTransactionOverview(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
+        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(user.getId()))
                 .and(TransactionSpecifications.dateBetween(startDate, endDate))
                 .and(TransactionSpecifications.type(type));
 
@@ -271,10 +271,10 @@ public class TransactionService {
         return List.of(totalAmount, averageAmount, expensesCount);
     }
 
-    public List<CategoryDto> getAllCategoriesAmount(String userId, LocalDate startDate, LocalDate endDate, TransactionType type) {
-        checkUserExists(userId);
+    public List<CategoryDto> getAllCategoriesAmount(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
+        checkUserExists(user);
 
-        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(userId))
+        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(user.getId()))
                 .and(TransactionSpecifications.dateBetween(startDate, endDate))
                 .and(TransactionSpecifications.type(type));
 
@@ -305,9 +305,9 @@ public class TransactionService {
         };
     }
 
-    private void checkUserExists(String userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException("User not found with id: " + userId);
+    private void checkUserExists(User user) {
+        if (user == null || user.getId() == null || !userRepository.existsById(user.getId())) {
+            throw new UserNotFoundException("User not found with id: " + (user == null ? null : user.getId()));
         }
     }
 }

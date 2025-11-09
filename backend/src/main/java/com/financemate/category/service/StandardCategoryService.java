@@ -2,7 +2,6 @@ package com.financemate.category.service;
 
 import com.financemate.category.exceptions.CategoryTypeMismatchException;
 import com.financemate.auth.model.user.User;
-import com.financemate.auth.repository.UserRepository;
 import com.financemate.category.dto.CategoryDto;
 import com.financemate.category.exceptions.CategoryNotFoundExcpetion;
 import com.financemate.category.mapper.CategoryMapper;
@@ -22,7 +21,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class StandardCategoryService implements  CategoryService {
     private final CategoryRepository categoryRepository;
-    private final UserRepository userRepository;
     private final CategoryMapper categoryMapper;
 
     private static final Map<String, Map<CategoryLocale, String>> DEFAULT_CATEGORIES = Map.of(
@@ -124,13 +122,11 @@ public class StandardCategoryService implements  CategoryService {
 
     @Override
     @Transactional
-    public CategoryDto updateCategory(String id, CategoryDto dto, String userId) {
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new RuntimeException("User not found"));
+    public CategoryDto updateCategory(String id, CategoryDto dto, User user) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        if (!category.getUser().equals(user)) {
+        if (category.getUser() == null || !category.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("Access denied");
         }
 
@@ -151,10 +147,7 @@ public class StandardCategoryService implements  CategoryService {
     }
 
     @Override
-    public List<CategoryDto> getUserCategories(String userId, TransactionType type) {
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new RuntimeException("User not found"));
-
+    public List<CategoryDto> getUserCategories(User user, TransactionType type) {
         return categoryRepository.findByUserAndTransactionType(user, type)
                 .stream()
                 .map(category -> {
@@ -169,9 +162,7 @@ public class StandardCategoryService implements  CategoryService {
 
     @Override
     @Transactional
-    public void deleteCategory(String id, String userId) {
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new RuntimeException("User not found"));
+    public void deleteCategory(String id, User user) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
@@ -179,7 +170,7 @@ public class StandardCategoryService implements  CategoryService {
             throw new RuntimeException("Cannot delete default category");
         }
 
-        if (!category.getUser().equals(user)) {
+        if (category.getUser() == null || !category.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("Access denied");
         }
 

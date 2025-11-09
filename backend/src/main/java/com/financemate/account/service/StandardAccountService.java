@@ -5,13 +5,12 @@ import com.financemate.account.exception.AccessException;
 import com.financemate.account.exception.AccountNotFoundException;
 import com.financemate.account.exception.CurrencyNotFoundException;
 import com.financemate.account.exception.IllegalOperationException;
-import com.financemate.account.exception.UserNotFoundException;
 import com.financemate.account.model.Account;
 import com.financemate.account.model.Currency;
 import com.financemate.account.repository.AccountRepository;
 import com.financemate.account.repository.CurrencyRepository;
 import com.financemate.account.repository.ExchangeRateRepository;
-import com.financemate.auth.repository.UserRepository;
+import com.financemate.auth.model.user.User;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -22,34 +21,27 @@ import java.util.Objects;
 public class StandardAccountService implements AccountService {
 
     private final AccountRepository accountRepository;
-    private final UserRepository userRepository;
     private final CurrencyRepository currencyRepository;
     private final ExchangeRateRepository exchangeRateRepository;
 
     public StandardAccountService(AccountRepository accountRepository,
-                                  UserRepository userRepository,
                                   CurrencyRepository currencyRepository,
                                   ExchangeRateRepository exchangeRateRepository) {
         this.exchangeRateRepository = exchangeRateRepository;
         this.currencyRepository = currencyRepository;
-        this.userRepository = userRepository;
         this.accountRepository = accountRepository;
     }
 
     @Override
-    public List<Account> getAccountForUser(String userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-
-        List<Account> accounts = accountRepository.findAllByUserId(userId);
+    public List<Account> getAccountForUser(User user) {
+        List<Account> accounts = accountRepository.findAllByUserId(user.getId());
         accounts.forEach(account -> account.setBalance(round(account.getBalance())));
         return accounts;
     }
 
     @Override
-    public Account createAccount(AccountDto dto, String userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    public Account createAccount(AccountDto dto, User user) {
+        // Zauważamy, że kontroler przekazuje zaautoryzowanego Usera — zakładamy że jest poprawny
         currencyRepository.findById(dto.currencyCode())
                 .orElseThrow(() -> new CurrencyNotFoundException("Currency not found"));
 
@@ -59,7 +51,7 @@ public class StandardAccountService implements AccountService {
         account.setCurrencyCode(dto.currencyCode());
         account.setBalance(dto.balance());
         account.setColor(dto.color());
-        account.setUserId(userId);
+        account.setUserId(user.getId());
         account.setIncludeInStats(true);
         account.setArchived(false);
 
@@ -68,9 +60,9 @@ public class StandardAccountService implements AccountService {
 
     @Override
     @Transactional
-    public Account updateAccount(String accountId, AccountDto dto, String userId) {
+    public Account updateAccount(String accountId, AccountDto dto, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(userId)) {
+        if (!account.getUserId().equals(user.getId())) {
             throw new AccessException("Account does not belong to user");
         }
 
@@ -91,18 +83,18 @@ public class StandardAccountService implements AccountService {
 
     @Override
     @Transactional
-    public void deleteAccount(String accountId, String userId) {
+    public void deleteAccount(String accountId, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(userId)) {
+        if (!account.getUserId().equals(user.getId())) {
             throw new AccessException("Account does not belong to user");
         }
         accountRepository.delete(account);
     }
 
     @Override
-    public Account getAccountById(String accountId, String userId) {
+    public Account getAccountById(String accountId, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(userId)) {
+        if (!account.getUserId().equals(user.getId())) {
             throw new AccessException("Account does not belong to user");
         }
         account.setBalance(round(account.getBalance()));
@@ -111,9 +103,9 @@ public class StandardAccountService implements AccountService {
 
     @Override
     @Transactional
-    public void archiveAccount(String accountId, String userId) {
+    public void archiveAccount(String accountId, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(userId)) {
+        if (!account.getUserId().equals(user.getId())) {
             throw new AccessException("Account does not belong to user");
         }
         account.setArchived(!account.isArchived());
@@ -122,9 +114,9 @@ public class StandardAccountService implements AccountService {
 
     @Override
     @Transactional
-    public void includeInStats(String accountId, String userId) {
+    public void includeInStats(String accountId, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(userId)) {
+        if (!account.getUserId().equals(user.getId())) {
             throw new AccessException("Account does not belong to user");
         }
         account.setIncludeInStats(!account.isIncludeInStats());
@@ -133,9 +125,9 @@ public class StandardAccountService implements AccountService {
 
     @Override
     @Transactional
-    public void changeBalance(String accountId, double amount, String userId) {
+    public void changeBalance(String accountId, double amount, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(userId)) {
+        if (!account.getUserId().equals(user.getId())) {
             throw new AccessException("Account does not belong to user");
         }
         account.setBalance(account.getBalance() + amount);
@@ -144,10 +136,7 @@ public class StandardAccountService implements AccountService {
 
     @Override
     @Transactional
-    public void transferBetweenAccounts(String fromAccountId, String toAccountId, double amount, String userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-
+    public void transferBetweenAccounts(String fromAccountId, String toAccountId, double amount, User user) {
         if (fromAccountId.equals(toAccountId)) {
             throw new IllegalOperationException("Cannot transfer to the same account");
         }
@@ -156,7 +145,7 @@ public class StandardAccountService implements AccountService {
         Account toAccount = accountRepository.findById(toAccountId).orElseThrow(()
                 -> new AccountNotFoundException("Destination account not found"));
 
-        if (!fromAccount.getUserId().equals(userId) || !toAccount.getUserId().equals(userId)) {
+        if (!fromAccount.getUserId().equals(user.getId()) || !toAccount.getUserId().equals(user.getId())) {
             throw new AccessException("One or both accounts do not belong to user");
         }
 
@@ -182,10 +171,9 @@ public class StandardAccountService implements AccountService {
     }
 
     @Override
-    public double getUserBalance(String userId) {
-        Currency mainCurrency = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found")).getMainCurrency();
-        List<Account> accounts = accountRepository.findAllByUserIdAndIncludeInStatsIsTrue(userId);
+    public double getUserBalance(User user) {
+        Currency mainCurrency = user.getMainCurrency();
+        List<Account> accounts = accountRepository.findAllByUserIdAndIncludeInStatsIsTrue(user.getId());
         double result = accounts.stream()
                 .mapToDouble(account -> {
                     if (account.getCurrencyCode().equals(mainCurrency.getCode())) {

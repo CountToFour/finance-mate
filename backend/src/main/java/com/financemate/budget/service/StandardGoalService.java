@@ -45,7 +45,7 @@ public class StandardGoalService implements GoalService {
                 .orElseThrow(() -> new RuntimeException("Goal not found"));
 
         try {
-            accountService.changeBalance(accountId, -amount, user.getId());
+            accountService.changeBalance(accountId, -amount, user);
             goal.setCurrentAmount(goal.getCurrentAmount() + amount);
 
             if (goal.getCurrentAmount() >= goal.getTargetAmount()) {
@@ -74,7 +74,7 @@ public class StandardGoalService implements GoalService {
         }
 
         try {
-            accountService.changeBalance(accountId, -amount, user.getId());
+            accountService.changeBalance(accountId, -amount, user);
             goal.setCurrentAmount(goal.getCurrentAmount() - amount);
 
             goalRepository.save(goal);

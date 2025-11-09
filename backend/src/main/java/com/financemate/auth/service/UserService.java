@@ -15,8 +15,10 @@ public class UserService {
     private final UserRepository userRepository;
     private final CurrencyService currencyService;
 
-    public User changeUserCurrency(String code, String userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    public User changeUserCurrency(String code, User user) {
+        if (user == null || user.getId() == null) {
+            throw new RuntimeException("User not provided");
+        }
         user.setMainCurrency(currencyService.getCurrencyByCode(code));
         return userRepository.save(user);
     }

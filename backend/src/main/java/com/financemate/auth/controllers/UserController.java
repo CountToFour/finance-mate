@@ -1,9 +1,11 @@
 package com.financemate.auth.controllers;
 
+import com.financemate.auth.model.user.User;
 import com.financemate.auth.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,11 +20,12 @@ public class UserController {
 
     private final UserService userService;
 
-    @PutMapping("/{code}/{userId}")
+    @PutMapping("/{code}")
     public ResponseEntity<?> changeUserCurrency(@PathVariable String code,
-                                                @PathVariable String userId) {
+                                                Authentication authentication) {
         try {
-            return ResponseEntity.ok(userService.changeUserCurrency(code, userId));
+            User user = userService.getUserFromAuthentication(authentication);
+            return ResponseEntity.ok(userService.changeUserCurrency(code, user));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
