@@ -4,7 +4,6 @@ import com.financemate.account.model.Account;
 import com.financemate.account.repository.AccountRepository;
 import com.financemate.account.service.AccountService;
 import com.financemate.auth.model.user.User;
-import com.financemate.auth.repository.UserRepository;
 import com.financemate.budget.service.BudgetService;
 import com.financemate.category.model.Category;
 import com.financemate.category.repository.CategoryRepository;
@@ -44,7 +43,6 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final RecurringTransactionRepository recurringTransactionRepository;
     private final TransactionMapper transactionMapper;
-    private final UserRepository userRepository;
     private final AccountRepository accountRepository;
     private final AccountService accountService;
     private final CategoryRepository categoryRepository;
@@ -53,7 +51,7 @@ public class TransactionService {
     @Transactional
     public TransactionResponse addTransaction(TransactionRequest dto, User user) {
         Transaction transaction = transactionMapper.transactionToEntity(dto);
-        Account account = accountRepository.findByIdAndUserId(dto.getAccountId(), user.getId())
+        Account account = accountRepository.findByIdAndUserId(dto.getAccountId(), user)
                 .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + dto.getAccountId()));
         Category category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + dto.getCategoryId()));
@@ -83,7 +81,7 @@ public class TransactionService {
     @Transactional
     public RecurringTransactionResponse addRecurringTransaction(TransactionRequest dto, User user) {
         if (dto.getPeriodType() != PeriodType.NONE) {
-            Account account = accountRepository.findByIdAndUserId(dto.getAccountId(), user.getId())
+            Account account = accountRepository.findByIdAndUserId(dto.getAccountId(), user)
                     .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + dto.getAccountId()));
             Category category = categoryRepository.findById(dto.getCategoryId())
                     .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + dto.getCategoryId()));
@@ -117,7 +115,6 @@ public class TransactionService {
     public List<TransactionResponse> getTransactionsByUser(User user, String category, Double minPrice, Double maxPrice,
                                                            LocalDate startDate, LocalDate endDate, TransactionType type,
                                                            String accountName) throws UserNotFoundException {
-        checkUserExists(user);
 
         Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(user.getId()))
                 .and(TransactionSpecifications.hasCategory(category))
@@ -137,7 +134,6 @@ public class TransactionService {
 
     public List<RecurringTransactionResponse> getAllRecurringTransactions(User user, TransactionType type)
             throws UserNotFoundException {
-        checkUserExists(user);
 
         return recurringTransactionRepository.findAllByUserIdAndTransactionType(user.getId(), type).stream()
                 .map(transaction -> {
@@ -230,7 +226,7 @@ public class TransactionService {
             transaction.setPeriodType(dto.periodType());
         }
         if (dto.accountId() != null && !dto.accountId().equals(transaction.getAccount().getId())) {
-            Account account = accountRepository.findByIdAndUserId(dto.accountId(), transaction.getUser().getId())
+            Account account = accountRepository.findByIdAndUserId(dto.accountId(), transaction.getUser())
                     .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + dto.accountId()));
             transaction.setAccount(account);
         }
@@ -239,7 +235,6 @@ public class TransactionService {
     }
 
     public TransactionOverviewDto getTransactionOverview(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
-        checkUserExists(user);
 
         List<Object> actualTotalOverview = getMonthlyTransactionOverview(user, startDate, endDate, type);
         List<Object> previousTotalOverview = getMonthlyTransactionOverview(user, startDate.minusMonths(1), endDate.minusMonths(1), type);
@@ -272,7 +267,6 @@ public class TransactionService {
     }
 
     public List<CategoryDto> getAllCategoriesAmount(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
-        checkUserExists(user);
 
         Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(user.getId()))
                 .and(TransactionSpecifications.dateBetween(startDate, endDate))
@@ -303,11 +297,5 @@ public class TransactionService {
             case YEARLY -> baseDate.plusYears(1);
             default -> baseDate;
         };
-    }
-
-    private void checkUserExists(User user) {
-        if (user == null || user.getId() == null || !userRepository.existsById(user.getId())) {
-            throw new UserNotFoundException("User not found with id: " + (user == null ? null : user.getId()));
-        }
     }
 }

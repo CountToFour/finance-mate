@@ -34,7 +34,7 @@ public class StandardAccountService implements AccountService {
 
     @Override
     public List<Account> getAccountForUser(User user) {
-        List<Account> accounts = accountRepository.findAllByUserId(user.getId());
+        List<Account> accounts = accountRepository.findAllByUserId(user);
         accounts.forEach(account -> account.setBalance(round(account.getBalance())));
         return accounts;
     }
@@ -42,16 +42,16 @@ public class StandardAccountService implements AccountService {
     @Override
     public Account createAccount(AccountDto dto, User user) {
         // Zauważamy, że kontroler przekazuje zaautoryzowanego Usera — zakładamy że jest poprawny
-        currencyRepository.findById(dto.currencyCode())
+        Currency currency = currencyRepository.findById(dto.currencyCode())
                 .orElseThrow(() -> new CurrencyNotFoundException("Currency not found"));
 
         Account account = new Account();
         account.setName(dto.name());
         account.setDescription(dto.description());
-        account.setCurrencyCode(dto.currencyCode());
+        account.setCurrencyCode(currency);
         account.setBalance(dto.balance());
         account.setColor(dto.color());
-        account.setUserId(user.getId());
+        account.setUserId(user);
         account.setIncludeInStats(true);
         account.setArchived(false);
 
@@ -73,9 +73,13 @@ public class StandardAccountService implements AccountService {
         if (!Objects.equals(account.getCurrencyCode(), dto.currencyCode())) {
             throw new IllegalOperationException("Currency cannot be changed");
         }
+
+        Currency currency = currencyRepository.findById(dto.currencyCode())
+                .orElseThrow(() -> new CurrencyNotFoundException("Currency not found"));
+
         account.setName(dto.name());
         account.setDescription(dto.description());
-        account.setCurrencyCode(dto.currencyCode());
+        account.setCurrencyCode(currency);
         account.setBalance(dto.balance());
         account.setColor(dto.color());
         return accountRepository.save(account);
@@ -155,8 +159,8 @@ public class StandardAccountService implements AccountService {
 
         double finalAmount;
         if (!fromAccount.getCurrencyCode().equals(toAccount.getCurrencyCode())) {
-            String currency = toAccount.getCurrencyCode();
-            double rate = exchangeRateRepository.findByFromCurrencyAndToCurrency(fromAccount.getCurrencyCode(), currency)
+            Currency currencyCode = toAccount.getCurrencyCode();
+            double rate = exchangeRateRepository.findByFromCurrencyAndToCurrency(fromAccount.getCurrencyCode().getCode(), currencyCode.getCode())
                     .orElseThrow(() -> new CurrencyNotFoundException("Exchange rate not found"))
                     .getRate();
             finalAmount = amount * rate;
@@ -173,13 +177,13 @@ public class StandardAccountService implements AccountService {
     @Override
     public double getUserBalance(User user) {
         Currency mainCurrency = user.getMainCurrency();
-        List<Account> accounts = accountRepository.findAllByUserIdAndIncludeInStatsIsTrue(user.getId());
+        List<Account> accounts = accountRepository.findAllByUserIdAndIncludeInStatsIsTrue(user);
         double result = accounts.stream()
                 .mapToDouble(account -> {
                     if (account.getCurrencyCode().equals(mainCurrency.getCode())) {
                         return account.getBalance();
                     } else {
-                        double rate = exchangeRateRepository.findByFromCurrencyAndToCurrency(account.getCurrencyCode(), mainCurrency.getCode())
+                        double rate = exchangeRateRepository.findByFromCurrencyAndToCurrency(account.getCurrencyCode().getCode(), mainCurrency.getCode())
                                 .orElseThrow(() -> new CurrencyNotFoundException("Exchange rate not found"))
                                 .getRate();
                         return account.getBalance() * rate;
