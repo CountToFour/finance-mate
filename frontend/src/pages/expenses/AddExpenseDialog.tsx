@@ -12,8 +12,8 @@ import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import dayjs, {Dayjs} from "dayjs";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import {useAuthStore} from "../../store/auth.ts";
-import type {Expense, ExpenseDto} from "../../lib/types.ts";
-import {addExpense, addRecurringExpense, editExpense} from "../../lib/api.ts";
+import type {Expense, TransactionDto} from "../../lib/types.ts";
+import {addTransaction, addRecurringTransaction, editExpense} from "../../lib/api.ts";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {useTranslation} from "react-i18next";
@@ -39,7 +39,6 @@ const periodTypes = {
 const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initialExpense}) => {
     const {success, error} = useNotification();
     const {t} = useTranslation();
-    const user = useAuthStore(s => s.user);
     const [date, setDate] = useState<Dayjs | null>(dayjs());
     const [description, setDescription] = useState<string | null>(null);
     const [amount, setAmount] = useState("");
@@ -81,12 +80,12 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
     const handleSave = () => {
         if (!validate()) return;
 
-        const expenseDto: ExpenseDto = {
-            userId: user?.id,
-            category: category,
+        const expenseDto: TransactionDto = {
+            accountId: 'ID',
+            categoryId: category,
             price: parseFloat(amount),
             description: description,
-            expenseDate: date?.format("YYYY-MM-DD"),
+            createdAt: date?.format("YYYY-MM-DD"),
             periodType: periodType,
         };
 
@@ -96,7 +95,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
             console.log(periodTypes.NONE);
             if (periodType !== 'NONE') {
                 console.log("GOWNO2")
-                addRecurringExpense(expenseDto)
+                addRecurringTransaction(expenseDto)
                     .then(() => {
                         success(t('expenses.notifications.add.success'));
                         handleClose();
@@ -106,7 +105,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     });
             } else {
                 console.log("GOWNO3")
-                addExpense(expenseDto)
+                addTransaction(expenseDto)
                     .then(() => {
                         success(t('expenses.notifications.add.success'));
                         handleClose();

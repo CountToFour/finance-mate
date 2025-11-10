@@ -1,6 +1,6 @@
 import axios from 'axios'
 import {useAuthStore} from "../store/auth.ts";
-import type {ExpenseDto} from "./types.ts";
+import type {EditTransactionDto, TransactionDto, CreateAccountDto, TransferDto} from "./types.ts";
 
 export const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -36,14 +36,14 @@ export const register = (email: string, password: string, username: string) => a
 //EXPENSES
 
 export const getExpenses = (
-    userId: string | undefined,
     category: string | null,
     startDate: string,
     endDate: string,
 ) => axios.get(
-    `http://localhost:8080/api/expenses/${userId}`,
+    `http://localhost:8080/api/transactions`,
     {
         params: {
+            type: 'EXPENSE',
             category: category,
             startDate: startDate,
             endDate: endDate,
@@ -55,17 +55,20 @@ export const getExpenses = (
     }
 )
 
-export const getAllRecurringExpenses = (userId: string | undefined) => axios.get(
-    `http://localhost:8080/api/expenses/recurring/${userId}`,
+export const getAllRecurringExpenses = () => axios.get(
+    `http://localhost:8080/api/transactions/recurring`,
     {
+        params : {
+            type: 'EXPENSE',
+        },
         withCredentials: true,
         headers: {
             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
         }
     })
 
-export const deleteExpense = (id: string) => axios.delete(
-    `http://localhost:8080/api/expenses/${id}`,
+export const deleteTransaction = (id: string) => axios.delete(
+    `http://localhost:8080/api/transactions/${id}`,
     {
         withCredentials: true,
         headers: {
@@ -74,8 +77,8 @@ export const deleteExpense = (id: string) => axios.delete(
     }
 )
 
-export const deleteRecurringExpense = (id: string) => axios.delete(
-    `http://localhost:8080/api/expenses/recurring/${id}`,
+export const deleteRecurringTransaction = (id: string) => axios.delete(
+    `http://localhost:8080/api/transactions/recurring/${id}`,
     {
         withCredentials: true,
         headers: {
@@ -84,9 +87,9 @@ export const deleteRecurringExpense = (id: string) => axios.delete(
     }
 )
 
-export const addExpense = (expense: ExpenseDto) => axios.post(
-    'http://localhost:8080/api/expenses',
-    expense,
+export const addTransaction = (transaction: TransactionDto) => axios.post(
+    'http://localhost:8080/api/transactions',
+    transaction,
     {
         withCredentials: true,
         headers: {
@@ -95,9 +98,9 @@ export const addExpense = (expense: ExpenseDto) => axios.post(
     }
 )
 
-export const addRecurringExpense = (expense: ExpenseDto) => axios.post(
-    'http://localhost:8080/api/expenses/recurring',
-    expense,
+export const addRecurringTransaction = (transaction: TransactionDto) => axios.post(
+    'http://localhost:8080/api/transactions/recurring',
+    transaction,
     {
         withCredentials: true,
         headers: {
@@ -106,9 +109,9 @@ export const addRecurringExpense = (expense: ExpenseDto) => axios.post(
     }
 )
 
-export const editExpense = (id: string, expense: ExpenseDto) => axios.put(
-    `http://localhost:8080/api/expenses/edit/${id}`,
-    expense,
+export const editExpense = (id: string, transaction: EditTransactionDto) => axios.put(
+    `http://localhost:8080/api/transactions/edit/${id}`,
+    transaction,
     {
         withCredentials: true,
         headers: {
@@ -118,11 +121,11 @@ export const editExpense = (id: string, expense: ExpenseDto) => axios.put(
 )
 
 export const getAllCategoriesAmount = (
-    userId: string | undefined,
+    type: string,
     startDate: string,
     endDate: string,
 ) => axios.get(
-    `http://localhost:8080/api/expenses/categories/${userId}`,
+    `http://localhost:8080/api/transactions/categories/type/${type}`,
     {
         params: {
             startDate: startDate,
@@ -136,16 +139,103 @@ export const getAllCategoriesAmount = (
 )
 
 export const getExpenseOverview = (
-    userId: string | undefined,
+    type: string,
     startDate: string,
     endDate: string,
 ) => axios.get(
-    `http://localhost:8080/api/expenses/overview/${userId}`,
+    `http://localhost:8080/api/transactions/overview/type/${type}`,
     {
         params: {
             startDate: startDate,
             endDate: endDate,
         },
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+// ACCOUNTS
+
+export const getAccounts = () => axios.get(
+    'http://localhost:8080/api/account',
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const createAccount = (account: CreateAccountDto) => axios.post(
+    'http://localhost:8080/api/account/create',
+    account,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const updateAccount = (account: CreateAccountDto, accountId: string) => axios.put(
+    `http://localhost:8080/api/account/update/${accountId}`,
+    account,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const deleteAccount = (accountId: string) => axios.delete(
+    `http://localhost:8080/api/account/${accountId}`,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const archiveAccount = (accountId: string) => axios.put(
+    `http://localhost:8080/api/account/archive/${accountId}`,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const includeInStatsAccount = (accountId: string) => axios.put(
+    `http://localhost:8080/api/account/include-in-stats/${accountId}`,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const transferBetweenAccounts = (accountId: string, transferDto: TransferDto) => axios.put(
+    `http://localhost:8080/api/account/include-in-stats/${accountId}`,
+    transferDto,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+// CURRENCIES
+
+export const getCurrencies = () => axios.get(
+    'http://localhost:8080/api/currency',
+    {
         withCredentials: true,
         headers: {
             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,

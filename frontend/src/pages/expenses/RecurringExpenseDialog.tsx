@@ -12,7 +12,7 @@ import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import dayjs, {Dayjs} from "dayjs";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import {useAuthStore} from "../../store/auth.ts";
-import type {ExpenseDto, RecurringExpense} from "../../lib/types.ts";
+import type {TransactionDto, RecurringExpense} from "../../lib/types.ts";
 import {editExpense} from "../../lib/api.ts";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
@@ -84,7 +84,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, recur
     const handleSave = () => {
         if (!validate()) return;
 
-        const expenseDto: ExpenseDto = {
+        const expenseDto: TransactionDto = {
             userId: user?.id,
             category: category,
             price: parseFloat(amount),

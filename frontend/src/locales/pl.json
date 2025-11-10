@@ -1,5 +1,6 @@
 {
   "layout" : {
+    "account": "Konta",
     "dashboard" : "Pulpit",
     "expenses": "Wydatki",
     "incomes": "Przychody",

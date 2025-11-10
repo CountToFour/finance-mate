@@ -29,14 +29,24 @@ export type Expense = {
     expenseDate: string
 }
 
-export type ExpenseDto = {
-    userId: string | undefined
-    category: string
+export type TransactionDto = {
+    accountId: string
+    categoryId: string
     price: number
     description: string | null
-    expenseDate: string
+    createdAt: string
     periodType: string
+    transactionType: string
     active: boolean
+}
+
+export type EditTransactionDto = {
+    accountId: string
+    categoryId: string
+    price: number
+    description: string | null
+    createdAt: string
+    periodType: string
 }
 
 export type RecurringExpense = {
@@ -63,4 +73,37 @@ export type ExpenseOverview = {
     expenseCount: number
     totalAmountChangePercentage: number
     expenseCountChangePercentage: number
+}
+
+//ACCOUNTS
+
+export type Account = {
+    id: string
+    name: string
+    description?: string
+    currencyCode: Currency
+    balance: number
+    color: string
+    includeInStats: boolean
+    archived?: boolean
+}
+
+export type CreateAccountDto = {
+    name: string
+    description?: string | null
+    currencyCode: string
+    balance: number
+    color?: string
+}
+
+export type TransferDto = {
+    fromAccountId: string
+    toAccountId: string
+    amount: number
+}
+
+export type Currency = {
+    code: string
+    name: string
+    symbol: string
 }

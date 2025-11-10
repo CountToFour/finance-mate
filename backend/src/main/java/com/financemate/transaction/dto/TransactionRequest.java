@@ -33,7 +33,7 @@ public class TransactionRequest {
     @Size(max = 255, message = "Description must have max 255 characters")
     private String description;
 
-    @NotNull(message = "Expense date cannot be null")
+    @NotNull(message = "Transaction date cannot be null")
     private LocalDate createdAt;
 
     @NotNull(message = "Period type cannot be null")

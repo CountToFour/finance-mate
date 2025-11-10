@@ -18,8 +18,8 @@ import {
     , ResponsiveContainer
 } from "recharts";
 import {
-    deleteExpense,
-    deleteRecurringExpense,
+    deleteTransaction,
+    deleteRecurringTransaction,
     getAllCategoriesAmount,
     getAllRecurringExpenses, getExpenseOverview,
     getExpenses
@@ -75,30 +75,30 @@ function ExpensesPage() {
 
     useEffect(() => {
         if (category === "Wszystkie") {
-            getExpenses(user?.id, null, dateFrom, dateTo).then((res) => setExpenses(res.data));
+            getExpenses(null, dateFrom, dateTo).then((res) => setExpenses(res.data));
         } else {
-            getExpenses(user?.id, category, dateFrom, dateTo).then((res) => setExpenses(res.data));
+            getExpenses(category, dateFrom, dateTo).then((res) => setExpenses(res.data));
         }
-        getExpenseOverview(user?.id, dayjs().startOf("month").format("YYYY-MM-DD"),
+        getExpenseOverview('EXPENSE', dayjs().startOf("month").format("YYYY-MM-DD"),
             dayjs().endOf("month").format("YYYY-MM-DD")).then((res) => setOverview(res.data));
     }, [user?.id, openDialog, category, dateFrom, dateTo]);
 
     useEffect(() => {
-        getAllRecurringExpenses(user?.id).then((res) => setRecurringExpenses(res.data));
+        getAllRecurringExpenses().then((res) => setRecurringExpenses(res.data));
     }, [editRecurringExpense, user?.id])
 
     useEffect(() => {
-        getAllCategoriesAmount(user?.id, categoryDateFrom, categoryDateTo).then((res) => setCategoriesExpenses(res.data));
+        getAllCategoriesAmount('EXPENSE', categoryDateFrom, categoryDateTo).then((res) => setCategoriesExpenses(res.data));
     }, [user?.id, openDialog, categoryDateFrom, categoryDateTo])
 
     const handleDeletion = (id: string) => {
-        deleteExpense(id)
+        deleteTransaction(id)
             .then(() => {
                 success(t('expenses.notifications.delete.success'))
                 if (category === "Wszystkie") {
-                    getExpenses(user?.id, null, dateFrom, dateTo).then((res) => setExpenses(res.data));
+                    getExpenses( null, dateFrom, dateTo).then((res) => setExpenses(res.data));
                 } else {
-                    getExpenses(user?.id, category, dateFrom, dateTo).then((res) => setExpenses(res.data));
+                    getExpenses(category, dateFrom, dateTo).then((res) => setExpenses(res.data));
                 }
             })
             .catch(() => {
@@ -107,10 +107,10 @@ function ExpensesPage() {
     };
 
     const handleRecurringDeletion = (id: string) => {
-        deleteRecurringExpense(id)
+        deleteRecurringTransaction(id)
             .then(() => {
                 success(t('expenses.notifications.delete.success'))
-                getAllRecurringExpenses(user?.id).then((res) => setRecurringExpenses(res.data));
+                getAllRecurringExpenses().then((res) => setRecurringExpenses(res.data));
             })
             .catch(() => {
                 error(t('expenses.notifications.delete.error'))

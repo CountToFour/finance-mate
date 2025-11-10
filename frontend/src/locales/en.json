@@ -1,5 +1,6 @@
 {
   "layout": {
+    "account": "Accounts",
     "dashboard": "Dashboard",
     "expenses": "Expenses",
     "incomes": "Income",
