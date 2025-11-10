@@ -65,7 +65,7 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
             setDescription(initialAccount.description ?? "");
             setAmount((initialAccount.balance ?? 0).toString());
             setColor(initialAccount.color ?? '#2b8aef')
-            setCurrencyCode(initialAccount.currencyCode.code ?? "");
+            setCurrencyCode(initialAccount.currencySymbol ?? "");
         } else {
             setName("");
             setDescription("");

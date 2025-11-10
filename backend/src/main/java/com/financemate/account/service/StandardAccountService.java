@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 @Service
 public class StandardAccountService implements AccountService {
@@ -38,13 +39,18 @@ public class StandardAccountService implements AccountService {
     }
 
     @Override
-    public List<Account> getAccountForUser(User user) {
+    public List<AccountResponse> getAccountForUser(User user) {
         List<Account> accounts = accountRepository.findAllByUserId(user);
-        accounts.forEach(account -> account.setBalance(round(account.getBalance())));
-        return accounts;
+        return accounts.stream().map(account -> {
+            AccountResponse accountResponse = accountMapper.accountToDto(account);
+            accountResponse.setCurrencySymbol(account.getCurrencyCode().getSymbol());
+            account.setBalance(round(account.getBalance()));
+            return accountResponse;
+        }).toList();
     }
 
     @Override
+    @Transactional
     public AccountResponse createAccount(AccountDto dto, User user) {
         Currency currency = currencyRepository.findById(dto.currencyCode())
                 .orElseThrow(() -> new CurrencyNotFoundException("Currency not found"));
@@ -127,7 +133,7 @@ public class StandardAccountService implements AccountService {
     @Transactional
     public void includeInStats(String accountId, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(user.getId())) {
+        if (!account.getUserId().getId().equals(user.getId())) {
             throw new AccessException("Account does not belong to user");
         }
         account.setIncludeInStats(!account.isIncludeInStats());

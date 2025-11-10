@@ -202,6 +202,7 @@ export const deleteAccount = (accountId: string) => axios.delete(
 
 export const archiveAccount = (accountId: string) => axios.put(
     `http://localhost:8080/api/account/archive/${accountId}`,
+    {},
     {
         withCredentials: true,
         headers: {
@@ -212,6 +213,7 @@ export const archiveAccount = (accountId: string) => axios.put(
 
 export const includeInStatsAccount = (accountId: string) => axios.put(
     `http://localhost:8080/api/account/include-in-stats/${accountId}`,
+    {},
     {
         withCredentials: true,
         headers: {
@@ -221,7 +223,7 @@ export const includeInStatsAccount = (accountId: string) => axios.put(
 )
 
 export const transferBetweenAccounts = (accountId: string, transferDto: TransferDto) => axios.put(
-    `http://localhost:8080/api/account/include-in-stats/${accountId}`,
+    `http://localhost:8080/api/account/transfer/${accountId}`,
     transferDto,
     {
         withCredentials: true,

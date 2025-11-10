@@ -11,7 +11,6 @@ import {
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import dayjs, {Dayjs} from "dayjs";
 import {useNotification} from "../../components/NotificationContext.tsx";
-import {useAuthStore} from "../../store/auth.ts";
 import type {Expense, TransactionDto} from "../../lib/types.ts";
 import {addTransaction, addRecurringTransaction, editExpense} from "../../lib/api.ts";
 import {LocalizationProvider} from "@mui/x-date-pickers";
