@@ -1,10 +1,12 @@
 package com.financemate.account.service;
 
 import com.financemate.account.dto.AccountDto;
+import com.financemate.account.dto.AccountResponse;
 import com.financemate.account.exception.AccessException;
 import com.financemate.account.exception.AccountNotFoundException;
 import com.financemate.account.exception.CurrencyNotFoundException;
 import com.financemate.account.exception.IllegalOperationException;
+import com.financemate.account.mapper.AccountMapper;
 import com.financemate.account.model.Account;
 import com.financemate.account.model.Currency;
 import com.financemate.account.repository.AccountRepository;
@@ -23,13 +25,16 @@ public class StandardAccountService implements AccountService {
     private final AccountRepository accountRepository;
     private final CurrencyRepository currencyRepository;
     private final ExchangeRateRepository exchangeRateRepository;
+    private final AccountMapper accountMapper;
 
     public StandardAccountService(AccountRepository accountRepository,
                                   CurrencyRepository currencyRepository,
-                                  ExchangeRateRepository exchangeRateRepository) {
+                                  ExchangeRateRepository exchangeRateRepository,
+                                  AccountMapper accountMapper) {
         this.exchangeRateRepository = exchangeRateRepository;
         this.currencyRepository = currencyRepository;
         this.accountRepository = accountRepository;
+        this.accountMapper = accountMapper;
     }
 
     @Override
@@ -40,8 +45,7 @@ public class StandardAccountService implements AccountService {
     }
 
     @Override
-    public Account createAccount(AccountDto dto, User user) {
-        // Zauważamy, że kontroler przekazuje zaautoryzowanego Usera — zakładamy że jest poprawny
+    public AccountResponse createAccount(AccountDto dto, User user) {
         Currency currency = currencyRepository.findById(dto.currencyCode())
                 .orElseThrow(() -> new CurrencyNotFoundException("Currency not found"));
 
@@ -55,7 +59,10 @@ public class StandardAccountService implements AccountService {
         account.setIncludeInStats(true);
         account.setArchived(false);
 
-        return accountRepository.save(account);
+        Account save = accountRepository.save(account);
+        AccountResponse accountResponse = accountMapper.accountToDto(save);
+        accountResponse.setCurrencySymbol(currency.getSymbol());
+        return accountResponse;
     }
 
     @Override

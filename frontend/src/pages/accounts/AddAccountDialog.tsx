@@ -6,7 +6,7 @@ import {
     DialogActions,
     Button,
     TextField,
-    MenuItem, Box,
+    MenuItem, Box, IconButton, Typography, ClickAwayListener,
 } from "@mui/material";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import type {Account, CreateAccountDto, Currency} from "../../lib/types.ts";
@@ -15,7 +15,12 @@ import {
     createAccount, updateAccount
 } from "../../lib/api.ts";
 import {useTranslation} from "react-i18next";
+import {ChromePicker, CirclePicker} from 'react-color';
+import AddIcon from "@mui/icons-material/Add";
 
+const defaultColor = [ "#4CAF50", "#2196F3", "#FFC107", "#F44336",
+    "#9C27B0", "#FF9800", "#607D8B", "#E91E63"
+]
 
 interface AddExpenseDialogProps {
     open: boolean;
@@ -32,8 +37,10 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
     const [color, setColor] = useState<string>("#2b8aef");
     const [currencyCode, setCurrencyCode] = useState<string>("");
     const [currencies, setCurrencies] = useState<Currency[]>([]);
+    const [customColor, setCustomColor] = useState("");
+    const [showPicker, setShowPicker] = useState(false);
 
-    const [errors, setErrors] = useState({
+    const [errors, setFormErrors] = useState<{amount:string;color:string;currencyId:string;name:string;description:string}>({
         amount: "",
         color: "",
         currencyId: "",
@@ -42,7 +49,17 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
     });
 
     useEffect(() => {
-        void getCurrencies().then((res) => setCurrencies(res.data)).catch(() => {});
+        if (!showPicker) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setShowPicker(false);
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [showPicker]);
+
+    useEffect(() => {
+        void getCurrencies().then((res) => setCurrencies(res.data)).catch(() => {
+        });
         if (initialAccount) {
             setName(initialAccount.name ?? "");
             setDescription(initialAccount.description ?? "");
@@ -50,7 +67,6 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
             setColor(initialAccount.color ?? '#2b8aef')
             setCurrencyCode(initialAccount.currencyCode.code ?? "");
         } else {
-            // reset when opening for new account
             setName("");
             setDescription("");
             setAmount("");
@@ -81,21 +97,22 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
             valid = false;
         }
 
-        setErrors(newErrors);
+        setFormErrors(newErrors);
         return valid;
     };
 
     const handleSave = async () => {
         if (!validate()) return;
-
+        console.log("waluta " + currencyCode)
         const accountDto = ({
             name: name,
             description: description || undefined,
-            currencyId: currencyCode,
+            currencyCode: currencyCode,
             balance: parseFloat(amount) || 0,
             color: color,
         } as unknown) as CreateAccountDto;
 
+        console.log(accountDto);
         try {
             if (!initialAccount) {
                 await createAccount(accountDto);
@@ -123,19 +140,26 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         setAmount("");
         setColor('#2b8aef');
         setCurrencyCode("");
-        setErrors({amount: "", color: "", currencyId: "", name: "", description: ""});
+        setShowPicker(false);
+        setFormErrors({amount: "", color: "", currencyId: "", name: "", description: ""});
         onClose();
     };
 
     return (
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
-            <DialogTitle>{initialAccount ? t('accounts.dialog.editTitle', 'Edytuj konto') : t('accounts.dialog.addTitle', 'Dodaj konto')}</DialogTitle>
-            <DialogContent dividers>
+            <DialogTitle>
+                {initialAccount
+                    ? t('accounts.dialog.editTitle', 'Edytuj konto')
+                    : t('accounts.dialog.addTitle', 'Dodaj konto')}
+            </DialogTitle>
+
+            <DialogContent dividers sx={{ position: 'relative' }}>
                 <Box
                     sx={{
                         display: "grid",
                         gridTemplateColumns: {xs: "1fr", sm: "1fr 1fr"},
                         gap: 2,
+                        mb: 2,
                     }}
                 >
                     <TextField
@@ -146,7 +170,7 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                         onChange={(e) => {
                             setAmount(e.target.value);
                             if (e.target.value.length > 0) {
-                                setErrors(prev => ({...prev, amount: ""}));
+                                setFormErrors((prev) => ({...prev, amount: ""}));
                             }
                         }}
                         error={!!errors.amount}
@@ -155,52 +179,114 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     <TextField
                         select
                         fullWidth
-                        margin="normal"
                         label={t('accounts.fields.currency', 'Waluta')}
                         value={currencyCode}
                         onChange={(e) => {
                             setCurrencyCode(e.target.value);
-                            setErrors(prev => ({...prev, currencyId: ""}));
+                            setFormErrors((prev) => ({...prev, currencyId: ""}));
                         }}
                         error={!!errors.currencyId}
                         helperText={errors.currencyId}
                     >
-                        <MenuItem value="">— wybierz —</MenuItem>
                         {currencies.map((currency: Currency) => (
                             <MenuItem key={currency.code} value={currency.code}>
-                                {currency.code} {currency.name ? `- ${currency.name}` : ''}
+                                {currency.code} {currency.symbol ? `- ${currency.symbol}` : ''}
                             </MenuItem>
                         ))}
                     </TextField>
                 </Box>
+
                 <TextField
                     fullWidth
-                    margin="normal"
                     label={t('accounts.fields.name', 'Nazwa')}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     error={!!errors.name}
                     helperText={errors.name}
                 />
+
                 <TextField
+                    sx={{mb: 2}}
                     fullWidth
                     margin="normal"
                     label={t('accounts.fields.description', 'Opis')}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                 />
-                <TextField
-                    fullWidth
-                    margin="normal"
-                    label={t('accounts.fields.color', 'Kolor')}
-                    type="color"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    error={!!errors.color}
-                    helperText={errors.color}
-                    InputLabelProps={{shrink: true}}
-                />
+
+                <Box sx={{width: '100%'}}>
+                    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
+                        {t('accounts.fields.color', 'Kolor')}
+                    </Typography>
+
+                    <Box
+                        sx={{
+                            width: "100%",
+                            display: "flex",
+                            "& .circle-picker": {
+                                width: "auto !important",
+                                display: "flex !important",
+                                flexWrap: "wrap !important"
+                            },
+                        }}
+                    >
+                            <CirclePicker
+                                circleSize={30}
+                                circleSpacing={8}
+                                color={color}
+                                onChangeComplete={(color) => setColor(color.hex)}
+                                colors={defaultColor}
+                            />
+
+                        <IconButton
+                            onClick={() => setShowPicker(!showPicker)}
+                            sx={{
+                                ml: 1,
+                                width: 30,
+                                height: 30,
+                                borderRadius: "50%",
+                                background: customColor,
+                                border: "2px dashed #aaa",
+                                transition: "transform 0.2s",
+                                "&:hover": {
+                                    transform: "scale(1.2)",
+                                    background: customColor,
+                                },
+                            }}
+                        >
+                            <AddIcon sx={{ color: "#aaa" }} />
+                        </IconButton>
+
+                        {showPicker && (
+                            <ClickAwayListener onClickAway={() => setShowPicker(false)}>
+                                <Box
+                                    sx={{
+                                        position: "absolute",
+                                        top: '50%',
+                                        left: '50%',
+                                        transform: 'translate(-50%, -50%)',
+                                        zIndex: 1400,
+                                        boxShadow: 3,
+                                        borderRadius: 2,
+                                        overflow: "hidden",
+                                        backgroundColor: 'background.paper',
+                                        p: 1,
+                                    }}
+                                >
+                                    <ChromePicker
+                                        color={customColor}
+                                        onChange={(color) => {
+                                            setCustomColor(color.hex);
+                                            setColor(color.hex);
+                                        }}
+                                    />
+                                </Box>
+                            </ClickAwayListener>
+                            )}
+                    </Box>
+                </Box>
             </DialogContent>
+
             <DialogActions sx={{mr: 2, mb: 1, mt: 1}}>
                 <Button onClick={handleClose} color="secondary">
                     {t('expenses.addExpense.cancel', 'Anuluj')}
@@ -210,6 +296,7 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                 </Button>
             </DialogActions>
         </Dialog>
+
     );
 };
 

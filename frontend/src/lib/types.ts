@@ -81,7 +81,7 @@ export type Account = {
     id: string
     name: string
     description?: string
-    currencyCode: Currency
+    currencySymbol: string
     balance: number
     color: string
     includeInStats: boolean
