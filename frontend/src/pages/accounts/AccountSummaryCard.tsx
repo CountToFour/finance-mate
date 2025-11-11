@@ -13,6 +13,8 @@ type AccountProps = {
     color: string
     includeInStats: boolean
     statsMethod: () => void;
+    deleteMethod: () => void;
+    editMethod: () => void;
     sx?: SxProps<Theme>;
 };
 
@@ -24,6 +26,8 @@ const AccountSummaryCard: React.FC<AccountProps> = ({
                                                         color,
                                                         includeInStats,
                                                         statsMethod,
+                                                        deleteMethod,
+                                                        editMethod,
                                                         sx
                                                     }) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -73,8 +77,11 @@ const AccountSummaryCard: React.FC<AccountProps> = ({
                         </IconButton>
                     </Box>
                     <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
-                        <MenuItem onClick={handleMenuClose}>Edytuj</MenuItem>
-                        <MenuItem onClick={handleMenuClose}>Usuń</MenuItem>
+                        <MenuItem onClick={() => {
+                            handleMenuClose();
+                            editMethod();
+                        }}>Edytuj</MenuItem>
+                        <MenuItem onClick={deleteMethod}>Usuń</MenuItem>
                         <MenuItem onClick={handleMenuClose}>Inne opcje</MenuItem>
                     </Menu>
                 </Box>

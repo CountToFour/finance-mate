@@ -2,10 +2,10 @@ import {useEffect, useState} from 'react';
 import {
     Box,
     Typography,
-    Button, Grid,
+    Button
 } from "@mui/material";
 import {Add} from '@mui/icons-material';
-import {getAccounts, getCurrencies, includeInStatsAccount} from "../../lib/api.ts";
+import {deleteAccount, getAccounts, getCurrencies, includeInStatsAccount} from "../../lib/api.ts";
 import type {Account, Currency} from "../../lib/types.ts";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import AddAccountDialog from "./AddAccountDialog.tsx";
@@ -14,6 +14,7 @@ import AccountSummaryCard from "./AccountSummaryCard.tsx";
 export default function Accounts() {
     const [openDialog, setOpenDialog] = useState(false);
     const [accounts, setAccounts] = useState<Account[]>([]);
+    const [accountToEdit, setAccountToEdit] = useState<Account | null>(null);
     const [currencies, setCurrencies] = useState<Currency[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -26,7 +27,7 @@ export default function Accounts() {
         getCurrencies().then((res) => {
             setCurrencies(res.data);
         });
-    }, []);
+    }, [openDialog]);
 
     const includeAccountInStats = (accountId: string) => {
         includeInStatsAccount(accountId).then((res) => {
@@ -34,7 +35,18 @@ export default function Accounts() {
             getAccounts().then((res) => {
                 setAccounts(res.data);
             });
-        })
+        }).catch(() => {
+            error("Błąd podczas aktualizacji konta");
+        });
+    }
+
+    const handleDeleteAccount = (accountId: string) => {
+        deleteAccount(accountId).then(() => {
+            success("Pomyślnie usunięto konto")
+            setAccounts(prevAccounts => prevAccounts.filter(account => account.id !== accountId));
+        }).catch(() => {
+            error("Błąd podczas usuwania konta");
+        });
     }
 
     return (
@@ -56,18 +68,27 @@ export default function Accounts() {
                         name={account.name}
                         description={account.description}
                         balance={account.balance}
-                        currencySymbol={account.currencySymbol}
+                        currencySymbol={account.currency.symbol}
                         color={account.color}
                         includeInStats={account.includeInStats}
                         statsMethod={() => includeAccountInStats(account.id)}
+                        deleteMethod={() => handleDeleteAccount(account.id)}
+                        editMethod={() => {
+                            setAccountToEdit(account);
+                            setOpenDialog(true)
+                        }}
+
                     />
                 ))}
             </Box>
 
             <AddAccountDialog
                 open={openDialog}
-                onClose={() => setOpenDialog(false)}
-                initialAccount={null}
+                onClose={() => {
+                    setOpenDialog(false)
+                    setAccountToEdit(null)
+                }}
+                initialAccount={accountToEdit}
             />
         </>
     )

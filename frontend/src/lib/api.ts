@@ -191,7 +191,7 @@ export const updateAccount = (account: CreateAccountDto, accountId: string) => a
 )
 
 export const deleteAccount = (accountId: string) => axios.delete(
-    `http://localhost:8080/api/account/${accountId}`,
+    `http://localhost:8080/api/account/delete/${accountId}`,
     {
         withCredentials: true,
         headers: {
