@@ -26,8 +26,8 @@ public class Account {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User userId;
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "currency_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "currency_id", referencedColumnName = "code", nullable = false)
     private Currency currencyCode;
     private double balance;
     private String color;

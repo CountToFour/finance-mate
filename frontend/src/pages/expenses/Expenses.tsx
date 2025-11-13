@@ -22,10 +22,10 @@ import {
     deleteRecurringTransaction,
     getAllCategoriesAmount,
     getAllRecurringExpenses, getExpenseOverview,
-    getExpenses
+    getExpenses, getAccounts
 } from "../../lib/api.ts";
 import {useAuthStore} from "../../store/auth.ts";
-import type {CategoryAmount, Expense, ExpenseOverview, RecurringExpense} from "../../lib/types.ts";
+import type {Account, CategoryAmount, Expense, ExpenseOverview, RecurringExpense} from "../../lib/types.ts";
 import {DataGrid, type GridColDef} from '@mui/x-data-grid';
 import {useNotification} from "../../components/NotificationContext.tsx";
 import AddExpenseDialog from "./AddExpenseDialog.tsx";
@@ -51,6 +51,7 @@ function ExpensesPage() {
     const {t} = useTranslation();
     const user = useAuthStore(s => s.user);
 
+    const [accounts, setAccounts] = useState<Account[]>([]);
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
@@ -81,6 +82,9 @@ function ExpensesPage() {
         }
         getExpenseOverview('EXPENSE', dayjs().startOf("month").format("YYYY-MM-DD"),
             dayjs().endOf("month").format("YYYY-MM-DD")).then((res) => setOverview(res.data));
+        getAccounts().then((res) => {
+            setAccounts(res.data);
+        });
     }, [user?.id, openDialog, category, dateFrom, dateTo]);
 
     useEffect(() => {
@@ -530,6 +534,7 @@ function ExpensesPage() {
                 open={openDialog}
                 onClose={() => setOpenDialog(false)}
                 initialExpense={selectedExpense}
+                accounts={accounts}
             />
             <RecurringExpenseDialog
                 open={editRecurringExpense}

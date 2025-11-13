@@ -11,7 +11,7 @@ import {
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import dayjs, {Dayjs} from "dayjs";
 import {useNotification} from "../../components/NotificationContext.tsx";
-import type {Expense, TransactionDto} from "../../lib/types.ts";
+import type {Account, Expense, TransactionDto} from "../../lib/types.ts";
 import {addTransaction, addRecurringTransaction, editExpense} from "../../lib/api.ts";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
@@ -22,6 +22,7 @@ interface AddExpenseDialogProps {
     open: boolean;
     onClose: () => void;
     initialExpense?: Expense | null;
+    accounts: Account[];
 }
 
 //TODO JAK PONIŻEJ
@@ -35,18 +36,20 @@ const periodTypes = {
     YEARLY: "Yearly"
 }
 
-const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initialExpense}) => {
+const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initialExpense, accounts}) => {
     const {success, error} = useNotification();
     const {t} = useTranslation();
     const [date, setDate] = useState<Dayjs | null>(dayjs());
     const [description, setDescription] = useState<string | null>(null);
     const [amount, setAmount] = useState("");
     const [category, setCategory] = useState("");
+    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
     const [periodType, setPeriodType] = useState<keyof typeof periodTypes>("NONE");
 
     const [errors, setErrors] = useState({
         amount: "",
         category: "",
+        account: "",
     });
 
     useEffect(() => {
@@ -55,13 +58,21 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
             setAmount(initialExpense.price.toString());
             setCategory(initialExpense.category);
             setDate(dayjs(initialExpense.expenseDate));
+            // jeśli initialExpense zawiera id konta, ustaw odpowiednie konto w stanie
+            // zakładamy, że initialExpense ma pole accountId (string). Jeśli nie, nic nie zmieniamy.
+            // @ts-ignore
+            if ((initialExpense as any).accountId) {
+                // znajdź konto w liście accounts
+                const acct = accounts.find(a => a.id === (initialExpense as any).accountId);
+                if (acct) setSelectedAccount(acct);
+            }
         }
-    }, [initialExpense])
+    }, [initialExpense, accounts])
 
 
     const validate = () => {
         let valid = true;
-        const newErrors = {description: "", amount: "", category: ""};
+        const newErrors = {description: "", amount: "", category: "", account: ""};
 
         if (!amount || parseFloat(amount) <= 0) {
             newErrors.amount = t('expenses.addExpense.price.required');
@@ -69,6 +80,10 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         }
         if (!category) {
             newErrors.category = t('expenses.addExpense.category.required');
+            valid = false;
+        }
+        if (!selectedAccount) {
+            newErrors.account = t('expenses.addExpense.account.required') || 'Wybierz konto';
             valid = false;
         }
 
@@ -80,20 +95,18 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         if (!validate()) return;
 
         const expenseDto: TransactionDto = {
-            accountId: 'ID',
-            categoryId: category,
+            // wysyłamy id konta
+            accountId: selectedAccount!.id,
+            categoryId: "e9e205c8-af85-479f-a62b-3b2ef9de2b95",
             price: parseFloat(amount),
             description: description,
             createdAt: date?.format("YYYY-MM-DD"),
             periodType: periodType,
+            transactionType: "EXPENSE"
         };
 
         if (!initialExpense) {
-            console.log("GOWNO")
-            console.log(periodType);
-            console.log(periodTypes.NONE);
             if (periodType !== 'NONE') {
-                console.log("GOWNO2")
                 addRecurringTransaction(expenseDto)
                     .then(() => {
                         success(t('expenses.notifications.add.success'));
@@ -103,7 +116,6 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                         error(t('expenses.notifications.add.error'));
                     });
             } else {
-                console.log("GOWNO3")
                 addTransaction(expenseDto)
                     .then(() => {
                         success(t('expenses.notifications.add.success'));
@@ -127,12 +139,13 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
     };
 
     const handleClose = () => {
+        setSelectedAccount(null);
         setDescription(null);
         setAmount("");
         setCategory("");
         setPeriodType("NONE");
         setDate(dayjs());
-        setErrors({amount: "", category: ""});
+        setErrors({amount: "", category: "", account: ""});
         onClose();
     };
 
@@ -179,6 +192,28 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                 />
+                <TextField
+                    select
+                    fullWidth
+                    margin="normal"
+                    label={t('Konto')}
+                    value={selectedAccount ? selectedAccount.id : ""}
+                    onChange={(e) => {
+                        const id = e.target.value as string;
+                        const acct = accounts.find(a => a.id === id) ?? null;
+                        setSelectedAccount(acct);
+                        setErrors({...errors, account: ""});
+                    }
+                    }
+                    error={!!errors.account}
+                    helperText={errors.account}
+                >
+                    {accounts.map((account) => (
+                        <MenuItem key={account.id} value={account.id}>
+                            {account.name}
+                        </MenuItem>
+                    ))}
+                </TextField>
                 <TextField
                     select
                     fullWidth

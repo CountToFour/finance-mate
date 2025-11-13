@@ -14,6 +14,7 @@ import com.financemate.transaction.exception.UserNotFoundException;
 import com.financemate.transaction.model.PeriodType;
 import com.financemate.transaction.model.TransactionType;
 import com.financemate.transaction.service.TransactionService;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -43,6 +44,7 @@ public class TransactionController {
     private final UserService userService;
 
     @PostMapping
+    @Transactional
     public ResponseEntity<?> addTransaction(@Valid @RequestBody TransactionRequest transaction,
                                             Authentication authentication) {
         try {

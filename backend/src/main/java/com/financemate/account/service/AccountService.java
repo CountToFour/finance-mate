@@ -13,7 +13,7 @@ public interface AccountService {
     AccountResponse createAccount(AccountDto dto, User user);
     Account updateAccount(String accountId, AccountDto dto, User user);
     void deleteAccount(String accountId, User user);
-    Account getAccountById(String accountId, User user);
+    AccountResponse getAccountById(String accountId, User user);
     void archiveAccount(String accountId, User user);
     void includeInStats(String accountId, User user);
     void changeBalance(String accountId, double amount, User user);

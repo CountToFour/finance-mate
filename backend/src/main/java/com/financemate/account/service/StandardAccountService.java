@@ -2,11 +2,11 @@ package com.financemate.account.service;
 
 import com.financemate.account.dto.AccountDto;
 import com.financemate.account.dto.AccountResponse;
+import com.financemate.account.dto.CurrencyResponse;
 import com.financemate.account.exception.AccessException;
 import com.financemate.account.exception.AccountNotFoundException;
 import com.financemate.account.exception.CurrencyNotFoundException;
 import com.financemate.account.exception.IllegalOperationException;
-import com.financemate.account.mapper.AccountMapper;
 import com.financemate.account.model.Account;
 import com.financemate.account.model.Currency;
 import com.financemate.account.repository.AccountRepository;
@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 @Service
 public class StandardAccountService implements AccountService {
@@ -26,27 +25,32 @@ public class StandardAccountService implements AccountService {
     private final AccountRepository accountRepository;
     private final CurrencyRepository currencyRepository;
     private final ExchangeRateRepository exchangeRateRepository;
-    private final AccountMapper accountMapper;
 
     public StandardAccountService(AccountRepository accountRepository,
                                   CurrencyRepository currencyRepository,
-                                  ExchangeRateRepository exchangeRateRepository,
-                                  AccountMapper accountMapper) {
+                                  ExchangeRateRepository exchangeRateRepository) {
         this.exchangeRateRepository = exchangeRateRepository;
         this.currencyRepository = currencyRepository;
         this.accountRepository = accountRepository;
-        this.accountMapper = accountMapper;
     }
 
     @Override
     public List<AccountResponse> getAccountForUser(User user) {
         List<Account> accounts = accountRepository.findAllByUserId(user);
-        return accounts.stream().map(account -> {
-            AccountResponse accountResponse = accountMapper.accountToDto(account);
-            accountResponse.setCurrencySymbol(account.getCurrencyCode().getSymbol());
-            account.setBalance(round(account.getBalance()));
-            return accountResponse;
-        }).toList();
+        return accounts.stream().map(account -> new AccountResponse(
+                account.getId(),
+                account.getName(),
+                account.getDescription(),
+                round(account.getBalance()),
+                account.getColor(),
+                account.isIncludeInStats(),
+                account.isArchived(),
+                new CurrencyResponse(
+                        account.getCurrencyCode().getCode(),
+                        account.getCurrencyCode().getName(),
+                        account.getCurrencyCode().getSymbol()
+                )
+        )).toList();
     }
 
     @Override
@@ -66,16 +70,27 @@ public class StandardAccountService implements AccountService {
         account.setArchived(false);
 
         Account save = accountRepository.save(account);
-        AccountResponse accountResponse = accountMapper.accountToDto(save);
-        accountResponse.setCurrencySymbol(currency.getSymbol());
-        return accountResponse;
+        return new AccountResponse(
+                save.getId(),
+                save.getName(),
+                save.getDescription(),
+                save.getBalance(),
+                save.getColor(),
+                save.isIncludeInStats(),
+                save.isArchived(),
+                new CurrencyResponse(
+                        save.getCurrencyCode().getCode(),
+                        save.getCurrencyCode().getName(),
+                        save.getCurrencyCode().getSymbol()
+                )
+        );
     }
 
     @Override
     @Transactional
     public Account updateAccount(String accountId, AccountDto dto, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(user.getId())) {
+        if (!account.getUserId().getId().equals(user.getId())) {
             throw new AccessException("Account does not belong to user");
         }
 
@@ -102,20 +117,33 @@ public class StandardAccountService implements AccountService {
     @Transactional
     public void deleteAccount(String accountId, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(user.getId())) {
+        if (!account.getUserId().getId().equals(user.getId())) {
             throw new AccessException("Account does not belong to user");
         }
         accountRepository.delete(account);
     }
 
     @Override
-    public Account getAccountById(String accountId, User user) {
+    public AccountResponse getAccountById(String accountId, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(user.getId())) {
+        if (!account.getUserId().getId().equals(user.getId())) {
             throw new AccessException("Account does not belong to user");
         }
-        account.setBalance(round(account.getBalance()));
-        return account;
+
+        return new AccountResponse(
+                account.getId(),
+                account.getName(),
+                account.getDescription(),
+                round(account.getBalance()),
+                account.getColor(),
+                account.isIncludeInStats(),
+                account.isArchived(),
+                new CurrencyResponse(
+                        account.getCurrencyCode().getCode(),
+                        account.getCurrencyCode().getName(),
+                        account.getCurrencyCode().getSymbol()
+                )
+        );
     }
 
     @Override
@@ -144,7 +172,7 @@ public class StandardAccountService implements AccountService {
     @Transactional
     public void changeBalance(String accountId, double amount, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(user.getId())) {
+        if (!account.getUserId().getId().equals(user.getId())) {
             throw new AccessException("Account does not belong to user");
         }
         account.setBalance(account.getBalance() + amount);

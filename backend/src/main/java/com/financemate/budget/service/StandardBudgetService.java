@@ -10,6 +10,7 @@ import com.financemate.budget.repository.BudgetRepository;
 import com.financemate.category.model.Category;
 import com.financemate.category.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StandardBudgetService implements BudgetService {
@@ -52,12 +54,14 @@ public class StandardBudgetService implements BudgetService {
     }
 
     @Override
-    @Transactional
     public void updateSpentAmount(Category category, double amount) {
-        Budget budget = budgetRepository.findActiveByCategory(category).orElseThrow(
-                () -> new RuntimeException("Active budget not found for category")
-        );
-        budget.setSpentAmount(budget.getSpentAmount() + amount);
+        Optional<Budget> budget = budgetRepository.findActiveByCategory(category);
+        if (budget.isEmpty()) {
+            log.warn("No active budget found for category: {}", category.getName());
+            return;
+        }
+        Budget b = budget.get();
+        b.setSpentAmount(b.getSpentAmount() + amount);
     }
 
     @Override
