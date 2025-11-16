@@ -36,6 +36,15 @@ const AccountSummaryCard: React.FC<AccountProps> = ({
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
     const handleMenuClose = () => setAnchorEl(null);
 
+    const hexToRgba = (hex: string, alpha: number) => {
+        const r = parseInt(hex.substring(1, 3), 16);
+        const g = parseInt(hex.substring(3, 5), 16);
+        const b = parseInt(hex.substring(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+
+    const backgroundColor = hexToRgba(color, 0.2);
+
     return (
         <Card
             elevation={1}
@@ -43,7 +52,7 @@ const AccountSummaryCard: React.FC<AccountProps> = ({
                 position: 'relative',
                 overflow: 'hidden',
                 borderRadius: 2,
-                bgcolor: 'background.paper',
+                bgcolor: backgroundColor,
                 border: '1px solid',
                 borderColor: color,
                 borderWidth: 5,

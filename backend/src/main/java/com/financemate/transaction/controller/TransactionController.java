@@ -177,8 +177,8 @@ public class TransactionController {
     @GetMapping("/overview/type/{type}")
     public ResponseEntity<?> getTransactionOverview(Authentication authentication,
                                                     @PathVariable TransactionType type,
-                                                    @RequestParam LocalDate startDate,
-                                                    @RequestParam LocalDate endDate) {
+                                                    @RequestParam(required = false) LocalDate startDate,
+                                                    @RequestParam(required = false) LocalDate endDate) {
         try {
             User user = userService.getUserFromAuthentication(authentication);
             return ResponseEntity.ok(transactionService.getTransactionOverview(user, startDate, endDate, type));

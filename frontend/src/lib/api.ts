@@ -140,8 +140,8 @@ export const getAllCategoriesAmount = (
 
 export const getExpenseOverview = (
     type: string,
-    startDate: string,
-    endDate: string,
+    startDate: string | null,
+    endDate: string | null,
 ) => axios.get(
     `http://localhost:8080/api/transactions/overview/type/${type}`,
     {
@@ -149,6 +149,17 @@ export const getExpenseOverview = (
             startDate: startDate,
             endDate: endDate,
         },
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const deactivateRecurringTransaction = (id: string) => axios.put(
+    `http://localhost:8080/api/transactions/deactivate/${id}`,
+    {},
+    {
         withCredentials: true,
         headers: {
             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,

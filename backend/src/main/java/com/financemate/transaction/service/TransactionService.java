@@ -31,6 +31,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -241,23 +242,62 @@ public class TransactionService {
 
     public TransactionOverviewDto getTransactionOverview(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
 
-        List<Object> actualTotalOverview = getMonthlyTransactionOverview(user, startDate, endDate, type);
-        List<Object> previousTotalOverview = getMonthlyTransactionOverview(user, startDate.minusMonths(1), endDate.minusMonths(1), type);
+        // jeśli daty nie są przekazane, licz na podstawie ostatnich 30 dni
+        boolean useLast30Days = (startDate == null || endDate == null);
+        LocalDate currentStart;
+        LocalDate currentEnd;
+        LocalDate previousStart;
+        LocalDate previousEnd;
 
-        double totalAmountChangePercentage = ((double) actualTotalOverview.get(0) / (double) previousTotalOverview.get(0)) * 100;
-        totalAmountChangePercentage = Math.round(totalAmountChangePercentage * 10.0) / 10.0 - 100;
-        int expenseCountChangePercentage = (int) actualTotalOverview.get(2) - (int) previousTotalOverview.get(2);
+        if (useLast30Days) {
+            currentEnd = LocalDate.now();
+            currentStart = currentEnd.minusDays(29); // ostatnie 30 dni łącznie
+            previousEnd = currentStart.minusDays(1);
+            previousStart = previousEnd.minusDays(29);
+        } else {
+            currentStart = startDate;
+            currentEnd = endDate;
+            previousStart = currentStart.minusMonths(1);
+            previousEnd = currentEnd.minusMonths(1);
+        }
+
+        List<Object> actualTotalOverview = getMonthlyTransactionOverview(user, currentStart, currentEnd, type);
+        List<Object> previousTotalOverview = getMonthlyTransactionOverview(user, previousStart, previousEnd, type);
+
+        double actualTotal = (double) actualTotalOverview.get(0);
+        double previousTotal = (double) previousTotalOverview.get(0);
+
+        double totalAmountChangePercentage;
+        if (previousTotal == 0) {
+            totalAmountChangePercentage = actualTotal == 0 ? 0.0 : 100.0; // jeśli poprzedni okres miał 0, ustaw pragmatycznie 100% wzrostu
+        } else {
+            totalAmountChangePercentage = ((actualTotal - previousTotal) / previousTotal) * 100.0;
+        }
+        // zaokrąglenie do 1 miejsca po przecinku
+        totalAmountChangePercentage = Math.round(totalAmountChangePercentage * 10.0) / 10.0;
+
+        int expenseCountChange = (int) actualTotalOverview.get(2) - (int) previousTotalOverview.get(2);
+
+        double totalRounded = Math.round(actualTotal * 100.0) / 100.0;
+        double averageRounded = Math.round(((double) actualTotalOverview.get(1)) * 100.0) / 100.0;
 
         return new TransactionOverviewDto(
-                Math.round((double) actualTotalOverview.get(0) * 100.0) / 100.0,
-                Math.round((double) actualTotalOverview.get(1) * 100.0) / 100.0,
+                totalRounded,
+                averageRounded,
                 (int) actualTotalOverview.get(2),
                 totalAmountChangePercentage,
-                expenseCountChangePercentage
+                expenseCountChange
         );
     }
 
     private List<Object> getMonthlyTransactionOverview(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
+        // zabezpieczenie: jeśli startDate > endDate, zamień je
+        if (startDate.isAfter(endDate)) {
+            LocalDate tmp = startDate;
+            startDate = endDate;
+            endDate = tmp;
+        }
+
         Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(user.getId()))
                 .and(TransactionSpecifications.dateBetween(startDate, endDate))
                 .and(TransactionSpecifications.type(type));
@@ -265,7 +305,11 @@ public class TransactionService {
         List<Transaction> transactions = transactionRepository.findAll(spec);
         double totalAmount = transactions.stream().map(Transaction::getPrice)
                 .mapToDouble(Double::doubleValue).sum();
-        double averageAmount = totalAmount / 30;
+
+        long days = ChronoUnit.DAYS.between(startDate, endDate) + 1; // liczba dni w okresie (włącznie)
+        if (days <= 0) days = 1;
+
+        double averageAmount = totalAmount / (double) days;
         int expensesCount = transactions.size();
 
         return List.of(totalAmount, averageAmount, expensesCount);

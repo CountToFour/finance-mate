@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {
     Box,
     Card,
@@ -6,7 +6,7 @@ import {
     Typography,
     IconButton,
     Divider,
-    Button, MenuItem, TextField, Chip,
+    Button, MenuItem, TextField, Chip, Switch, FormControlLabel,
 } from "@mui/material";
 import {Add, AttachMoneyOutlined} from "@mui/icons-material";
 import InputAdornment from '@mui/material/InputAdornment';
@@ -14,15 +14,11 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import {
-    PieChart, Pie, Cell, Tooltip as RechartsTooltip
-    , ResponsiveContainer
-} from "recharts";
-import {
     deleteTransaction,
     deleteRecurringTransaction,
     getAllCategoriesAmount,
     getAllRecurringExpenses, getExpenseOverview,
-    getExpenses, getAccounts, getCategories
+    getExpenses, getAccounts, getCategories, deactivateRecurringTransaction
 } from "../../lib/api.ts";
 import {useAuthStore} from "../../store/auth.ts";
 import type {Account, Category, CategoryAmount, Expense, ExpenseOverview, RecurringExpense} from "../../lib/types.ts";
@@ -43,8 +39,6 @@ import ExpenseSummaryCard from "./ExpenseSummaryCard.tsx";
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
-const COLORS = ["#5C86D3", "#A175BF", "#CDB557", "#7AB6D1"];
-// const categories = ["Wszystkie", "Jedzenie", "Transport", "Zakupy", "Rozrywka", "Inne"];
 const currentYear = dayjs();
 
 function ExpensesPage() {
@@ -82,8 +76,7 @@ function ExpensesPage() {
             getExpenses(filteredCategory, dateFrom, dateTo).then((res) => setExpenses(res.data));
         }
 
-        getExpenseOverview('EXPENSE', dayjs().startOf("month").format("YYYY-MM-DD"),
-            dayjs().endOf("month").format("YYYY-MM-DD")).then((res) => setOverview(res.data));
+        getExpenseOverview('EXPENSE', null, null).then((res) => setOverview(res.data));
 
         getAccounts().then((res) => {
             setAccounts(res.data);
@@ -201,11 +194,10 @@ function ExpensesPage() {
             flex: 0.5,
             sortable: false,
             filterable: false,
-            headerAlign: 'right',
             renderCell: (params) => (
                 <Box sx={{
                     display: 'flex',
-                    justifyContent: 'right',
+                    justifyContent: 'center',
                     width: '100%',
                     height: '100%',
                 }}>
@@ -270,7 +262,7 @@ function ExpensesPage() {
         {
             field: 'category',
             headerName: t('expenses.page.expensesTable.category'),
-            flex: 1.5,
+            flex: 1,
             renderCell: (params) => {
                 const category = categories.find(a => a.name === params.value);
                 if (!category) return params.value;
@@ -287,6 +279,43 @@ function ExpensesPage() {
             }
         },
         {
+            field: 'active',
+            //TODO WIELOJĘZYCZNBOSC
+            headerName: "Aktywność",
+            flex: 0.5,
+            renderCell: (params) => {
+                const isActive = params.row.active;
+
+                return (
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={isActive}
+                                onChange={async () => {
+                                    try {
+                                        await deactivateRecurringTransaction(params.row.id);
+
+                                        setRecurringExpenses(prev =>
+                                            prev.map(exp =>
+                                                exp.id === params.row.id
+                                                    ? { ...exp, active: !exp.active }
+                                                    : exp
+                                            )
+                                        );
+                                    } catch (e) {
+                                        console.error(e);
+                                    }
+                                }}
+                                color="secondary"
+                            />
+                        }
+                        label={false}
+                        sx={{ minWidth: "140px" }}
+                    />
+                );
+            }
+        },
+        {
             field: 'price',
             headerName: t('expenses.page.expensesTable.price'),
             flex: 0.8,
@@ -296,14 +325,13 @@ function ExpensesPage() {
         {
             field: 'actions',
             headerName: t('expenses.page.expensesTable.actions'),
-            flex: 0.8,
+            flex: 0.5,
             sortable: false,
             filterable: false,
-            headerAlign: 'right',
             renderCell: (params) => (
                 <Box sx={{
                     display: 'flex',
-                    justifyContent: 'right',
+                    justifyContent: 'center',
                     width: '100%',
                     height: '100%',
                 }}>
@@ -598,36 +626,6 @@ function ExpensesPage() {
                                     },
                                 }}
                             />
-                        </CardContent>
-                    </Card>
-                </Box>
-                <Box flex={0.8}>
-                    <Card sx={{mb: 3}}>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Wydatki według kategorii
-                            </Typography>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <PieChart>
-                                    <Pie
-                                        data={expenses}
-                                        dataKey="price"
-                                        nameKey="category"
-                                        cx="50%"
-                                        cy="50%"
-                                        outerRadius={100}
-                                        label
-                                    >
-                                        {expenses.map((_, i) => (
-                                            <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]}/>
-                                        ))}
-                                    </Pie>
-                                    <RechartsTooltip/>
-                                </PieChart>
-                            </ResponsiveContainer>
-                            <Typography variant="subtitle1" align="center" mt={2}>
-                                Całkowite wydatki: {totalSpending.toFixed(2)} zł
-                            </Typography>
                         </CardContent>
                     </Card>
                 </Box>
