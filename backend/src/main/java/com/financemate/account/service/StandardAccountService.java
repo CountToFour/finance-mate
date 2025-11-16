@@ -189,7 +189,7 @@ public class StandardAccountService implements AccountService {
         Account toAccount = accountRepository.findById(toAccountId).orElseThrow(()
                 -> new AccountNotFoundException("Destination account not found"));
 
-        if (!fromAccount.getUserId().equals(user.getId()) || !toAccount.getUserId().equals(user.getId())) {
+        if (!fromAccount.getUserId().getId().equals(user.getId()) || !toAccount.getUserId().getId().equals(user.getId())) {
             throw new AccessException("One or both accounts do not belong to user");
         }
 

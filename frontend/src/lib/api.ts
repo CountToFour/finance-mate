@@ -233,8 +233,8 @@ export const includeInStatsAccount = (accountId: string) => axios.put(
     }
 )
 
-export const transferBetweenAccounts = (accountId: string, transferDto: TransferDto) => axios.put(
-    `http://localhost:8080/api/account/transfer/${accountId}`,
+export const transferBetweenAccounts = (transferDto: TransferDto) => axios.put(
+    `http://localhost:8080/api/account/transfer`,
     transferDto,
     {
         withCredentials: true,

@@ -10,9 +10,11 @@ import type {Account, Currency} from "../../lib/types.ts";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import AddAccountDialog from "./AddAccountDialog.tsx";
 import AccountSummaryCard from "./AccountSummaryCard.tsx";
+import TransferDialog from "./TransferDialog.tsx";
 
 export default function Accounts() {
     const [openDialog, setOpenDialog] = useState(false);
+    const [transferDialog, setTransferDialog] = useState(false);
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [accountToEdit, setAccountToEdit] = useState<Account | null>(null);
     const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -27,7 +29,7 @@ export default function Accounts() {
         getCurrencies().then((res) => {
             setCurrencies(res.data);
         });
-    }, [openDialog]);
+    }, [openDialog, transferDialog]);
 
     const includeAccountInStats = (accountId: string) => {
         includeInStatsAccount(accountId).then((res) => {
@@ -56,13 +58,24 @@ export default function Accounts() {
                     <Typography variant="h5" fontWeight={'bold'} color={'secondary'}>Konta</Typography>
                     <Typography variant="body2" sx={{mt: 1}}>Zarządzaj swoimi kontami</Typography>
                 </Box>
-                <Button variant={'contained'} color={'secondary'} onClick={() => {setOpenDialog(true)}}>
-                    <Add sx={{mr: 1}}/>
-                    Nowe konto
-                </Button>
+                <Box display="flex" gap={2} alignItems="center">
+                    <Button variant={'contained'} color={'secondary'} onClick={() => {
+                        setTransferDialog(true)
+                    }}>
+                        <Add sx={{mr: 1}}/>
+                        Transfer
+                    </Button>
+                    <Button variant={'contained'} color={'secondary'} onClick={() => {
+                        setOpenDialog(true)
+                    }}>
+                        <Add sx={{mr: 1}}/>
+                        Nowe konto
+                    </Button>
+                </Box>
             </Box>
 
-            <Box p={2} display="grid" gap={2} sx={{gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'}}}>
+            <Box p={2} display="grid" gap={2}
+                 sx={{gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'}}}>
                 {accounts.map((account) => (
                     <AccountSummaryCard
                         name={account.name}
@@ -81,7 +94,11 @@ export default function Accounts() {
                     />
                 ))}
             </Box>
-
+            <TransferDialog
+                open={transferDialog}
+                onClose={() => setTransferDialog(false)}
+                accounts={accounts}
+            />
             <AddAccountDialog
                 open={openDialog}
                 onClose={() => {
