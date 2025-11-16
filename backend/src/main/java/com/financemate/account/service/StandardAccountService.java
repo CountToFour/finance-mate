@@ -150,7 +150,7 @@ public class StandardAccountService implements AccountService {
     @Transactional
     public void archiveAccount(String accountId, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(user.getId())) {
+        if (!account.getUserId().getId().equals(user.getId())) {
             throw new AccessException("Account does not belong to user");
         }
         account.setArchived(!account.isArchived());
@@ -169,7 +169,6 @@ public class StandardAccountService implements AccountService {
     }
 
     @Override
-    @Transactional
     public void changeBalance(String accountId, double amount, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
         if (!account.getUserId().getId().equals(user.getId())) {

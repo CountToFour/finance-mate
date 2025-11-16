@@ -12,7 +12,7 @@ const CategoryExpense: React.FC<CategoryExpenseProps> = ({categoryAmount, color}
     const {t} = useTranslation();
 
     return (
-        <Box sx={{border: 1, borderColor: '#8c8c8c', borderRadius: 1.5, p: 2, display: 'flex', gap: 1.5}}>
+        <Box sx={{border: 3, borderColor: color, borderRadius: 1.5, p: 2, display: 'flex', gap: 1.5}}>
             <Box sx={{width: 14, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 <Box sx={{width: 15, height: 15, borderRadius: '50%', bgcolor: color}}/>
             </Box>

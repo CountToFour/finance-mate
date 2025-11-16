@@ -6,7 +6,7 @@ import {
     Typography,
     IconButton,
     Divider,
-    Button, MenuItem, TextField,
+    Button, MenuItem, TextField, Chip,
 } from "@mui/material";
 import {Add, AttachMoneyOutlined} from "@mui/icons-material";
 import InputAdornment from '@mui/material/InputAdornment';
@@ -22,10 +22,10 @@ import {
     deleteRecurringTransaction,
     getAllCategoriesAmount,
     getAllRecurringExpenses, getExpenseOverview,
-    getExpenses, getAccounts
+    getExpenses, getAccounts, getCategories
 } from "../../lib/api.ts";
 import {useAuthStore} from "../../store/auth.ts";
-import type {Account, CategoryAmount, Expense, ExpenseOverview, RecurringExpense} from "../../lib/types.ts";
+import type {Account, Category, CategoryAmount, Expense, ExpenseOverview, RecurringExpense} from "../../lib/types.ts";
 import {DataGrid, type GridColDef} from '@mui/x-data-grid';
 import {useNotification} from "../../components/NotificationContext.tsx";
 import AddExpenseDialog from "./AddExpenseDialog.tsx";
@@ -44,7 +44,7 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 const COLORS = ["#5C86D3", "#A175BF", "#CDB557", "#7AB6D1"];
-const categories = ["Wszystkie", "Jedzenie", "Transport", "Zakupy", "Rozrywka", "Inne"];
+// const categories = ["Wszystkie", "Jedzenie", "Transport", "Zakupy", "Rozrywka", "Inne"];
 const currentYear = dayjs();
 
 function ExpensesPage() {
@@ -53,10 +53,11 @@ function ExpensesPage() {
 
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [categories, setCategories] = useState<Category[]>([])
     const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
     const [selectedRecurringExpense, setSelectedRecurringExpense] = useState<RecurringExpense>();
-    const [category, setCategory] = useState<string>("Wszystkie");
+    const [filteredCategory, setFilteredCategory] = useState<string>("Wszystkie");
     const [categoriesExpenses, setCategoriesExpenses] = useState<CategoryAmount[]>([])
     const [overview, setOverview] = useState<ExpenseOverview>();
 
@@ -75,21 +76,25 @@ function ExpensesPage() {
     const totalSpending = expenses.reduce((acc, e) => acc + e.price, 0);
 
     useEffect(() => {
-        if (category === "Wszystkie") {
+        if (filteredCategory === "Wszystkie") {
             getExpenses(null, dateFrom, dateTo).then((res) => setExpenses(res.data));
         } else {
-            getExpenses(category, dateFrom, dateTo).then((res) => setExpenses(res.data));
+            getExpenses(filteredCategory, dateFrom, dateTo).then((res) => setExpenses(res.data));
         }
+
         getExpenseOverview('EXPENSE', dayjs().startOf("month").format("YYYY-MM-DD"),
             dayjs().endOf("month").format("YYYY-MM-DD")).then((res) => setOverview(res.data));
+
         getAccounts().then((res) => {
             setAccounts(res.data);
         });
-    }, [user?.id, openDialog, category, dateFrom, dateTo]);
+
+        getCategories('EXPENSE').then((res) => setCategories(res.data))
+    }, [user?.id, openDialog, filteredCategory, dateFrom, dateTo]);
 
     useEffect(() => {
         getAllRecurringExpenses().then((res) => setRecurringExpenses(res.data));
-    }, [editRecurringExpense, user?.id])
+    }, [editRecurringExpense, user?.id, openDialog])
 
     useEffect(() => {
         getAllCategoriesAmount('EXPENSE', categoryDateFrom, categoryDateTo).then((res) => setCategoriesExpenses(res.data));
@@ -99,10 +104,10 @@ function ExpensesPage() {
         deleteTransaction(id)
             .then(() => {
                 success(t('expenses.notifications.delete.success'))
-                if (category === "Wszystkie") {
-                    getExpenses( null, dateFrom, dateTo).then((res) => setExpenses(res.data));
+                if (filteredCategory === "Wszystkie") {
+                    getExpenses(null, dateFrom, dateTo).then((res) => setExpenses(res.data));
                 } else {
-                    getExpenses(category, dateFrom, dateTo).then((res) => setExpenses(res.data));
+                    getExpenses(filteredCategory, dateFrom, dateTo).then((res) => setExpenses(res.data));
                 }
             })
             .catch(() => {
@@ -121,9 +126,40 @@ function ExpensesPage() {
             });
     }
 
+    const hexToRgba = (hex: string, alpha: number) => {
+        const r = parseInt(hex.substring(1, 3), 16);
+        const g = parseInt(hex.substring(3, 5), 16);
+        const b = parseInt(hex.substring(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+
+
+    //COLUMNS WITH EXPENSES
     const columns: GridColDef[] = [
         {
-            field: 'expenseDate',
+            field: 'accountName',
+            //TODO ZMIENIC NA WIELOJEZYCZNOSC
+            headerName: t('Nazwa konta'),
+            flex: 1,
+            renderCell: (params) => {
+                const account = accounts.find(a => a.name === params.value);
+                if (!account) return params.value;
+                const background = hexToRgba(account.color, 0.2)
+                return (
+                    <Chip label={account?.name}
+                          variant={"outlined"}
+                          sx={{
+                              color: account?.color,
+                              borderColor: account?.color,
+                              backgroundColor: background,
+                              fontWeight: 600,
+                              borderWidth: 2,
+                          }}/>
+                );
+            }
+        },
+        {
+            field: 'createdAt',
             headerName: t('expenses.page.expensesTable.date'),
             flex: 1,
         },
@@ -136,19 +172,33 @@ function ExpensesPage() {
         {
             field: 'category',
             headerName: t('expenses.page.expensesTable.category'),
-            flex: 1.5,
+            flex: 1,
+            renderCell: (params) => {
+                const category = categories.find(a => a.name === params.value);
+                if (!category) return params.value;
+                const background = hexToRgba(category.color, 0.2)
+                return (
+                    <Chip label={category?.name}
+                          variant={"outlined"}
+                          sx={{
+                              color: category?.color,
+                              borderColor: category?.color,
+                              backgroundColor: background,
+                          }}/>
+                );
+            }
         },
         {
             field: 'price',
             headerName: t('expenses.page.expensesTable.price'),
-            flex: 1,
-            valueFormatter: value => `-${value} zł`,
+            flex: 0.8,
+            valueFormatter: value => `${value} zł`,
             cellClassName: 'priceNegative',
         },
         {
             field: 'actions',
             headerName: t('expenses.page.expensesTable.actions'),
-            flex: 0.8,
+            flex: 0.5,
             sortable: false,
             filterable: false,
             headerAlign: 'right',
@@ -182,9 +232,32 @@ function ExpensesPage() {
         },
     ]
 
+    //COLUMNS WITH RECURRING EXPENSES
     const recurringColumns: GridColDef[] = [
         {
-            field: 'expenseDate',
+            field: 'accountName',
+            //TODO ZMIENIC NA WIELOJEZYCZNOSC
+            headerName: t('Nazwa konta'),
+            flex: 1,
+            renderCell: (params) => {
+                const account = accounts.find(a => a.name === params.value);
+                if (!account) return params.value;
+                const background = hexToRgba(account.color, 0.2)
+                return (
+                    <Chip label={account?.name}
+                          variant={"outlined"}
+                          sx={{
+                              color: account?.color,
+                              borderColor: account?.color,
+                              backgroundColor: background,
+                              fontWeight: 600,
+                              borderWidth: 2,
+                          }}/>
+                );
+            }
+        },
+        {
+            field: 'createdAt',
             headerName: t('expenses.page.expensesTable.date'),
             flex: 1,
         },
@@ -198,12 +271,26 @@ function ExpensesPage() {
             field: 'category',
             headerName: t('expenses.page.expensesTable.category'),
             flex: 1.5,
+            renderCell: (params) => {
+                const category = categories.find(a => a.name === params.value);
+                if (!category) return params.value;
+                const background = hexToRgba(category.color, 0.2)
+                return (
+                    <Chip label={category?.name}
+                          variant={"outlined"}
+                          sx={{
+                              color: category?.color,
+                              borderColor: category?.color,
+                              backgroundColor: background,
+                          }}/>
+                );
+            }
         },
         {
             field: 'price',
             headerName: t('expenses.page.expensesTable.price'),
-            flex: 1,
-            valueFormatter: value => `-${value} zł`,
+            flex: 0.8,
+            valueFormatter: value => `${value} zł`,
             cellClassName: 'priceNegative',
         },
         {
@@ -263,7 +350,9 @@ function ExpensesPage() {
                     {t('expenses.page.add')}
                 </Button>
             </Box>
-            <Box p={2} display="grid" gap={2} sx={{gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'}}}>
+            {/*// SHORT SUMMARY*/}
+            <Box p={2} display="grid" gap={2}
+                 sx={{gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'}}}>
                 <ExpenseSummaryCard
                     type="totalExpenses"
                     title="Całkowite wydatki"
@@ -272,7 +361,7 @@ function ExpensesPage() {
                     change={overview?.totalAmountChangePercentage}
                     currency="zł"
                     accentColor="#E53935" // czerwony jak na podglądzie; możesz też użyć 'error.main'
-                    icon={<AttachMoneyOutlined fontSize="medium" />}
+                    icon={<AttachMoneyOutlined fontSize="medium"/>}
                 />
                 <ExpenseSummaryCard
                     type="totalTransactions"
@@ -281,7 +370,7 @@ function ExpensesPage() {
                     amount={overview?.expenseCount}
                     change={overview?.expenseCountChangePercentage}
                     accentColor="#70B2B1"
-                    icon={<ReceiptIcon fontSize="medium" />}
+                    icon={<ReceiptIcon fontSize="medium"/>}
                 />
                 <ExpenseSummaryCard
                     type="Average"
@@ -290,10 +379,11 @@ function ExpensesPage() {
                     amount={overview?.averageAmount}
                     currency="zł"
                     accentColor="#5C86D3" // czerwony jak na podglądzie; możesz też użyć 'error.main'
-                    icon={<TrendingUpIcon fontSize="medium" />}
+                    icon={<TrendingUpIcon fontSize="medium"/>}
                 />
 
             </Box>
+            {/*// EXPENSES TABLE*/}
             <Box ml={2} mr={2}>
                 <Card>
                     <CardContent>
@@ -349,9 +439,9 @@ function ExpensesPage() {
                                     />
                                 </LocalizationProvider>
                                 <TextField
-                                    value={category}
+                                    value={filteredCategory}
                                     defaultValue={"Wszystkie"}
-                                    onChange={(e) => setCategory(e.target.value)}
+                                    onChange={(e) => setFilteredCategory(e.target.value)}
                                     select
                                     sx={{width: 250}}
                                     size="small"
@@ -365,9 +455,12 @@ function ExpensesPage() {
                                         },
                                     }}
                                 >
+                                    {/*//TODO ZMIENIC NA WIELOJEZYCZNOSC*/}
+                                    <MenuItem value="Wszystkie">Wszystkie</MenuItem>
+
                                     {Object.values(categories).map((cat) => (
-                                        <MenuItem key={cat} value={cat}>
-                                            {cat}
+                                        <MenuItem key={cat.id} value={cat.name}>
+                                            {cat.name}
                                         </MenuItem>
                                     ))}
                                 </TextField>
@@ -394,6 +487,7 @@ function ExpensesPage() {
                     </CardContent>
                 </Card>
             </Box>
+            {/*EXPENSES FOR CATEGORIES*/}
             <Box p={2}>
                 <Card>
                     <CardContent>
@@ -457,16 +551,24 @@ function ExpensesPage() {
                                 gap: 2,
                             }}
                         >
-                            {Object.values(categoriesExpenses).map((cat, i) => (
-                                <CategoryExpense
-                                    categoryAmount={cat}
-                                    color={COLORS[i % COLORS.length]}
-                                />
-                            ))}
+                            {Object.values(categoriesExpenses).map((cat, i) => {
+                                const matchedCategory = categories.find(c => c.name === cat.category);
+
+                                return (
+                                    <CategoryExpense
+                                        key={i}
+                                        categoryAmount={cat}
+                                        color={matchedCategory?.color}
+                                    />
+                                );
+                            })}
+
                         </Box>
                     </CardContent>
                 </Card>
             </Box>
+
+            {/*// RECURRING EXPENSES TABLE*/}
             <Box p={2} display="flex" gap={3}>
                 <Box flex={1}>
                     <Card>
@@ -499,7 +601,7 @@ function ExpensesPage() {
                         </CardContent>
                     </Card>
                 </Box>
-                <Box flex={1}>
+                <Box flex={0.8}>
                     <Card sx={{mb: 3}}>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
@@ -532,14 +634,20 @@ function ExpensesPage() {
             </Box>
             <AddExpenseDialog
                 open={openDialog}
-                onClose={() => setOpenDialog(false)}
+                onClose={() => {
+                    setOpenDialog(false)
+                    setSelectedExpense(null)
+                }}
                 initialExpense={selectedExpense}
                 accounts={accounts}
+                categories={categories}
             />
             <RecurringExpenseDialog
                 open={editRecurringExpense}
                 onClose={() => setEditRecurringExpense(false)}
                 recurringExpense={selectedRecurringExpense}
+                accounts={accounts}
+                categories={categories}
             />
         </>
     );

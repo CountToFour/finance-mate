@@ -11,8 +11,7 @@ import {
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import dayjs, {Dayjs} from "dayjs";
 import {useNotification} from "../../components/NotificationContext.tsx";
-import {useAuthStore} from "../../store/auth.ts";
-import type {TransactionDto, RecurringExpense} from "../../lib/types.ts";
+import type {TransactionDto, RecurringExpense, Account, Category, Currency} from "../../lib/types.ts";
 import {editExpense} from "../../lib/api.ts";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
@@ -23,10 +22,10 @@ interface AddExpenseDialogProps {
     open: boolean;
     onClose: () => void;
     recurringExpense?: RecurringExpense;
+    accounts: Account[];
+    categories: Category[];
 }
 
-//TODO JAK PONIŻEJ
-const categories = ["Jedzenie", "Transport", "Zakupy", "Rozrywka", "Inne"];
 //TODO ZROBIĆ Z TEGO ENUM W types.ts I ROZWAŻYĆ CUSTOM PERIOD
 const periodTypes = {
     DAILY: "Daily",
@@ -37,36 +36,52 @@ const periodTypes = {
 
 type PeriodType = keyof typeof periodTypes;
 
-const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, recurringExpense}) => {
+const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, recurringExpense, accounts, categories}) => {
     const {success, error} = useNotification();
     const {t} = useTranslation();
-    const user = useAuthStore(s => s.user);
     const [date, setDate] = useState<Dayjs>();
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");
-    const [category, setCategory] = useState("");
+    const [category, setCategory] = useState<Category | null>(null);
+    const [currency, setCurrency] = useState<Currency | null>(null);
+    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
     const [periodType, setPeriodType] = useState<PeriodType | "">(recurringExpense?.periodType as PeriodType ?? "");
     const [active, setActive] = useState<boolean>();
 
     const [errors, setErrors] = useState({
         amount: "",
         category: "",
+        account: "",
     });
 
     useEffect(() => {
         if (recurringExpense) {
             setDescription(recurringExpense.description ?? null);
-            setAmount(recurringExpense.price.toString());
-            setCategory(recurringExpense.category);
-            setDate(dayjs(recurringExpense.expenseDate));
+            setAmount(Math.abs(recurringExpense.price).toString());
+            setDate(dayjs(recurringExpense.createdAt));
             setActive(recurringExpense.active);
+            setPeriodType(recurringExpense.periodType as PeriodType);
+
+            if ((recurringExpense as RecurringExpense).category) {
+                const cat = categories.find(c => c.name === (recurringExpense as RecurringExpense).category);
+                if (cat) setCategory(cat);
+            }
+
+            if ((recurringExpense as RecurringExpense).accountName) {
+                // znajdź konto w liście accounts
+                const acct = accounts.find(a => a.name === (recurringExpense as RecurringExpense).accountName);
+                if (acct) {
+                    setSelectedAccount(acct);
+                    setCurrency(acct.currency);
+                }
+            }
         }
-    }, [recurringExpense])
+    }, [accounts, categories, recurringExpense])
 
 
     const validate = () => {
         let valid = true;
-        const newErrors = {description: "", amount: "", category: ""};
+        const newErrors = {description: "", amount: "", category: "", account: ""};
 
         if (!amount || parseFloat(amount) <= 0) {
             newErrors.amount = t('expenses.addExpense.price.required');
@@ -74,6 +89,10 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, recur
         }
         if (!category) {
             newErrors.category = t('expenses.addExpense.category.required');
+            valid = false;
+        }
+        if (!selectedAccount) {
+            newErrors.account = t('expenses.addExpense.account.required') || 'Wybierz konto';
             valid = false;
         }
 
@@ -85,13 +104,14 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, recur
         if (!validate()) return;
 
         const expenseDto: TransactionDto = {
-            userId: user?.id,
-            category: category,
+            accountId: selectedAccount!.id,
+            categoryId: category!.id,
             price: parseFloat(amount),
             description: description,
-            expenseDate: date?.format("YYYY-MM-DD"),
+            createdAt: date!.format("YYYY-MM-DD"),
             periodType: periodType,
-            active: active
+            active: active,
+            transactionType: "EXPENSE"
         };
 
         if (recurringExpense) {
@@ -107,18 +127,18 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, recur
     };
 
     const handleClose = () => {
-        setErrors({amount: "", category: ""});
+        setErrors({amount: "", category: "", account: ""});
         onClose();
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
+        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
             <DialogTitle>{t('expenses.recurringExpense.label')}</DialogTitle>
             <DialogContent dividers>
                 <Box
                     sx={{
-                        display: "grid",
-                        gridTemplateColumns: {xs: "1fr", sm: "1fr 1fr"},
+                        display: "flex",
+                        alignItems: "center",
                         gap: 2,
                     }}
                 >
@@ -129,6 +149,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, recur
                             onChange={(newValue) => setDate(newValue)}
                             slotProps={{textField: {fullWidth: true}}}
                             format={"DD-MM-YYYY"}
+                            sx={{flex: 1}}
                             // disablePast={true}
                         />
                     </LocalizationProvider>
@@ -146,6 +167,14 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, recur
                         }
                         error={!!errors.amount}
                         helperText={errors.amount}
+                        sx={{flex: 1}}
+                    />
+                    <TextField
+                        fullWidth
+                        label={"Waluta"}
+                        value={currency?.symbol ?? ""}
+                        disabled
+                        sx={{flex: 0.5}}
                     />
                 </Box>
                 <TextField
@@ -159,10 +188,36 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, recur
                     select
                     fullWidth
                     margin="normal"
-                    label={t('expenses.addExpense.category.label')}
-                    value={category}
+                    //TODO WIELOJEZYCZNOSC
+                    label={t('Konto')}
+                    value={selectedAccount ? selectedAccount.id : ""}
                     onChange={(e) => {
-                        setCategory(e.target.value)
+                        const id = e.target.value as string;
+                        const acct = accounts.find(a => a.id === id) ?? null;
+                        setSelectedAccount(acct);
+                        setCurrency(acct?.currency);
+                        setErrors({...errors, account: ""});
+                    }
+                    }
+                    error={!!errors.account}
+                    helperText={errors.account}
+                >
+                    {accounts.map((account) => (
+                        <MenuItem key={account.id} value={account.id}>
+                            {account.name}
+                        </MenuItem>
+                    ))}
+                </TextField>
+                <TextField
+                    select
+                    fullWidth
+                    margin="normal"
+                    label={t('expenses.addExpense.category.label')}
+                    value={category ? category.id : ""}
+                    onChange={(e) => {
+                        const id = e.target.value as string;
+                        const cat = categories.find(c => c.id === id) ?? null;
+                        setCategory(cat)
                         setErrors({...errors, category: ""})
                     }
                     }
@@ -170,8 +225,8 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, recur
                     helperText={errors.category}
                 >
                     {categories.map((cat) => (
-                        <MenuItem key={cat} value={cat}>
-                            {cat}
+                        <MenuItem key={cat.id} value={cat.id}>
+                            {cat.name}
                         </MenuItem>
                     ))}
                 </TextField>

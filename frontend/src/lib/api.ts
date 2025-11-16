@@ -244,3 +244,18 @@ export const getCurrencies = () => axios.get(
         },
     }
 )
+
+// CATEGORIES
+
+export const getCategories = (transactionType: string) => axios.get(
+    'http://localhost:8080/api/categories',
+    {
+        params: {
+            type: transactionType,
+        },
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)

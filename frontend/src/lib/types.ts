@@ -22,11 +22,11 @@ export type State = {
 
 export type Expense = {
     id: string
-    userId: string
+    accountName: string
     category: string
     price: number
     description: string
-    expenseDate: string
+    createdAt: string
 }
 
 export type TransactionDto = {
@@ -51,11 +51,11 @@ export type EditTransactionDto = {
 
 export type RecurringExpense = {
     id: string
-    userId: string
+    accountName: string
     category: string
     price: number
     description: string
-    expenseDate: string
+    createdAt: string
     active: boolean
     periodType: string
 }
@@ -106,4 +106,13 @@ export type Currency = {
     code: string
     name: string
     symbol: string
+}
+
+//CATEGORY
+
+export type Category = {
+    id: string
+    name: string
+    color: string
+
 }

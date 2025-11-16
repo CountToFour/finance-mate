@@ -11,7 +11,7 @@ import {
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import dayjs, {Dayjs} from "dayjs";
 import {useNotification} from "../../components/NotificationContext.tsx";
-import type {Account, Expense, TransactionDto} from "../../lib/types.ts";
+import type {Account, Category, Currency, Expense, TransactionDto} from "../../lib/types.ts";
 import {addTransaction, addRecurringTransaction, editExpense} from "../../lib/api.ts";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
@@ -23,10 +23,9 @@ interface AddExpenseDialogProps {
     onClose: () => void;
     initialExpense?: Expense | null;
     accounts: Account[];
+    categories: Category[];
 }
 
-//TODO JAK PONIŻEJ
-const categories = ["Jedzenie", "Transport", "Zakupy", "Rozrywka", "Inne"];
 //TODO ZROBIĆ Z TEGO ENUM W types.ts I ROZWAŻYĆ CUSTOM PERIOD
 const periodTypes = {
     NONE: "None",
@@ -36,13 +35,14 @@ const periodTypes = {
     YEARLY: "Yearly"
 }
 
-const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initialExpense, accounts}) => {
+const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initialExpense, accounts, categories}) => {
     const {success, error} = useNotification();
     const {t} = useTranslation();
     const [date, setDate] = useState<Dayjs | null>(dayjs());
     const [description, setDescription] = useState<string | null>(null);
     const [amount, setAmount] = useState("");
-    const [category, setCategory] = useState("");
+    const [category, setCategory] = useState<Category | null>(null);
+    const [currency, setCurrency] = useState<Currency | null>(null);
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
     const [periodType, setPeriodType] = useState<keyof typeof periodTypes>("NONE");
 
@@ -55,19 +55,24 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
     useEffect(() => {
         if (initialExpense) {
             setDescription(initialExpense.description ?? null);
-            setAmount(initialExpense.price.toString());
-            setCategory(initialExpense.category);
-            setDate(dayjs(initialExpense.expenseDate));
+            setAmount(Math.abs(initialExpense.price).toString());
+            if ((initialExpense as Expense).category) {
+                const cat = categories.find(c => c.name === (initialExpense as Expense).category);
+                if (cat) setCategory(cat);
+            }
+            setDate(dayjs(initialExpense.createdAt));
             // jeśli initialExpense zawiera id konta, ustaw odpowiednie konto w stanie
             // zakładamy, że initialExpense ma pole accountId (string). Jeśli nie, nic nie zmieniamy.
-            // @ts-ignore
-            if ((initialExpense as any).accountId) {
+            if ((initialExpense as Expense).accountName) {
                 // znajdź konto w liście accounts
-                const acct = accounts.find(a => a.id === (initialExpense as any).accountId);
-                if (acct) setSelectedAccount(acct);
+                const acct = accounts.find(a => a.name === (initialExpense as Expense).accountName);
+                if (acct) {
+                    setSelectedAccount(acct);
+                    setCurrency(acct.currency);
+                }
             }
         }
-    }, [initialExpense, accounts])
+    }, [initialExpense, accounts, categories])
 
 
     const validate = () => {
@@ -97,10 +102,10 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         const expenseDto: TransactionDto = {
             // wysyłamy id konta
             accountId: selectedAccount!.id,
-            categoryId: "e9e205c8-af85-479f-a62b-3b2ef9de2b95",
+            categoryId: category!.id,
             price: parseFloat(amount),
             description: description,
-            createdAt: date?.format("YYYY-MM-DD"),
+            createdAt: date!.format("YYYY-MM-DD"),
             periodType: periodType,
             transactionType: "EXPENSE"
         };
@@ -142,7 +147,8 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         setSelectedAccount(null);
         setDescription(null);
         setAmount("");
-        setCategory("");
+        setCategory(null);
+        setCurrency(null);
         setPeriodType("NONE");
         setDate(dayjs());
         setErrors({amount: "", category: "", account: ""});
@@ -150,13 +156,13 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
+        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
             <DialogTitle>{initialExpense ? t('expenses.addExpense.editLabel') : t('expenses.addExpense.addLabel')}</DialogTitle>
             <DialogContent dividers>
                 <Box
                     sx={{
-                        display: "grid",
-                        gridTemplateColumns: {xs: "1fr", sm: "1fr 1fr"},
+                        display: "flex",
+                        alignItems: "center",
                         gap: 2,
                     }}
                 >
@@ -167,6 +173,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                             onChange={(newValue) => setDate(newValue)}
                             slotProps={{textField: {fullWidth: true}}}
                             format={"DD-MM-YYYY"}
+                            sx = {{flex: 1}}
                         />
                     </LocalizationProvider>
                     <TextField
@@ -183,6 +190,14 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                         }
                         error={!!errors.amount}
                         helperText={errors.amount}
+                        sx = {{flex: 1}}
+                    />
+                    <TextField
+                        fullWidth
+                        label={"Waluta"}
+                        value={currency?.symbol ?? ""}
+                        disabled
+                        sx={{ flex: 0.5 }}
                     />
                 </Box>
                 <TextField
@@ -196,12 +211,15 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     select
                     fullWidth
                     margin="normal"
+                    disabled={!!initialExpense}
+                    //TODO WIELOJEZYCZNOSC
                     label={t('Konto')}
                     value={selectedAccount ? selectedAccount.id : ""}
                     onChange={(e) => {
                         const id = e.target.value as string;
                         const acct = accounts.find(a => a.id === id) ?? null;
                         setSelectedAccount(acct);
+                        setCurrency(acct?.currency);
                         setErrors({...errors, account: ""});
                     }
                     }
@@ -219,9 +237,11 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     fullWidth
                     margin="normal"
                     label={t('expenses.addExpense.category.label')}
-                    value={category}
+                    value={category ? category.id : ""}
                     onChange={(e) => {
-                        setCategory(e.target.value)
+                        const id = e.target.value as string;
+                        const cat = categories.find(c => c.id === id) ?? null;
+                        setCategory(cat)
                         setErrors({...errors, category: ""})
                     }
                     }
@@ -229,8 +249,8 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     helperText={errors.category}
                 >
                     {categories.map((cat) => (
-                        <MenuItem key={cat} value={cat}>
-                            {cat}
+                        <MenuItem key={cat.id} value={cat.id}>
+                            {cat.name}
                         </MenuItem>
                     ))}
                 </TextField>

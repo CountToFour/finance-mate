@@ -62,6 +62,7 @@ public class StandardBudgetService implements BudgetService {
         }
         Budget b = budget.get();
         b.setSpentAmount(b.getSpentAmount() + amount);
+        budgetRepository.save(b);
     }
 
     @Override

@@ -214,7 +214,12 @@ public class TransactionService {
             }
         }
         if (Objects.nonNull(dto.price()) && dto.price() != Math.abs(transaction.getPrice())) {
-            transaction.setPrice(dto.price());
+            if (transaction.getTransactionType() == TransactionType.EXPENSE) {
+                transaction.setPrice(-Math.abs(dto.price()));
+                System.out.println("Setting expense price: " + transaction.getPrice());
+            } else {
+                transaction.setPrice(Math.abs(dto.price()));
+            }
         }
         if (dto.description() != null && !dto.description().equals(transaction.getDescription())) {
             transaction.setDescription(dto.description());
