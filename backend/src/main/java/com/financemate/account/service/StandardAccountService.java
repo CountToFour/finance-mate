@@ -88,7 +88,7 @@ public class StandardAccountService implements AccountService {
 
     @Override
     @Transactional
-    public Account updateAccount(String accountId, AccountDto dto, User user) {
+    public AccountResponse updateAccount(String accountId, AccountDto dto, User user) {
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
         if (!account.getUserId().getId().equals(user.getId())) {
             throw new AccessException("Account does not belong to user");
@@ -98,7 +98,7 @@ public class StandardAccountService implements AccountService {
             throw new IllegalOperationException("Balance cannot be changed directly");
         }
 
-        if (!Objects.equals(account.getCurrencyCode(), dto.currencyCode())) {
+        if (!Objects.equals(account.getCurrencyCode().getCode(), dto.currencyCode())) {
             throw new IllegalOperationException("Currency cannot be changed");
         }
 
@@ -110,7 +110,22 @@ public class StandardAccountService implements AccountService {
         account.setCurrencyCode(currency);
         account.setBalance(dto.balance());
         account.setColor(dto.color());
-        return accountRepository.save(account);
+        Account save = accountRepository.save(account);
+
+        return new AccountResponse(
+                save.getId(),
+                save.getName(),
+                save.getDescription(),
+                save.getBalance(),
+                save.getColor(),
+                save.isIncludeInStats(),
+                save.isArchived(),
+                new CurrencyResponse(
+                        save.getCurrencyCode().getCode(),
+                        save.getCurrencyCode().getName(),
+                        save.getCurrencyCode().getSymbol()
+                )
+        );
     }
 
     @Override
@@ -220,7 +235,7 @@ public class StandardAccountService implements AccountService {
         List<Account> accounts = accountRepository.findAllByUserIdAndIncludeInStatsIsTrue(user);
         double result = accounts.stream()
                 .mapToDouble(account -> {
-                    if (account.getCurrencyCode().equals(mainCurrency.getCode())) {
+                    if (account.getCurrencyCode().getCode().equals(mainCurrency.getCode())) {
                         return account.getBalance();
                     } else {
                         double rate = exchangeRateRepository.findByFromCurrencyAndToCurrency(account.getCurrencyCode().getCode(), mainCurrency.getCode())

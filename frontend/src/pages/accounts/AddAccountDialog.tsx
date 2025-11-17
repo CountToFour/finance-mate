@@ -26,9 +26,11 @@ interface AddExpenseDialogProps {
     open: boolean;
     onClose: () => void;
     initialAccount?: Account | null;
+    onUpdated: (updated: Account) => void;
+    onCreated: (created: Account) => void;
 }
 
-const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initialAccount}) => {
+const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initialAccount, onUpdated, onCreated}) => {
     const {success, error} = useNotification();
     const {t} = useTranslation();
     const [name, setName] = useState<string>("");
@@ -115,12 +117,14 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         console.log(accountDto);
         try {
             if (!initialAccount) {
-                await createAccount(accountDto);
+                const res = await createAccount(accountDto);
                 success(t('accounts.notifications.createSuccess', 'Udało się utworzyć konto'));
+                onCreated(res.data)
                 handleClose();
             } else {
-                await updateAccount(accountDto, initialAccount.id);
+                const res = await updateAccount(accountDto, initialAccount.id);
                 success(t('accounts.notifications.updateSuccess', 'Udało się zaktualizować konto'));
+                onUpdated(res.data);
                 handleClose();
             }
         } catch (e) {
@@ -179,6 +183,7 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     <TextField
                         select
                         fullWidth
+                        disabled={!!initialAccount}
                         label={t('accounts.fields.currency', 'Waluta')}
                         value={currencyCode}
                         onChange={(e) => {

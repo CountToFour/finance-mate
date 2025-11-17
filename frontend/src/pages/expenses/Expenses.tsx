@@ -145,8 +145,6 @@ function ExpensesPage() {
                               color: account?.color,
                               borderColor: account?.color,
                               backgroundColor: background,
-                              fontWeight: 600,
-                              borderWidth: 2,
                           }}/>
                 );
             }
@@ -242,8 +240,6 @@ function ExpensesPage() {
                               color: account?.color,
                               borderColor: account?.color,
                               backgroundColor: background,
-                              fontWeight: 600,
-                              borderWidth: 2,
                           }}/>
                 );
             }

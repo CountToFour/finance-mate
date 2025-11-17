@@ -11,7 +11,7 @@ public interface AccountService {
 
     List<AccountResponse> getAccountForUser(User user);
     AccountResponse createAccount(AccountDto dto, User user);
-    Account updateAccount(String accountId, AccountDto dto, User user);
+    AccountResponse updateAccount(String accountId, AccountDto dto, User user);
     void deleteAccount(String accountId, User user);
     AccountResponse getAccountById(String accountId, User user);
     void archiveAccount(String accountId, User user);

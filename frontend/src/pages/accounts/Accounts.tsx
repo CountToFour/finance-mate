@@ -29,14 +29,19 @@ export default function Accounts() {
         getCurrencies().then((res) => {
             setCurrencies(res.data);
         });
-    }, [openDialog, transferDialog]);
+    }, [transferDialog]);
 
     const includeAccountInStats = (accountId: string) => {
-        includeInStatsAccount(accountId).then((res) => {
+        includeInStatsAccount(accountId).then(() => {
             success('Operacja zakończona sukcesem');
-            getAccounts().then((res) => {
-                setAccounts(res.data);
-            });
+
+            setAccounts(prev =>
+                prev.map(acc =>
+                    acc.id === accountId
+                        ? { ...acc, includeInStats: !acc.includeInStats }
+                        : acc
+                )
+            );
         }).catch(() => {
             error("Błąd podczas aktualizacji konta");
         });
@@ -49,6 +54,16 @@ export default function Accounts() {
         }).catch(() => {
             error("Błąd podczas usuwania konta");
         });
+    }
+
+    const updateAccount = (updated: Account) => {
+        setAccounts(prev =>
+            prev.map(acc => (acc.id === updated.id ? updated : acc))
+        );
+    };
+
+    const addAccountToList = (newAccount: Account) => {
+        setAccounts(prev => [...prev, newAccount]);
     }
 
     return (
@@ -106,6 +121,8 @@ export default function Accounts() {
                     setAccountToEdit(null)
                 }}
                 initialAccount={accountToEdit}
+                onUpdated={updateAccount}
+                onCreated={addAccountToList}
             />
         </>
     )
