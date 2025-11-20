@@ -116,3 +116,25 @@ export type Category = {
     color: string
 
 }
+
+// BUDGETS
+
+export type BudgetDto = {
+    categoryId: string
+    limitAmount: number
+    periodType: string
+    startDate: string
+    endDate: string
+    color: string
+}
+
+export type Budget = {
+    id: string
+    limitAmount: number
+    spentAmount: number
+    active: boolean
+    periodType: string
+    categoryName: string
+    startDate: string
+    endDate: string
+}

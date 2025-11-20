@@ -1,6 +1,6 @@
 import axios from 'axios'
 import {useAuthStore} from "../store/auth.ts";
-import type {EditTransactionDto, TransactionDto, CreateAccountDto, TransferDto} from "./types.ts";
+import type {EditTransactionDto, TransactionDto, CreateAccountDto, TransferDto, BudgetDto} from "./types.ts";
 
 export const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -268,5 +268,59 @@ export const getCategories = (transactionType: string) => axios.get(
         headers: {
             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
         },
+    }
+)
+
+// BUDGETS
+
+export const createBudget = (budgetDto: BudgetDto) => axios.post(
+    'http://localhost:8080/api/budgets',
+    budgetDto,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const getBudgets = () => axios.get(
+    'http://localhost:8080/api/budgets',
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    }
+)
+
+export const getBudgetById = (id: string) => axios.get(
+    `http://localhost:8080/api/budgets/${id}`,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    }
+)
+
+export const updateBudget = (budgetDto: BudgetDto, id: string) => axios.put(
+    `http://localhost:8080/api/budgets/${id}`,
+    budgetDto,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    }
+)
+
+export const deleteBudget = (id: string) => axios.delete(
+    `http://localhost:8080/api/budgets/${id}`,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
     }
 )

@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import Register from "./pages/Register.tsx";
 import Expenses from "./pages/expenses/Expenses.tsx";
 import Accounts from "./pages/accounts/Accounts.tsx";
+import BudgetPage from "./pages/budgets/BudgetPage.tsx";
 
 
 export const router = createBrowserRouter([
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
             { path: '/', element: <Dashboard /> },
             { path: '/expenses', element: <Expenses />},
             { path: '/accounts', element: <Accounts />},
+            { path: '/budgets', element: <BudgetPage />},
         ],
     },
 ]);
