@@ -79,7 +79,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         let valid = true;
         const newErrors = {description: "", amount: "", category: "", account: ""};
 
-        if (!amount || parseFloat(amount) <= 0) {
+        if (!amount || parseFloat(amount) <= 0.01) {
             newErrors.amount = t('expenses.addExpense.price.required');
             valid = false;
         }
@@ -183,7 +183,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                         value={amount}
                         onChange={(e) => {
                             setAmount(e.target.value)
-                            if (e.target.value.length > 0) {
+                            if (e.target.value.length > 0.01) {
                                 setErrors({...errors, amount: ""})
                             }
                         }

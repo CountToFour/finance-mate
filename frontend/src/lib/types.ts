@@ -125,7 +125,7 @@ export type BudgetDto = {
     periodType: string
     startDate: string
     endDate: string
-    color: string
+    // color: string
 }
 
 export type Budget = {

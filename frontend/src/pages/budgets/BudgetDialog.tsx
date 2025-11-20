@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
     Box,
-    Typography,
     Button,
     Dialog,
     DialogTitle,
@@ -13,13 +12,15 @@ import {
 } from "@mui/material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
-import dayjs from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 
 import {
     createBudget,
     updateBudget,
 } from "../../lib/api";
-import type { Budget, BudgetDto, Category} from "../../lib/types";
+import type {Budget, BudgetDto, Category} from "../../lib/types";
+import {useTranslation} from "react-i18next";
+import {useNotification} from "../../components/NotificationContext.tsx";
 
 
 const BudgetDialog: React.FC<{
@@ -29,140 +30,194 @@ const BudgetDialog: React.FC<{
     initial?: Budget | null;
     onSaved: (saved: Budget) => void;
 }> = ({ open, onClose, categories, initial, onSaved }) => {
+    const {success, error} = useNotification();
+    const {t} = useTranslation();
     const isEdit = !!initial;
-    const [categoryId, setCategoryId] = useState<string>(initial ? "" : "");
-    const [limitAmount, setLimitAmount] = useState<number>(initial ? initial.limitAmount : 0);
-    const [periodType, setPeriodType] = useState<string>(initial ? initial.periodType : "MONTH");
-    const [startDate, setStartDate] = useState<any>(initial ? dayjs(initial.startDate) : dayjs());
-    const [endDate, setEndDate] = useState<any>(initial ? dayjs(initial.endDate) : dayjs().endOf("month"));
-    const [color, setColor] = useState<string>(initial ? (categories.find(c => c.name === initial.categoryName)?.color ?? "#6b7280") : "#6b7280");
+    const [category, setCategory] = useState<Category | null>(null);
+    const [limitAmount, setLimitAmount] = useState<string>(initial ? String(initial.limitAmount) : "");
+    const [periodType, setPeriodType] = useState<string>(initial ? initial.periodType : "MONTHLY");
+    const [startDate, setStartDate] = useState<Dayjs | null>(initial ? dayjs(initial.startDate) : dayjs());
+    const [endDate, setEndDate] = useState<Dayjs | null>(initial ? dayjs(initial.endDate) : dayjs().endOf("month"));
+    // const [color, setColor] = useState<string>(initial ? (categories.find(c => c.name === initial.categoryName)?.color ?? "#6b7280") : "#6b7280");
     const [saving, setSaving] = useState(false);
+
+    const [errors, setErrors] = useState({
+        limitAmount: "",
+        category: "",
+        startDate: "",
+        endDate: "",
+    });
 
     useEffect(() => {
         if (initial) {
-            setLimitAmount(initial.limitAmount);
+            setLimitAmount(String(initial.limitAmount));
             setPeriodType(initial.periodType);
             setStartDate(dayjs(initial.startDate));
             setEndDate(dayjs(initial.endDate));
-            const cat = categories.find(c => c.name === initial.categoryName);
-            setCategoryId(cat?.id ?? "");
-            setColor(cat?.color ?? "#6b7280");
+            if ((initial as Budget).categoryName) {
+                const cat = categories.find(c => c.name === (initial as Budget).categoryName);
+                if (cat) setCategory(cat);
+            }
+            // setColor(cat?.color ?? "#6b7280");
         } else {
-            setCategoryId("");
-            setLimitAmount(0);
-            setPeriodType("MONTH");
+            setCategory(null);
+            setLimitAmount("");
+            setPeriodType("MONTHLY");
             setStartDate(dayjs());
             setEndDate(dayjs().endOf("month"));
         }
     }, [initial, categories, open]);
 
+    const validate = () => {
+        let valid = true;
+        const newErrors = {limitAmount: "", category: "", startDate: "", endDate: "",};
+
+        if (!limitAmount || parseFloat(limitAmount) <= 0.01) {
+            newErrors.limitAmount = t('expenses.addExpense.price.required');
+            valid = false;
+        }
+        if (!category) {
+            newErrors.category = t('expenses.addExpense.category.required');
+            valid = false;
+        }
+
+        if (!startDate) {
+            newErrors.startDate = 'Wybierz datę rozpoczęcia';
+            valid = false;
+        }
+
+        if (!endDate) {
+            newErrors.endDate = 'Wybierz datę zakończenia';
+            valid = false;
+        }
+
+        setErrors(newErrors);
+        return valid;
+    };
+
     const handleSave = async () => {
-        if (!categoryId) return alert("Wybierz kategorię");
+        if (!validate()) return;
         setSaving(true);
         const dto: BudgetDto = {
-            categoryId,
-            limitAmount,
-            periodType,
-            startDate: startDate.format("YYYY-MM-DD"),
-            endDate: endDate.format("YYYY-MM-DD"),
-            color,
+            categoryId: category!.id,
+            limitAmount: parseFloat(limitAmount),
+            periodType: periodType,
+            startDate: startDate!.format("YYYY-MM-DD"),
+            endDate: endDate!.format("YYYY-MM-DD"),
+            // color,
         };
 
         try {
             if (isEdit && initial) {
                 const res = await updateBudget(dto, initial.id);
                 onSaved(res.data);
+                success("Udało się edytować budżet")
             } else {
                 const res = await createBudget(dto);
+                success("Udało się dodać budżetu")
                 onSaved(res.data);
             }
             onClose();
         } catch (e) {
             console.error(e);
-            alert("Błąd zapisu budżetu");
+            error("Nie udało się zapisać budżetu")
         } finally {
             setSaving(false);
         }
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
             <DialogTitle>{isEdit ? "Edytuj budżet" : "Nowy budżet"}</DialogTitle>
-            <DialogContent>
-                <Stack spacing={2} mt={1}>
-                    <TextField
-                        select
-                        label="Kategoria"
-                        value={categoryId}
-                        onChange={(e) => {
-                            setCategoryId(e.target.value);
-                            const cat = categories.find(c => c.id === e.target.value);
-                            if (cat) setColor(cat.color);
-                        }}
-                        fullWidth
-                    >
-                        {categories.map(c => (
-                            <MenuItem key={c.id} value={c.id}>
-                                {c.name}
-                            </MenuItem>
-                        ))}
-                    </TextField>
+            <DialogContent dividers>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <Stack direction={{xs: 'column', sm: 'row'}} spacing={2}>
+                        <DatePicker
+                            disablePast={true}
+                            label="Start"
+                            value={startDate}
+                            onChange={(v) => setStartDate(v as Dayjs | null)}
+                            slotProps={{ textField: { fullWidth: true } }}
+                        />
+                        <DatePicker
+                            disablePast={true}
+                            label="Koniec"
+                            value={endDate}
+                            onChange={(v) => setEndDate(v as Dayjs | null)}
+                            slotProps={{ textField: { fullWidth: true } }}
+                        />
+                    </Stack>
+                </LocalizationProvider>
 
-                    <TextField
-                        label="Limit (PLN)"
-                        type="number"
-                        value={limitAmount}
-                        onChange={(e) => setLimitAmount(Number(e.target.value))}
-                        fullWidth
-                    />
-
+                <Box sx={{display: 'grid', gap: 2, gridTemplateColumns: {xs: '1fr', sm: '1fr 1fr'}, mt: 2}}>
                     <TextField
                         select
                         label="Okres"
                         value={periodType}
                         onChange={(e) => setPeriodType(e.target.value)}
+                        fullWidth
                     >
-                        <MenuItem value="MONTH">Miesięczny</MenuItem>
-                        <MenuItem value="WEEK">Tygodniowy</MenuItem>
-                        <MenuItem value="YEAR">Roczny</MenuItem>
+                        <MenuItem value="MONTHLY">Miesięczny</MenuItem>
                     </TextField>
+                    <TextField
+                        fullWidth
+                        label={t('expenses.addExpense.price.label')}
+                        type="number"
+                        value={limitAmount}
+                        onChange={(e) => {
+                            setLimitAmount(e.target.value)
+                            if (e.target.value.length > 0) {
+                                setErrors({...errors, limitAmount: ""})
+                            }
+                        }
+                        }
+                        error={!!errors.limitAmount}
+                        helperText={errors.limitAmount}
+                        sx = {{flex: 1}}
+                    />
+                </Box>
 
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <Stack direction="row" spacing={2}>
-                            <DatePicker
-                                label="Start"
-                                value={startDate}
-                                onChange={(v) => setStartDate(v)}
-                                slotProps={{ textField: { fullWidth: true } }}
-                            />
-                            <DatePicker
-                                label="Koniec"
-                                value={endDate}
-                                onChange={(v) => setEndDate(v)}
-                                slotProps={{ textField: { fullWidth: true } }}
-                            />
-                        </Stack>
-                    </LocalizationProvider>
+                <Box sx={{display: 'flex', gap: 2, mb: 1}}>
+                    <TextField
+                        select
+                        fullWidth
+                        margin="normal"
+                        label={t('expenses.addExpense.category.label')}
+                        value={category ? category.id : ""}
+                        onChange={(e) => {
+                            const id = e.target.value as string;
+                            const cat = categories.find(c => c.id === id) ?? null;
+                            setCategory(cat)
+                            setErrors({...errors, category: ""})
+                        }
+                        }
+                        error={!!errors.category}
+                        helperText={errors.category}
+                    >
+                        {categories.map((cat) => (
+                            <MenuItem key={cat.id} value={cat.id}>
+                                {cat.name}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                </Box>
 
-                    <Stack direction="row" spacing={2} alignItems="center">
-                        <TextField
-                            label="Kolor"
-                            type="color"
-                            value={color}
-                            onChange={(e) => setColor(e.target.value)}
-                            sx={{ width: 80 }}
-                        />
-                        <Typography variant="body2">Podgląd koloru</Typography>
-                        <Box sx={{ width: 32, height: 24, background: color, borderRadius: 1, border: "1px solid #ccc" }} />
-                    </Stack>
-                </Stack>
+                {/*<Stack direction="row" spacing={2} alignItems="center">*/}
+                {/*    <TextField*/}
+                {/*        label="Kolor"*/}
+                {/*        type="color"*/}
+                {/*        value={color}*/}
+                {/*        onChange={(e) => setColor(e.target.value)}*/}
+                {/*        sx={{ width: 80 }}*/}
+                {/*    />*/}
+                {/*    <Typography variant="body2">Podgląd koloru</Typography>*/}
+                {/*    <Box sx={{ width: 32, height: 24, background: color, borderRadius: 1, border: "1px solid #ccc" }} />*/}
+                {/*</Stack>*/}
             </DialogContent>
 
-            <DialogActions>
-                <Button onClick={onClose}>Anuluj</Button>
-                <Button onClick={handleSave} variant="contained" disabled={saving}>
-                    {isEdit ? "Zapisz" : "Utwórz"}
-                </Button>
+            <DialogActions sx={{display: 'flex', justifyContent: 'flex-end', gap: 1, p: 2}}>
+                <Button onClick={onClose} color="secondary">Anuluj</Button>
+                <Button onClick={handleSave} variant="contained" color="primary" disabled={saving}>{isEdit ? 'Zapisz' : 'Utwórz'}</Button>
             </DialogActions>
         </Dialog>
     );

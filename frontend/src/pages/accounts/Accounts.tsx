@@ -74,7 +74,7 @@ export default function Accounts() {
                     <Typography variant="body2" sx={{mt: 1}}>Zarządzaj swoimi kontami</Typography>
                 </Box>
                 <Box display="flex" gap={2} alignItems="center">
-                    <Button variant={'contained'} color={'secondary'} onClick={() => {
+                    <Button variant="outlined" onClick={() => {
                         setTransferDialog(true)
                     }}>
                         <Add sx={{mr: 1}}/>
