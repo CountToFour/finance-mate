@@ -6,27 +6,24 @@ import {
     DialogActions,
     Button,
     TextField,
-    MenuItem, Box,
+    MenuItem, Box
 } from "@mui/material";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import dayjs, {Dayjs} from "dayjs";
 import {useNotification} from "../../components/NotificationContext.tsx";
-import type {Account, Category, Currency, Expense, TransactionDto} from "../../lib/types.ts";
-import {addTransaction, addRecurringTransaction, editExpense} from "../../lib/api.ts";
+import type {Account, Category, Currency, Income} from "../../lib/types";
+import {addTransaction, addRecurringTransaction, editExpense} from "../../lib/api";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
-import {useTranslation} from "react-i18next";
 
-
-interface AddExpenseDialogProps {
+interface Props {
     open: boolean;
     onClose: () => void;
-    initialExpense?: Expense | null;
+    initialTransaction?: Income | null;
     accounts: Account[];
     categories: Category[];
 }
 
-//TODO ZROBIĆ Z TEGO ENUM W types.ts I ROZWAŻYĆ CUSTOM PERIOD
 const periodTypes = {
     NONE: "None",
     DAILY: "Daily",
@@ -35,9 +32,8 @@ const periodTypes = {
     YEARLY: "Yearly"
 }
 
-const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initialExpense, accounts, categories}) => {
+const AddIncomeDialog: React.FC<Props> = ({open, onClose, initialTransaction, accounts, categories}) => {
     const {success, error} = useNotification();
-    const {t} = useTranslation();
     const [date, setDate] = useState<Dayjs | null>(dayjs());
     const [description, setDescription] = useState<string | null>(null);
     const [amount, setAmount] = useState("");
@@ -46,139 +42,115 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
     const [periodType, setPeriodType] = useState<keyof typeof periodTypes>("NONE");
 
-    const [errors, setErrors] = useState({
-        amount: "",
-        category: "",
-        account: "",
-    });
+    const [errors, setErrors] = useState({amount: "", category: "", account: ""});
 
     useEffect(() => {
-        if (initialExpense) {
-            setDescription(initialExpense.description ?? null);
-            setAmount(Math.abs(initialExpense.price).toString());
-            if ((initialExpense as Expense).category) {
-                const cat = categories.find(c => c.name === (initialExpense as Expense).category);
+        if (initialTransaction) {
+            setDescription(initialTransaction.description ?? null);
+            setAmount(Math.abs(initialTransaction.price).toString());
+            if (initialTransaction.category) {
+                const cat = categories.find(c => c.name === initialTransaction.category);
                 if (cat) setCategory(cat);
             }
-            setDate(dayjs(initialExpense.createdAt));
-            // jeśli initialExpense zawiera id konta, ustaw odpowiednie konto w stanie
-            // zakładamy, że initialExpense ma pole accountId (string). Jeśli nie, nic nie zmieniamy.
-            if ((initialExpense as Expense).accountName) {
-                // znajdź konto w liście accounts
-                const acct = accounts.find(a => a.name === (initialExpense as Expense).accountName);
+            setDate(dayjs(initialTransaction.createdAt));
+            if (initialTransaction.accountName) {
+                const acct = accounts.find(a => a.name === initialTransaction.accountName);
                 if (acct) {
                     setSelectedAccount(acct);
                     setCurrency(acct.currency);
                 }
             }
         }
-    }, [initialExpense, accounts, categories])
-
+    }, [initialTransaction, accounts, categories]);
 
     const validate = () => {
         let valid = true;
         const newErrors = {description: "", amount: "", category: "", account: ""};
-
         if (!amount || parseFloat(amount) <= 0.01) {
-            newErrors.amount = t('expenses.addExpense.price.required');
+            newErrors.amount = 'Kwota jest wymagana';
             valid = false;
         }
         if (!category) {
-            newErrors.category = t('expenses.addExpense.category.required');
+            newErrors.category = 'Kategoria jest wymagana';
             valid = false;
         }
         if (!selectedAccount) {
-            newErrors.account = t('expenses.addExpense.account.required') || 'Wybierz konto';
+            newErrors.account = 'Wybierz konto';
             valid = false;
         }
-
         setErrors(newErrors);
         return valid;
-    };
+    }
 
     const handleSave = () => {
         if (!validate()) return;
-
-        const expenseDto: TransactionDto = {
+        const dto = {
             accountId: selectedAccount!.id,
             categoryId: category!.id,
             price: parseFloat(amount),
             description: description,
-            createdAt: date!.format("YYYY-MM-DD"),
+            createdAt: date!.format('YYYY-MM-DD'),
             periodType: periodType,
-            transactionType: "EXPENSE",
+            transactionType: 'INCOME',
             active: true
         };
 
-        if (!initialExpense) {
+        if (!initialTransaction) {
             if (periodType !== 'NONE') {
-                addRecurringTransaction(expenseDto)
-                    .then(() => {
-                        success(t('expenses.notifications.add.success'));
-                        handleClose();
-                    })
-                    .catch(() => {
-                        error(t('expenses.notifications.add.error'));
-                    });
+                addRecurringTransaction(dto).then(() => {
+                    success('Dodano');
+                    onClose();
+                }).catch(() => error('Błąd'));
             } else {
-                addTransaction(expenseDto)
-                    .then(() => {
-                        success(t('expenses.notifications.add.success'));
-                        handleClose();
-                    })
-                    .catch(() => {
-                        error(t('expenses.notifications.add.error'));
-                    });
+                addTransaction(dto).then(() => {
+                    success('Dodano');
+                    onClose();
+                }).catch(() => error('Błąd'));
             }
         } else {
-            editExpense(initialExpense.id, expenseDto)
-                .then(() => {
-                    success(t('expenses.notifications.edit.success'));
-                    handleClose();
-                })
-                .catch(() => {
-                    error(t('expenses.notifications.edit.error'));
-                });
+            // reuse editExpense endpoint (backend uses same edit path)
+            editExpense(initialTransaction.id, dto).then(() => {
+                success('Zaktualizowano');
+                onClose();
+            }).catch(() => error('Błąd'));
         }
-
-    };
+    }
 
     const handleClose = () => {
-        setSelectedAccount(null);
+        setDate(dayjs());
         setDescription(null);
         setAmount("");
         setCategory(null);
-        setCurrency(null);
+        setSelectedAccount(null);
         setPeriodType("NONE");
-        setDate(dayjs());
         setErrors({amount: "", category: "", account: ""});
         onClose();
-    };
+    }
 
     return (
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-            <DialogTitle>{initialExpense ? t('expenses.addExpense.editLabel') : t('expenses.addExpense.addLabel')}</DialogTitle>
+            <DialogTitle>{initialTransaction ? 'Edytuj przychód' : 'Nowy przychód'}</DialogTitle>
             <DialogContent dividers>
                 <Box
                     sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2
                     }}
                 >
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <DatePicker
-                            label={t('expenses.addExpense.date')}
+                            label={'Data'}
                             value={date}
-                            onChange={(newValue) => setDate(newValue)}
+                            onChange={(v) => setDate(v)}
                             slotProps={{textField: {fullWidth: true}}}
                             format={"DD-MM-YYYY"}
-                            sx = {{flex: 1}}
+                            sx={{flex: 1}}
                         />
                     </LocalizationProvider>
                     <TextField
                         fullWidth
-                        label={t('expenses.addExpense.price.label')}
+                        label={'Kwota'}
                         type="number"
                         value={amount}
                         onChange={(e) => {
@@ -190,59 +162,50 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                         }
                         error={!!errors.amount}
                         helperText={errors.amount}
-                        sx = {{flex: 1}}
-                    />
+                        sx={{flex: 1}}/>
                     <TextField
                         fullWidth
                         label={"Waluta"}
                         value={currency?.symbol ?? ""}
                         disabled
-                        sx={{ flex: 0.5 }}
+                        sx={{flex: 0.5}}
                     />
                 </Box>
                 <TextField
                     fullWidth
                     margin="normal"
-                    label={t('expenses.addExpense.description')}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                />
+                    label={'Opis'}
+                    value={description ?? ''}
+                    onChange={(e) => setDescription(e.target.value)}/>
                 <TextField
                     select
                     fullWidth
                     margin="normal"
-                    disabled={!!initialExpense}
-                    //TODO WIELOJEZYCZNOSC
-                    label={t('Konto')}
-                    value={selectedAccount ? selectedAccount.id : ""}
+                    label={'Konto'}
+                    value={selectedAccount ? selectedAccount.id : ''}
                     onChange={(e) => {
                         const id = e.target.value as string;
                         const acct = accounts.find(a => a.id === id) ?? null;
                         setSelectedAccount(acct);
                         setCurrency(acct!.currency);
-                        setErrors({...errors, account: ""});
-                    }
-                    }
+                        setErrors({...errors, account: ''});
+                    }}
                     error={!!errors.account}
                     helperText={errors.account}
                 >
-                    {accounts.map((account) => (
-                        <MenuItem key={account.id} value={account.id}>
-                            {account.name}
-                        </MenuItem>
-                    ))}
+                    {accounts.map(a => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}
                 </TextField>
                 <TextField
                     select
                     fullWidth
                     margin="normal"
-                    label={t('expenses.addExpense.category.label')}
-                    value={category ? category.id : ""}
+                    label={'Kategoria'}
+                    value={category ? category.id : ''}
                     onChange={(e) => {
                         const id = e.target.value as string;
                         const cat = categories.find(c => c.id === id) ?? null;
-                        setCategory(cat)
-                        setErrors({...errors, category: ""})
+                        setCategory(cat);
+                        setErrors({...errors, category: ''});
                     }
                     }
                     error={!!errors.category}
@@ -254,35 +217,29 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                         </MenuItem>
                     ))}
                 </TextField>
-                {!initialExpense && (<TextField
+                {!initialTransaction && (
+                    <TextField
                         select
                         fullWidth
                         margin="normal"
-                        label={t('expenses.addExpense.repeat')}
+                        label={'Powtarzaj'}
                         value={periodType}
-                        onChange={(e) => setPeriodType(e.target.value as keyof typeof periodTypes
-                        )}
-                        defaultValue={periodTypes.NONE}
+                        onChange={(e) => setPeriodType(e.target.value as keyof typeof periodTypes)}
                     >
-                        {Object.entries(periodTypes).map(([key, label]) => (
-                            <MenuItem key={key} value={key}>
-                                {label}
+                        {Object.entries(periodTypes).map(([key, label]) =>
+                            <MenuItem key={key}
+                                      value={key}>{label}
                             </MenuItem>
-                        ))}
+                        )}
                     </TextField>
-                )
-                }
+                )}
             </DialogContent>
             <DialogActions sx={{mr: 2, mb: 1, mt: 1}}>
-                <Button onClick={handleClose} color="secondary">
-                    {t('expenses.addExpense.cancel')}
-                </Button>
-                <Button onClick={handleSave} variant="contained" color="primary">
-                    {t('expenses.addExpense.save')}
-                </Button>
+                <Button onClick={handleClose} color="secondary">Anuluj</Button>
+                <Button onClick={handleSave} variant="contained" color="primary">Zapisz</Button>
             </DialogActions>
         </Dialog>
-    );
-};
+    )
+}
 
-export default AddExpenseDialog;
+export default AddIncomeDialog;

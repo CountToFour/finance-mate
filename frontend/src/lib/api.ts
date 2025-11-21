@@ -55,6 +55,27 @@ export const getExpenses = (
     }
 )
 
+export const getTransactions = (
+    type: string,
+    category: string | null,
+    startDate: string,
+    endDate: string,
+) => axios.get(
+    `http://localhost:8080/api/transactions`,
+    {
+        params: {
+            type: type,
+            category: category,
+            startDate: startDate,
+            endDate: endDate,
+        },
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
 export const getAllRecurringExpenses = () => axios.get(
     `http://localhost:8080/api/transactions/recurring`,
     {
@@ -66,6 +87,19 @@ export const getAllRecurringExpenses = () => axios.get(
             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
         }
     })
+
+export const getAllRecurringTransactions = (type: string) => axios.get(
+    `http://localhost:8080/api/transactions/recurring`,
+    {
+        params : {
+            type: type,
+        },
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    })
+
 
 export const deleteTransaction = (id: string) => axios.delete(
     `http://localhost:8080/api/transactions/${id}`,

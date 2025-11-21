@@ -52,19 +52,19 @@
         "category": "Category",
         "price": "Amount",
         "actions": "Actions",
-        "tooltip" : {
-          "edit" : "Edit",
-          "delete" : "Delete"
+        "tooltip": {
+          "edit": "Edit",
+          "delete": "Delete"
         }
       },
       "recurringTable": {
         "label": "Recurring expenses",
         "secondLabel": "Overview of recurring expenses"
       },
-      "categories" : {
-        "label" : "Expenses by category",
-        "secondLabel" : "Breakdown of expenses into categories in a given month",
-        "transaction" : "transactions"
+      "categories": {
+        "label": "Expenses by category",
+        "secondLabel": "Breakdown of expenses into categories in a given month",
+        "transaction": "transactions"
       }
     },
     "notifications": {
@@ -100,6 +100,58 @@
     },
     "recurringExpense": {
       "label": "Edit recurring expense",
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+  "income": {
+    "page": {
+      "label": "Your income",
+      "secondLabel": "Manage your incomes and track categories",
+      "add": "Add income",
+      "table": {
+        "label": "Latest incomes",
+        "secondLabel": "Overview of recent incomes",
+        "date": "Income date",
+        "description": "Description",
+        "category": "Category",
+        "amount": "Amount",
+        "actions": "Actions"
+      }
+    },
+    "notifications": {
+      "delete": {
+        "success": "Income has been deleted",
+        "error": "Failed to delete income"
+      },
+      "add": {
+        "success": "Income has been added successfully",
+        "error": "Failed to add income. Please try again."
+      },
+      "edit": {
+        "success": "Income has been updated successfully",
+        "error": "Failed to update income. Please try again."
+      }
+    },
+    "addIncome": {
+      "addLabel": "Add income",
+      "editLabel": "Edit income",
+      "date": "Income date",
+      "description": "Description",
+      "category": {
+        "label": "Category",
+        "required": "Select a category"
+      },
+      "price": {
+        "label": "Amount",
+        "required": "Amount must be greater than 0"
+      },
+      "repeat": "Repeat",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "recurringIncome": {
+      "label": "Edit recurring income",
       "active": "Active",
       "inactive": "Inactive"
     }

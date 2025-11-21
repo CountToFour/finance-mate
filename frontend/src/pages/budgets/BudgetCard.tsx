@@ -37,7 +37,7 @@ const BudgetCard: React.FC<{
 }> = ({ budget, category, onEdit, onDelete }) => {
     const pct = percent(budget.spentAmount, budget.limitAmount);
     const accent = category?.color ?? "#6b7280";
-    const bg = hexToRgba(accent, 0.12);
+    // const bg = hexToRgba(accent, 0.12);
 
     return (
         <Card variant="outlined" sx={{ borderRadius: 2 }}>

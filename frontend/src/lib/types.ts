@@ -29,6 +29,15 @@ export type Expense = {
     createdAt: string
 }
 
+export type Income = {
+    id: string
+    accountName: string
+    category: string
+    price: number
+    description: string
+    createdAt: string
+}
+
 export type TransactionDto = {
     accountId: string
     categoryId: string
@@ -60,6 +69,17 @@ export type RecurringExpense = {
     periodType: string
 }
 
+export type RecurringIncome = {
+    id: string
+    accountName: string
+    category: string
+    price: number
+    description: string
+    createdAt: string
+    active: boolean
+    periodType: string
+}
+
 export type CategoryAmount = {
     category: string
     amount: number
@@ -68,6 +88,14 @@ export type CategoryAmount = {
 }
 
 export type ExpenseOverview = {
+    totalAmount: number
+    averageAmount: number
+    expenseCount: number
+    totalAmountChangePercentage: number
+    expenseCountChangePercentage: number
+}
+
+export type IncomeOverview = {
     totalAmount: number
     averageAmount: number
     expenseCount: number

@@ -103,5 +103,57 @@
       "active": "Aktywny",
       "inactive": "Nieaktywny"
     }
+  },
+  "income": {
+    "page": {
+      "label": "Twoje przychody",
+      "secondLabel": "Zarządzaj swoimi przychodami i śledź kategorie",
+      "add": "Dodaj przychód",
+      "table": {
+        "label": "Ostatnie przychody",
+        "secondLabel": "Przegląd najnowszych przychodów",
+        "date": "Data przychodu",
+        "description": "Opis",
+        "category": "Kategoria",
+        "amount": "Kwota",
+        "actions": "Akcje"
+      }
+    },
+    "notifications": {
+      "delete": {
+        "success": "Przychód został usunięty",
+        "error": "Nie udało się usunąć przychodu"
+      },
+      "add": {
+        "success": "Przychód został pomyślnie dodany",
+        "error": "Nie udało się dodać przychodu. Spróbuj ponownie."
+      },
+      "edit": {
+        "success": "Przychód został pomyślnie zaktualizowany",
+        "error": "Nie udało się zaktualizować przychodu. Spróbuj ponownie."
+      }
+    },
+    "addIncome": {
+      "addLabel": "Dodaj przychód",
+      "editLabel": "Edytuj przychód",
+      "date": "Data przychodu",
+      "description": "Opis",
+      "category": {
+        "label": "Kategoria",
+        "required": "Wybierz kategorię"
+      },
+      "price": {
+        "label": "Kwota",
+        "required": "Kwota musi być większa od 0"
+      },
+      "repeat": "Powtarzaj",
+      "save": "Zapisz",
+      "cancel": "Anuluj"
+    },
+    "recurringIncome": {
+      "label": "Edytuj przychód okresowy",
+      "active": "Aktywny",
+      "inactive": "Nieaktywny"
+    }
   }
 }

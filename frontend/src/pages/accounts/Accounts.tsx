@@ -5,8 +5,8 @@ import {
     Button
 } from "@mui/material";
 import {Add} from '@mui/icons-material';
-import {deleteAccount, getAccounts, getCurrencies, includeInStatsAccount} from "../../lib/api.ts";
-import type {Account, Currency} from "../../lib/types.ts";
+import {deleteAccount, getAccounts, includeInStatsAccount} from "../../lib/api.ts";
+import type {Account} from "../../lib/types.ts";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import AddAccountDialog from "./AddAccountDialog.tsx";
 import AccountSummaryCard from "./AccountSummaryCard.tsx";
@@ -17,8 +17,8 @@ export default function Accounts() {
     const [transferDialog, setTransferDialog] = useState(false);
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [accountToEdit, setAccountToEdit] = useState<Account | null>(null);
-    const [currencies, setCurrencies] = useState<Currency[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    // const [currencies, setCurrencies] = useState<Currency[]>([]);
+    // const [isLoading, setIsLoading] = useState(false);
 
     const {success, error} = useNotification();
 
@@ -26,9 +26,9 @@ export default function Accounts() {
         getAccounts().then((res) => {
             setAccounts(res.data);
         });
-        getCurrencies().then((res) => {
-            setCurrencies(res.data);
-        });
+        // getCurrencies().then((res) => {
+        //     setCurrencies(res.data);
+        // });
     }, [transferDialog]);
 
     const includeAccountInStats = (accountId: string) => {
