@@ -2,7 +2,10 @@ import React from "react";
 import type {CategoryAmount} from "../../lib/types";
 import {Box, Typography} from "@mui/material";
 
-interface Props { categoryAmount: CategoryAmount; color?: string }
+interface Props { 
+    categoryAmount: CategoryAmount; 
+    color?: string 
+}
 
 const CategoryIncome: React.FC<Props> = ({categoryAmount, color}) => {
     return (
@@ -17,7 +20,7 @@ const CategoryIncome: React.FC<Props> = ({categoryAmount, color}) => {
                 </Box>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="body2" color={'text.secondary'}>{categoryAmount.transactions} transakcje</Typography>
-                    <Typography variant="body2" color={'text.secondary'}>{categoryAmount.percentage * 100} %</Typography>
+                    <Typography variant="body2" color={'text.secondary'}>{(categoryAmount.percentage * 100).toFixed(2)} %</Typography>
                 </Box>
             </Box>
         </Box>

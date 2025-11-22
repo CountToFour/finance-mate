@@ -98,20 +98,20 @@ const AddIncomeDialog: React.FC<Props> = ({open, onClose, initialTransaction, ac
         if (!initialTransaction) {
             if (periodType !== 'NONE') {
                 addRecurringTransaction(dto).then(() => {
-                    success('Dodano');
-                    onClose();
+                    success('Dodano przychód okresowy');
+                    handleClose();
                 }).catch(() => error('Błąd'));
             } else {
                 addTransaction(dto).then(() => {
                     success('Dodano');
-                    onClose();
+                    handleClose();
                 }).catch(() => error('Błąd'));
             }
         } else {
             // reuse editExpense endpoint (backend uses same edit path)
             editExpense(initialTransaction.id, dto).then(() => {
                 success('Zaktualizowano');
-                onClose();
+                handleClose();
             }).catch(() => error('Błąd'));
         }
     }

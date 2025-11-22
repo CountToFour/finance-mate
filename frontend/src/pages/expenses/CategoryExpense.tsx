@@ -27,7 +27,7 @@ const CategoryExpense: React.FC<CategoryExpenseProps> = ({categoryAmount, color}
                     <Typography variant="body2"
                                 color={"text.secondary"}>{categoryAmount.transactions} {t('expenses.page.categories.transaction')}</Typography>
                     <Typography variant="body2"
-                                color={"text.secondary"}>{categoryAmount.percentage * 100} %</Typography>
+                                color={"text.secondary"}>{(categoryAmount.percentage * 100).toFixed(2)} %</Typography>
                 </Box>
             </Box>
         </Box>

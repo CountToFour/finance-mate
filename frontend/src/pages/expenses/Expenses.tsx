@@ -36,7 +36,7 @@ import {useTranslation} from "react-i18next";
 import CategoryExpense from "./CategoryExpense.tsx";
 import Tooltip from '@mui/material/Tooltip';
 import ExpenseSummaryCard from "./ExpenseSummaryCard.tsx";
-import ReceiptIcon from '@mui/icons-material/Receipt';
+import ReceiptIcon from 'lucide-react';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 const currentYear = dayjs();

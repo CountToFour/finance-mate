@@ -1,18 +1,90 @@
 import React from 'react';
-import { Card, CardContent, Typography } from '@mui/material';
+import { Box, Card, CardContent, Typography, type SxProps, type Theme } from '@mui/material';
 
 type Props = {
-    title: string;
-    amount: number;
-    currency?: string;
+    type: "totalIncomes" | "totalTransactions" | "Average";
+        title: string;
+        description?: string;
+        amount: number;
+        change?: number;
+        currency?: string;
+        accentColor?: string;
+        icon?: React.ReactNode;
+        sx?: SxProps<Theme>;
 }
 
-const IncomeSummaryCard: React.FC<Props> = ({title, amount, currency}) => {
+const IncomeSummaryCard: React.FC<Props> = ({
+                                                 type,
+                                                 title,
+                                                 description,
+                                                 amount,
+                                                 change,
+                                                 currency,
+                                                 accentColor,
+                                                 icon,
+                                                 sx,
+}) => {
+
+    const changeIsPositive = typeof change === 'number' && change >= 0;
+    
+    const changeText = () => {
+        if (type === 'totalIncomes') {
+            return changeIsPositive ? `+${change}%` : `-${change}%`;
+        } else if (type === 'totalTransactions') {
+            return changeIsPositive ? `+${change}` : `-${change}`;
+        } else if (type === 'Average') {
+            return '';
+        }
+    }
+
     return (
-        <Card elevation={0} sx={{borderRadius:2}}>
+<Card
+            elevation={0}
+            sx={{
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: 2,
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+                ...sx,
+            }}
+        >
             <CardContent>
-                <Typography variant="subtitle1" fontWeight={'bold'}>{title}</Typography>
-                <Typography variant="h5" fontWeight={600} color={'secondary'}>{amount} {currency}</Typography>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5}>
+                    <Typography variant="subtitle1" fontWeight={"bold"}>
+                        {title}
+                    </Typography>
+                    <Box sx={{color:accentColor}}>
+                        {icon}
+                    </Box>
+                </Box>
+
+                <Typography
+                    variant="h5"
+                    sx={{
+                        marginTop: 4,
+                        fontWeight: 600,
+                        color: accentColor,
+                    }}
+                >
+                    {amount} {currency}
+                </Typography>
+
+                    <Box display="flex">
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                color: accentColor,
+                            }}
+                        >
+                            {changeText()}
+                        </Typography >
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                            {description}
+                        </Typography>
+                    </Box>
+
             </CardContent>
         </Card>
     )

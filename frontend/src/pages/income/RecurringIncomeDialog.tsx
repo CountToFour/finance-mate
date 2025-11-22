@@ -33,6 +33,7 @@ const RecurringIncomeDialog: React.FC<Props> = ({open, onClose, recurringTransac
     const [category, setCategory] = useState<Category | null>(null);
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
     const [periodType, setPeriodType] = useState<string>(recurringTransaction?.periodType ?? "");
+    const [currency, setCurrency] = useState<Currency | null>(null)
     const [active, setActive] = useState<boolean>();
     const [errors, setErrors] = useState({amount: "", category: "", account: ""});
 
@@ -49,7 +50,10 @@ const RecurringIncomeDialog: React.FC<Props> = ({open, onClose, recurringTransac
             }
             if (recurringTransaction.accountName) {
                 const acct = accounts.find(a => a.name === recurringTransaction.accountName);
-                if (acct) setSelectedAccount(acct);
+                if (acct) {
+                    setSelectedAccount(acct);
+                    setCurrency(acct.currency)
+                }
             }
         }
     }, [recurringTransaction, accounts, categories])
@@ -85,13 +89,43 @@ const RecurringIncomeDialog: React.FC<Props> = ({open, onClose, recurringTransac
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
             <DialogTitle>Powtarzające się przychody</DialogTitle>
             <DialogContent dividers>
-                <Box sx={{display: 'flex', alignItems: 'center', gap: 2}}>
+                <Box 
+                sx={{
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 2
+                    }}
+                >
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DatePicker label={'Data'} value={date} onChange={(v) => setDate(v as Dayjs | undefined)} slotProps={{textField: {fullWidth: true}}} format={"DD-MM-YYYY"} sx={{flex: 1}} />
+                        <DatePicker 
+                        label={'Data'} 
+                        value={date} 
+                        onChange={(v) => setDate(v as Dayjs | undefined)} 
+                        slotProps={{textField: {fullWidth: true}}} 
+                        format={"DD-MM-YYYY"} 
+                        sx={{flex: 1}} />
                     </LocalizationProvider>
-                    <TextField fullWidth label={'Kwota'} type="number" value={amount} onChange={(e) => setAmount(e.target.value)} sx={{flex: 1}} error={!!errors.amount} helperText={errors.amount} />
+                    <TextField 
+                        fullWidth 
+                        label={'Kwota'} 
+                        type="number" 
+                        value={amount} 
+                        onChange={(e) => setAmount(e.target.value)} 
+                        sx={{flex: 1}} 
+                        error={!!errors.amount} 
+                        helperText={errors.amount} 
+                    />
+                     <TextField
+                        fullWidth
+                        label={"Waluta"}
+                        value={currency?.symbol ?? ""}
+                        disabled
+                        sx={{flex: 0.5}}
+                    />
                 </Box>
-                <TextField fullWidth margin="normal" label={'Opis'} value={description} onChange={(e) => setDescription(e.target.value)} />
+                <TextField 
+                    fullWidth 
+                    margin="normal" label={'Opis'} value={description} onChange={(e) => setDescription(e.target.value)} />
                 <TextField select fullWidth margin="normal" label={'Konto'} value={selectedAccount ? selectedAccount.id : ''} onChange={(e) => { const id = e.target.value as string; const acct = accounts.find(a => a.id === id) ?? null; setSelectedAccount(acct); }} error={!!errors.account} helperText={errors.account}>
                     {accounts.map(a => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}
                 </TextField>
