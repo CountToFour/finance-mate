@@ -45,7 +45,13 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
 
     const handleSubmit = async () => {
         if (!name.trim()) return error('Podaj nazwę kategorii')
-        const dto: CategoryDto = { name: name.trim(), color, parentId: parentId || undefined, TransactionType: transactionType }
+        const dto: CategoryDto = { 
+            name: name.trim(), 
+            color, 
+            parentId: parentId || undefined, 
+            transactionType: transactionType 
+        }
+        console.log(dto)
         try {
             const res = await createCategory(dto)
             onSaved(res.data)

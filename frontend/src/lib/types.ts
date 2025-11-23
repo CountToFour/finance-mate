@@ -150,7 +150,7 @@ export type CategoryDto = {
     name: string
     color: string
     parentId?: string | null
-    TransactionType: string
+    transactionType: string
 }
 
 // BUDGETS
