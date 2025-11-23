@@ -94,8 +94,8 @@ const BudgetPage: React.FC = () => {
             {/* HEADER */}
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
                 <Box>
-                    <Typography variant="h4" fontWeight={700} color="primary">Budżet</Typography>
-                    <Typography variant="body2" color="text.secondary">Planuj i kontroluj swoje wydatki według kategorii</Typography>
+                    <Typography variant="h5" fontWeight={"bod"} color="secondary">Budżet</Typography>
+                    <Typography variant="body2" sx={{mt: 1}}>Planuj i kontroluj swoje wydatki według kategorii</Typography>
                 </Box>
 
                 <Stack direction="row" spacing={2}>

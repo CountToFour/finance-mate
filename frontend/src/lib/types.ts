@@ -142,7 +142,15 @@ export type Category = {
     id: string
     name: string
     color: string
+    parentId?: string | null
+    TransactionType: string
+}
 
+export type CategoryDto = {
+    name: string
+    color: string
+    parentId?: string | null
+    TransactionType: string
 }
 
 // BUDGETS

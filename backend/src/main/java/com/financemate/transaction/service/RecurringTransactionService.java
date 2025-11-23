@@ -23,7 +23,7 @@ public class RecurringTransactionService {
         this.transactionRepository = transactionRepository;
     }
 
-    @Scheduled(cron = "0 0 2 * * ?")
+    @Scheduled(cron = "0 0 1 * * ?")
     @Transactional
     public void generateRecurringExpenses() {
         LocalDate today = LocalDate.now().plusDays(1);

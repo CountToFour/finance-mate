@@ -305,6 +305,38 @@ export const getCategories = (transactionType: string) => axios.get(
     }
 )
 
+export const createCategory = (categoryDto: CategoryDto) => axios.post(
+    'http://localhost:8080/api/categories',
+    categoryDto,
+    {
+        withCredentials: true,
+        headers: {
+             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const updateCategory = (categoryDto: CategoryDto, id: string) => axios.put(
+    `http://localhost:8080/api/categories/${id}`,
+    categoryDto,
+    {
+        withCredentials: true,
+        headers: {
+             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const deleteCategory = (id: string) => axios.delete(
+    `http://localhost:8080/api/categories/${id}`,
+    {
+        withCredentials: true,
+        headers: {
+             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
 // BUDGETS
 
 export const createBudget = (budgetDto: BudgetDto) => axios.post(

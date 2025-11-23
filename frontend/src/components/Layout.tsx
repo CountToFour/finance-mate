@@ -36,7 +36,7 @@ export function Layout() {
         { text: t('layout.incomes'), icon: <AttachMoneyIcon />, path: "/incomes" },
         { text: t('layout.budget'), icon: <CrisisAlertIcon />, path: "/budgets" },
         { text: t('layout.report'), icon: <BarChartIcon />, path: "/" },
-        { text: t('layout.settings'), icon: <SettingsIcon />, path: "/" },
+        { text: t('layout.settings'), icon: <SettingsIcon />, path: "/settings" },
     ];
 
     const stringAvatar = (displayName: string) => {
