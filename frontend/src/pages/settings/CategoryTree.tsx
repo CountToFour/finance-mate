@@ -1,9 +1,12 @@
 import React, {useState, Fragment} from 'react'
 import type {Category} from '../../lib/types'
-import {Box, IconButton, List, ListItem, ListItemIcon, ListItemText, Collapse, Typography} from '@mui/material'
+import {Box, IconButton, List, ListItem, ListItemIcon, ListItemText, Collapse, Typography, Tooltip} from '@mui/material'
 import ExpandLess from '@mui/icons-material/ExpandLess'
 import ExpandMore from '@mui/icons-material/ExpandMore'
 import LabelIcon from '@mui/icons-material/Label'
+import { deleteCategory } from '../../lib/api'
+import {useNotification} from "../../components/NotificationContext.tsx";
+import DeleteIcon from '@mui/icons-material/Delete';
 
 type Props = {
     categories: Category[]
@@ -25,8 +28,19 @@ const buildTree = (cats: Category[]): Node[] => {
     return roots
 }
 
+
 const TreeNode: React.FC<{node: Node, level?: number}> = ({node, level=0}) => {
     const [open, setOpen] = useState(true)
+    const {success, error} = useNotification();
+
+    const handleDelete = (id: string) => {
+        deleteCategory(id).then(() => {
+            success("Udało usunąć sie kategorię")
+        }).catch(() => {
+            error("Nie udało się usunać kategorii")
+        })
+    }
+
     return (
         <Box>
             <ListItem sx={{pl: level * 3}}>
@@ -35,9 +49,19 @@ const TreeNode: React.FC<{node: Node, level?: number}> = ({node, level=0}) => {
                 </ListItemIcon>
                 <ListItemText primary={node.name} />
                 {node.children && node.children.length > 0 && (
-                    <IconButton size="small" onClick={() => setOpen(s => !s)}>
-                        {open ? <ExpandLess /> : <ExpandMore />}
-                    </IconButton>
+                    <Box display="flex" gap={2} alignItems="center">
+                        <IconButton size="small" onClick={() => setOpen(s => !s)}>
+                            {open ? <ExpandLess /> : <ExpandMore />}
+                        </IconButton>
+                        <Tooltip title={"Usuń kategorię"} arrow>
+                            <IconButton
+                                color="error"
+                                onClick={() => handleDelete(node.id)}
+                            >
+                                <DeleteIcon/>
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
                 )}
             </ListItem>
 
