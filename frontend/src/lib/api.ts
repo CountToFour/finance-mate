@@ -1,6 +1,6 @@
 import axios from 'axios'
 import {useAuthStore} from "../store/auth.ts";
-import type {EditTransactionDto, TransactionDto, CreateAccountDto, TransferDto, BudgetDto} from "./types.ts";
+import type {EditTransactionDto, TransactionDto, CreateAccountDto, TransferDto, BudgetDto, CategoryDto} from "./types.ts";
 
 export const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
