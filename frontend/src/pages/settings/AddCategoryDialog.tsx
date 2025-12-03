@@ -1,7 +1,7 @@
-import React, {useMemo, useState} from 'react'
+import React, {useMemo, useState, useEffect} from 'react'
 import {Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, Stack, Box} from '@mui/material'
 import type {Category, CategoryDto} from '../../lib/types'
-import {createCategory} from '../../lib/api'
+import {createCategory, updateCategory} from '../../lib/api'
 import {useNotification} from '../../components/NotificationContext'
 
 type Props = {
@@ -9,7 +9,9 @@ type Props = {
     onClose: () => void
     categories: Category[]
     transactionType: string
-    onSaved: (cat: Category) => void
+    onSaved: (cat: Category, edited?: boolean) => void
+    editing?: Category | null
+    parentForNew?: string | null
 }
 
 const flattenForSelect = (cats: Category[]) => {
@@ -35,13 +37,48 @@ const flattenForSelect = (cats: Category[]) => {
     return out
 }
 
-const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transactionType, onSaved}) => {
+const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transactionType, onSaved, editing=null, parentForNew=null}) => {
     const [name, setName] = useState('')
     const [color, setColor] = useState('#1976d2')
     const [parentId, setParentId] = useState<string | null>(null)
     const {success, error} = useNotification()
 
     const options = useMemo(() => flattenForSelect(categories), [categories])
+
+    const findParentColor = (id: string | null) => {
+        if (!id) return undefined
+        const found = categories.find(c => c.id === id)
+        return found?.color
+    }
+
+    useEffect(() => {
+        if (open) {
+            if (editing) {
+                setName(editing.name || '')
+                setParentId(editing.parentId || null)
+                // jeśli mamy parent, kolor będzie pobrany z rodzica
+                const pcol = findParentColor(editing.parentId || null)
+                setColor(pcol || editing.color || '#1976d2')
+            } else if (parentForNew) {
+                setName('')
+                setParentId(parentForNew)
+                const pcol = findParentColor(parentForNew)
+                setColor(pcol || '#1976d2')
+            } else {
+                setName('')
+                setColor('#1976d2')
+                setParentId(null)
+            }
+        }
+    }, [open, editing, parentForNew, categories])
+
+    // kiedy użytkownik zmieni rodzica w select (dynamiczne ustawienie koloru i zablokowanie)
+    useEffect(() => {
+        if (parentId) {
+            const pcol = findParentColor(parentId)
+            if (pcol) setColor(pcol)
+        }
+    }, [parentId])
 
     const handleSubmit = async () => {
         if (!name.trim()) return error('Podaj nazwę kategorii')
@@ -51,24 +88,32 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
             parentId: parentId || undefined, 
             transactionType: transactionType 
         }
-        console.log(dto)
         try {
-            const res = await createCategory(dto)
-            onSaved(res.data)
+            if (editing) {
+                const res = await updateCategory(dto, editing.id)
+                onSaved(res.data, true)
+                success('Kategoria zaktualizowana')
+            } else {
+                const res = await createCategory(dto)
+                onSaved(res.data, false)
+                success('Kategoria dodana')
+            }
             setName('')
             setColor('#1976d2')
             setParentId(null)
             onClose()
         } catch (e) {
             console.error(e)
-            error('Błąd podczas tworzenia kategorii')
+            error('Błąd podczas zapisu kategorii')
         }
     }
 
+    const colorLocked = !!parentId
+
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>Dodaj kategorię</DialogTitle>
-            <DialogContent>
+            <DialogTitle>{editing ? 'Edytuj kategorię' : 'Dodaj kategorię'}</DialogTitle>
+            <DialogContent dividers>
                 <Stack spacing={2} sx={{mt:1}}>
                     <TextField label="Nazwa" value={name} onChange={e => setName(e.target.value)} fullWidth />
                     <Box>
@@ -78,12 +123,12 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
                             ))}
                         </TextField>
                     </Box>
-                    <TextField label="Kolor" type="color" value={color} onChange={e => setColor(e.target.value)} />
+                    <TextField label="Kolor" type="color" value={color} onChange={e => setColor(e.target.value)} disabled={colorLocked} helperText={colorLocked ? 'Kolor dziedziczony od rodzica' : ''} />
                 </Stack>
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={{mr: 2, mb: 1, mt: 1}}>
                 <Button onClick={onClose}>Anuluj</Button>
-                <Button variant="contained" color="secondary" onClick={handleSubmit}>Zapisz</Button>
+                <Button variant="contained" color="secondary" onClick={handleSubmit}>{editing ? 'Zapisz zmiany' : 'Zapisz'}</Button>
             </DialogActions>
         </Dialog>
     )

@@ -154,7 +154,7 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
             <DialogTitle>
                 {initialAccount
                     ? t('accounts.dialog.editTitle', 'Edytuj konto')
-                    : t('accounts.dialog.addTitle', 'Dodaj konto')}
+                    : t('accounts.dialog.addTitle', 'Dodaj nowe konto')}
             </DialogTitle>
 
             <DialogContent dividers sx={{ position: 'relative' }}>
