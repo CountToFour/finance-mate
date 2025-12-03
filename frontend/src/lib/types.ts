@@ -87,15 +87,7 @@ export type CategoryAmount = {
     percentage: number
 }
 
-export type ExpenseOverview = {
-    totalAmount: number
-    averageAmount: number
-    expenseCount: number
-    totalAmountChangePercentage: number
-    expenseCountChangePercentage: number
-}
-
-export type IncomeOverview = {
+export type TransactionOverview = {
     totalAmount: number
     averageAmount: number
     expenseCount: number

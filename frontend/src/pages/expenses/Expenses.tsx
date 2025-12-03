@@ -17,11 +17,11 @@ import {
     deleteTransaction,
     deleteRecurringTransaction,
     getAllCategoriesAmount,
-    getAllRecurringExpenses, getExpenseOverview,
+    getAllRecurringExpenses, getTransactionOverview,
     getExpenses, getAccounts, getCategories, deactivateRecurringTransaction
 } from "../../lib/api.ts";
 import {useAuthStore} from "../../store/auth.ts";
-import type {Account, Category, CategoryAmount, Expense, ExpenseOverview, RecurringExpense} from "../../lib/types.ts";
+import type {Account, Category, CategoryAmount, Expense, TransactionOverview, RecurringExpense} from "../../lib/types.ts";
 import {DataGrid, type GridColDef} from '@mui/x-data-grid';
 import {useNotification} from "../../components/NotificationContext.tsx";
 import AddExpenseDialog from "./AddExpenseDialog.tsx";
@@ -53,7 +53,7 @@ function ExpensesPage() {
     const [selectedRecurringExpense, setSelectedRecurringExpense] = useState<RecurringExpense>();
     const [filteredCategory, setFilteredCategory] = useState<string>("Wszystkie");
     const [categoriesExpenses, setCategoriesExpenses] = useState<CategoryAmount[]>([])
-    const [overview, setOverview] = useState<ExpenseOverview>();
+    const [overview, setOverview] = useState<TransactionOverview>();
 
     const {success, error} = useNotification();
     const [openDialog, setOpenDialog] = useState(false);
@@ -76,7 +76,7 @@ function ExpensesPage() {
             getExpenses(filteredCategory, dateFrom, dateTo).then((res) => setExpenses(res.data));
         }
 
-        getExpenseOverview('EXPENSE', null, null).then((res) => setOverview(res.data));
+        getTransactionOverview('EXPENSE', null, null).then((res) => setOverview(res.data));
 
         getAccounts().then((res) => {
             setAccounts(res.data);

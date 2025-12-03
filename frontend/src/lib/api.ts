@@ -172,7 +172,7 @@ export const getAllCategoriesAmount = (
     }
 )
 
-export const getExpenseOverview = (
+export const getTransactionOverview = (
     type: string,
     startDate: string | null,
     endDate: string | null,

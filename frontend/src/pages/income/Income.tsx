@@ -34,9 +34,9 @@ import {
     deleteRecurringTransaction, getAllRecurringExpenses, getAllRecurringTransactions,
     deleteTransaction,
     deactivateRecurringTransaction,
-    getExpenseOverview
+    getTransactionOverview
 } from "../../lib/api";
-import type {Account, Category, CategoryAmount, ExpenseOverview, Income, RecurringIncome} from "../../lib/types";
+import type {Account, Category, CategoryAmount, TransactionOverview, Income, RecurringIncome} from "../../lib/types";
 import Tooltip from "@mui/material/Tooltip";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -59,7 +59,7 @@ function IncomePage() {
     const [selectedRecurringIncome, setSelectedRecurringIncome] = useState<RecurringIncome | null>(null)
     const [filteredCategory, setFilteredCategory] = useState<string>("Wszystkie");
     const [categoriesIncome, setCategoriesIncome] = useState<CategoryAmount[]>([]);
-    const [overview, setOverview] = useState<ExpenseOverview>();
+    const [overview, setOverview] = useState<TransactionOverview>();
     
 
     const {success, error} = useNotification();
@@ -82,7 +82,7 @@ function IncomePage() {
         } else {
             getTransactions('INCOME', filteredCategory, dateFrom, dateTo).then((res) => setTransactions(res.data));
         }
-        getExpenseOverview('INCOME', null, null).then((res) => setOverview(res.data));
+        getTransactionOverview('INCOME', null, null).then((res) => setOverview(res.data));
         
         getAccounts().then((res) => setAccounts(res.data));
         getCategories('INCOME').then((res) => setCategories(res.data));

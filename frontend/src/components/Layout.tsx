@@ -35,7 +35,7 @@ export function Layout() {
         { text: t('layout.expenses'), icon: <ReceiptIcon />, path: "/expenses" },
         { text: t('layout.incomes'), icon: <AttachMoneyIcon />, path: "/incomes" },
         { text: t('layout.budget'), icon: <CrisisAlertIcon />, path: "/budgets" },
-        { text: t('layout.report'), icon: <BarChartIcon />, path: "/" },
+        { text: t('layout.report'), icon: <BarChartIcon />, path: "/reports" },
         { text: t('layout.settings'), icon: <SettingsIcon />, path: "/settings" },
     ];
 

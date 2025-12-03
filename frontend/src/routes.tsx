@@ -1,4 +1,3 @@
-import React from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -10,6 +9,7 @@ import Accounts from "./pages/accounts/Accounts.tsx";
 import BudgetPage from "./pages/budgets/BudgetPage.tsx";
 import Income from "./pages/income/Income.tsx";
 import SettingsPage from './pages/settings/SettingsPage'
+import ReportsPage from './pages/reports/ReportsPage'
 
 
 export const router = createBrowserRouter([
@@ -29,6 +29,7 @@ export const router = createBrowserRouter([
             { path: '/budgets', element: <BudgetPage />},
             { path: '/incomes', element: <Income />},
             { path: '/settings', element: <SettingsPage /> },
+            { path: '/reports', element: <ReportsPage /> },
         ],
     },
 ]);
