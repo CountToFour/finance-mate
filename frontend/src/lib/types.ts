@@ -95,6 +95,12 @@ export type TransactionOverview = {
     expenseCountChangePercentage: number
 }
 
+export type MonthlyOverview = {
+    month: string
+    totalIncome: number
+    totalExpense: number
+}
+
 //ACCOUNTS
 
 export type Account = {

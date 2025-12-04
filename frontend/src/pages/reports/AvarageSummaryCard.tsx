@@ -1,5 +1,5 @@
 import React from 'react';
-import {Card, CardContent, Typography, Box, useTheme} from '@mui/material';
+import {Card, CardContent, Typography, Box, useTheme, hexToRgb} from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 type Props = {
@@ -8,6 +8,7 @@ type Props = {
     period: string;
     currency?: string;
     startColor: string;
+    icon?: React.ReactNode;
 }
 
 const IncomeSummaryCard: React.FC<Props> = ({
@@ -15,9 +16,17 @@ const IncomeSummaryCard: React.FC<Props> = ({
                                                 amount,
                                                 period,
                                                 currency = 'zł',
-                                                startColor = '#e3f2fd'
+                                                startColor = '#e3f2fd',
+                                                icon
                                             }) => {
     const theme = useTheme();
+
+    const hexToRgba = (hex: string, alpha: number) => {
+        const r = parseInt(hex.substring(1, 3), 16);
+        const g = parseInt(hex.substring(3, 5), 16);
+        const b = parseInt(hex.substring(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
 
     const formattedAmount = amount.toLocaleString('pl-PL', {
         minimumFractionDigits: 0,
@@ -30,7 +39,7 @@ const IncomeSummaryCard: React.FC<Props> = ({
                 position: 'relative',
                 overflow: 'hidden',
                 borderRadius: 2,
-                background: `linear-gradient(to bottom right, ${startColor}, #FFFFFF)`,
+                background: `linear-gradient(to bottom right, ${hexToRgba(startColor, 0.2)}, #FFFFFF)`,
                 border: '1px solid',
                 borderColor: 'divider',
             }}
@@ -40,16 +49,16 @@ const IncomeSummaryCard: React.FC<Props> = ({
                     sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        mb: 1 // Margines dolny
+                        mb: 1
                     }}
                 >
-                    <TrendingUpIcon
-                        sx={{
-                            fontSize: 20,
-                            mr: 1,
-                            color: theme.palette.primary.main
-                        }}
-                    />
+                    <Box sx={{
+                        color: startColor,
+                        mr: 1,
+                        fontSize: 20,
+                    }}>
+                        {icon}
+                    </Box>
                     <Typography
                         variant="subtitle1"
                         color="text.secondary"
@@ -64,7 +73,7 @@ const IncomeSummaryCard: React.FC<Props> = ({
                     component="div"
                     sx={{
                         fontWeight: 'bold',
-                        color: theme.palette.primary.main,
+                        color: startColor,
                         mt: 2,
                         mb: 1,
                     }}

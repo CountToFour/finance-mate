@@ -4,6 +4,7 @@ import com.financemate.auth.model.user.User;
 import com.financemate.auth.service.UserService;
 import com.financemate.transaction.dto.CategoryDto;
 import com.financemate.transaction.dto.EditTransactionDto;
+import com.financemate.transaction.dto.MonthOverviewDto;
 import com.financemate.transaction.dto.RecurringTransactionResponse;
 import com.financemate.transaction.dto.TransactionRequest;
 import com.financemate.transaction.dto.TransactionResponse;
@@ -17,6 +18,7 @@ import com.financemate.transaction.service.TransactionService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -186,4 +188,32 @@ public class TransactionController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @GetMapping("/overview/monthly")
+    public ResponseEntity<List<MonthOverviewDto>> getMonthlyOverview(
+            Authentication authentication,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        try {
+            User user = userService.getUserFromAuthentication(authentication);
+            return ResponseEntity.ok(transactionService.getMonthlyOverview(user, startDate, endDate));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("overview/top")
+    public ResponseEntity<?> getTopExpenses(Authentication authentication,
+                                            @RequestParam(required = false) LocalDate startDate,
+                                            @RequestParam(required = false) LocalDate endDate,
+                                            @RequestParam(defaultValue = "5") int limit,
+                                            @RequestParam TransactionType type) {
+        try {
+            User user = userService.getUserFromAuthentication(authentication);
+            return ResponseEntity.ok(transactionService.getTopTransactionsByAmount(user, startDate, endDate, limit, type));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
 }

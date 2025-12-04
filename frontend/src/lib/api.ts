@@ -201,6 +201,36 @@ export const deactivateRecurringTransaction = (id: string) => axios.put(
     }
 )
 
+export const getMonthlyOverview = (startDate: string, endDate: string) => axios.get(
+    `http://localhost:8080/api/transactions/overview/monthly`,
+    {
+        params: {
+            startDate: startDate,
+            endDate: endDate,
+        },
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const getTopExpenses = (startDate: string, endDate: string, limit: number, type: string) => axios.get(
+    `http://localhost:8080/api/transactions/overview/top`,
+    {
+        params: {
+            startDate: startDate,
+            endDate: endDate,
+            limit: limit,
+            type: type,
+        },
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    }
+)
+
 // ACCOUNTS
 
 export const getAccounts = () => axios.get(

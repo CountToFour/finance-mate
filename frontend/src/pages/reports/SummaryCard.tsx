@@ -64,7 +64,6 @@ const ExpenseSummaryCard: React.FC<Props> = ({
                                 color: accentColor,
                             }}
                         >
-                            {/*{changeText()}*/}
                         </Typography >
                         <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                             {description}

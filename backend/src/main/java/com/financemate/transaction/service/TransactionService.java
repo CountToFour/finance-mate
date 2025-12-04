@@ -9,6 +9,7 @@ import com.financemate.category.model.Category;
 import com.financemate.category.repository.CategoryRepository;
 import com.financemate.transaction.dto.CategoryDto;
 import com.financemate.transaction.dto.EditTransactionDto;
+import com.financemate.transaction.dto.MonthOverviewDto;
 import com.financemate.transaction.dto.RecurringTransactionResponse;
 import com.financemate.transaction.dto.TransactionRequest;
 import com.financemate.transaction.dto.TransactionOverviewDto;
@@ -31,10 +32,11 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -309,8 +311,8 @@ public class TransactionService {
         long days = ChronoUnit.DAYS.between(startDate, endDate) + 1; // liczba dni w okresie (włącznie)
         if (days <= 0) days = 1;
 
-        double averageAmount = totalAmount / (double) days;
         int expensesCount = transactions.size();
+        double averageAmount = totalAmount / expensesCount;
 
         return List.of(totalAmount, averageAmount, expensesCount);
     }
@@ -321,21 +323,70 @@ public class TransactionService {
                 .and(TransactionSpecifications.dateBetween(startDate, endDate))
                 .and(TransactionSpecifications.type(type));
 
-        Set<String> categories = transactionRepository.findAll(spec).stream()
-                .map(Transaction::getCategory)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        List<Transaction> transactions = transactionRepository.findAll(spec);
 
-        return categories.stream()
-                .map(category -> {
-                    int transactions = transactionRepository.findAll(spec.and(TransactionSpecifications.hasCategory(category))).size();
-                    double percentage = transactions / (double) transactionRepository.findAll(spec).size();
-                    double totalAmount = transactionRepository.findAll(spec.and(TransactionSpecifications.hasCategory(category))).stream()
+        double totalSum = transactions.stream()
+                .map(Transaction::getPrice)
+                .mapToDouble(Double::doubleValue)
+                .map(Math::abs)
+                .sum();
+
+        Map<String, List<Transaction>> grouped = transactions.stream()
+                .filter(t -> t.getCategory() != null)
+                .collect(Collectors.groupingBy(Transaction::getCategory));
+
+        return grouped.entrySet().stream()
+                .map(entry -> {
+                    String category = entry.getKey();
+                    List<Transaction> txs = entry.getValue();
+                    int transactionsCount = txs.size();
+                    double categorySum = txs.stream()
                             .map(Transaction::getPrice)
-                            .mapToDouble(Double::doubleValue).sum();
-                    return new CategoryDto(category, totalAmount, transactions, percentage);
+                            .mapToDouble(Double::doubleValue)
+                            .map(Math::abs)
+                            .sum();
+                    double percentage = totalSum == 0.0 ? 0.0 : (categorySum / totalSum);
+                    return new CategoryDto(category, categorySum, transactionsCount, percentage);
                 })
                 .toList();
+    }
+
+    public List<MonthOverviewDto> getMonthlyOverview(User user, LocalDate startDate, LocalDate endDate) {
+        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(user.getId()))
+                .and(TransactionSpecifications.dateBetween(startDate, endDate));
+
+        List<Transaction> transactions = transactionRepository.findAll(spec);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+
+        Map<java.time.YearMonth, List<Transaction>> groupedByMonth = transactions.stream()
+                .filter(t -> t.getCreatedAt() != null)
+                .collect(Collectors.groupingBy(t -> java.time.YearMonth.of(t.getCreatedAt().getYear(), t.getCreatedAt().getMonthValue())));
+
+        return groupedByMonth.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> {
+                    java.time.YearMonth ym = entry.getKey();
+                    String month = ym.format(formatter);
+                    List<Transaction> txs = entry.getValue();
+
+                    double totalIncome = txs.stream()
+                            .map(Transaction::getPrice)
+                            .mapToDouble(Double::doubleValue)
+                            .filter(price -> price > 0)
+                            .sum();
+
+                    double totalExpense = txs.stream()
+                            .map(Transaction::getPrice)
+                            .mapToDouble(Double::doubleValue)
+                            .filter(price -> price < 0)
+                            .map(Math::abs)
+                            .sum();
+
+                    return new MonthOverviewDto(month, totalIncome, totalExpense);
+                })
+                .toList();
+
     }
 
     private LocalDate calculateNextDate(LocalDate baseDate, PeriodType type) {
@@ -346,5 +397,23 @@ public class TransactionService {
             case YEARLY -> baseDate.plusYears(1);
             default -> baseDate;
         };
+    }
+
+
+    //TODO COS SIE STANIE JAK BEDZIE MNIEJ REKORDOW NIZ LIMIT
+    public List<TransactionResponse> getTopTransactionsByAmount(User user, LocalDate startDate, LocalDate endDate, int limit, TransactionType type) throws UserNotFoundException {
+        if (user == null) {
+            throw new IllegalArgumentException("User must not be null");
+        }
+        if (limit <= 0) {
+            return List.of();
+        }
+
+        List<TransactionResponse> all = getTransactionsByUser(user, null, null, null, startDate, endDate, type, null);
+
+        return all.stream()
+                .sorted((t1, t2) -> Double.compare(Math.abs(t2.getPrice()), Math.abs(t1.getPrice())))
+                .limit(limit)
+                .toList();
     }
 }
