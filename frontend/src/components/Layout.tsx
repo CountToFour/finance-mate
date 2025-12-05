@@ -30,7 +30,7 @@ export function Layout() {
     const navigate = useNavigate();
 
     const menuItems = [
-        { text: t('layout.dashboard'), icon: <HomeIcon />, path: "/" },
+        { text: t('layout.dashboard'), icon: <HomeIcon />, path: "/dashboard" },
         { text: t('layout.account'), icon: <AccountBalanceWalletIcon />, path: "/accounts" },
         { text: t('layout.expenses'), icon: <ReceiptIcon />, path: "/expenses" },
         { text: t('layout.incomes'), icon: <AttachMoneyIcon />, path: "/incomes" },

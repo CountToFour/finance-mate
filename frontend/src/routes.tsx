@@ -1,6 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Register from "./pages/Register.tsx";
@@ -10,6 +9,7 @@ import BudgetPage from "./pages/budgets/BudgetPage.tsx";
 import Income from "./pages/income/Income.tsx";
 import SettingsPage from './pages/settings/SettingsPage'
 import ReportsPage from './pages/reports/ReportsPage'
+import Dashboard from "./pages/dashboard/Dashboard.tsx";
 
 
 export const router = createBrowserRouter([
@@ -23,7 +23,7 @@ export const router = createBrowserRouter([
             </ProtectedRoute>
         ),
         children: [
-            { path: '/', element: <Dashboard /> },
+            { path: '/dashboard', element: <Dashboard /> },
             { path: '/expenses', element: <Expenses />},
             { path: '/accounts', element: <Accounts />},
             { path: '/budgets', element: <BudgetPage />},
