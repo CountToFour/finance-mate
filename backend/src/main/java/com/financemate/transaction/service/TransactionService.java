@@ -399,7 +399,6 @@ public class TransactionService {
         };
     }
 
-
     //TODO COS SIE STANIE JAK BEDZIE MNIEJ REKORDOW NIZ LIMIT
     public List<TransactionResponse> getTopTransactionsByAmount(User user, LocalDate startDate, LocalDate endDate, int limit, TransactionType type) throws UserNotFoundException {
         if (user == null) {
@@ -415,5 +414,35 @@ public class TransactionService {
                 .sorted((t1, t2) -> Double.compare(Math.abs(t2.getPrice()), Math.abs(t1.getPrice())))
                 .limit(limit)
                 .toList();
+    }
+
+    public double calculateQuarterlySavingsRate(User user) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusMonths(3);
+
+        Specification<Transaction> spec = Specification.allOf(
+                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.dateBetween(startDate, endDate)
+        );
+
+        List<Transaction> transactions = transactionRepository.findAll(spec);
+
+        double totalIncome = transactions.stream()
+                .filter(t -> t.getTransactionType() == TransactionType.INCOME)
+                .mapToDouble(Transaction::getPrice)
+                .sum();
+
+        double totalExpense = transactions.stream()
+                .filter(t -> t.getTransactionType() == TransactionType.EXPENSE)
+                .mapToDouble(Transaction::getPrice)
+                .map(Math::abs)
+                .sum();
+
+        //when there is no incomes
+        if (totalIncome == 0) {
+            return -1.0;
+        }
+
+        return (totalIncome - totalExpense) / totalIncome;
     }
 }

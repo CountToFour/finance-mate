@@ -19,6 +19,7 @@ import type { Budget, Category} from "../../lib/types";
 import BudgetDialog from "./BudgetDialog.tsx";
 import BudgetCard from "./BudgetCard.tsx";
 import {useNotification} from "../../components/NotificationContext.tsx";
+import SmartInvestmentWidget from "./InvestmentWidget.tsx";
 
 
 const hexToRgba = (hex: string, alpha = 0.2) => {
@@ -163,7 +164,7 @@ const BudgetPage: React.FC = () => {
                 </Card>
             </Box>
 
-            {/* Budżety wg kategorii */}
+            {/* Budgets by categories */}
             <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
                 <CardContent>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
@@ -185,6 +186,11 @@ const BudgetPage: React.FC = () => {
                     </Box>
                 </CardContent>
             </Card>
+
+            {/* Smart Investment Widget */}
+            <Box mt={3}>
+                <SmartInvestmentWidget />
+            </Box>
 
             {/* Dialog */}
             <BudgetDialog

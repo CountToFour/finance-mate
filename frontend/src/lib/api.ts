@@ -420,3 +420,25 @@ export const deleteBudget = (id: string) => axios.delete(
         }
     }
 )
+
+// RECOMMENDATIONS
+
+export const getRecommendations = () => axios.get(
+    'http://localhost:8080/api/investments/recommendations',
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    }
+)        
+
+export const getSmartRecommendations = () => axios.get(
+    'http://localhost:8080/api/recommendation/smart',
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    }
+);

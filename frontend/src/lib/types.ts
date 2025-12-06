@@ -172,3 +172,25 @@ export type Budget = {
     startDate: string
     endDate: string
 }
+
+// RECOMMENDATIONS
+
+export type RecommendationAction = 'BUY' | 'SELL' | 'HOLD';
+
+export type Recommendation = {
+    id: string;
+    symbol: string;
+    rsiValue: number;
+    action: RecommendationAction;
+    latestClose: number;
+    latestDatetime: string;
+}
+
+export type InvestmentProfile = 'CRITICAL' | 'CONSERVATIVE' | 'BALANCED' | 'AGGRESSIVE';
+
+export type SmartRecommendation = {
+    profile: InvestmentProfile;
+    savingsRate: number;
+    recommendations: Recommendation[]; // Używa istniejącego typu Recommendation
+    message: string;
+}
