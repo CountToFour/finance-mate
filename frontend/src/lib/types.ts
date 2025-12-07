@@ -191,6 +191,6 @@ export type InvestmentProfile = 'CRITICAL' | 'CONSERVATIVE' | 'BALANCED' | 'AGGR
 export type SmartRecommendation = {
     profile: InvestmentProfile;
     savingsRate: number;
-    recommendations: Recommendation[]; // Używa istniejącego typu Recommendation
+    recommendations: Recommendation[];
     message: string;
 }

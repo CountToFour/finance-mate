@@ -5,7 +5,8 @@ import {
     Button,
     Card,
     CardContent,
-    Stack
+    Stack,
+    useTheme
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import dayjs from "dayjs";
@@ -34,6 +35,7 @@ const money = (v: number) =>
     v.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " zł";
 
 const BudgetPage: React.FC = () => {
+    const theme = useTheme();
     const {success, error} = useNotification();
     const [budgets, setBudgets] = useState<Budget[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -131,7 +133,16 @@ const BudgetPage: React.FC = () => {
 
             {/* Summary cards */}
             <Box display="grid" gridTemplateColumns={{xs: '1fr', sm: 'repeat(4, 1fr)'}} gap={2} mb={3}>
-                <Card variant="outlined">
+                <Card 
+                    variant="outlined"
+                    sx={{
+                        bgcolor: 'background.paper',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2,
+                        borderLeft: `6px solid ${theme.palette.primary.main}`,
+                    }}
+                >
                     <CardContent>
                         <Typography variant="subtitle2">Całkowity budżet</Typography>
                         <Typography variant="h5" color="primary" fontWeight={700}>{money(totals.totalLimit)}</Typography>
@@ -139,7 +150,16 @@ const BudgetPage: React.FC = () => {
                     </CardContent>
                 </Card>
 
-                <Card variant="outlined">
+                <Card
+                    variant="outlined"
+                    sx={{
+                        bgcolor: 'background.paper',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2,
+                        borderLeft: `6px solid ${theme.palette.error.main}`,
+                    }}
+                >
                     <CardContent>
                         <Typography variant="subtitle2">Wydano</Typography>
                         <Typography variant="h5" color="error" fontWeight={700}>{money(totals.totalSpent)}</Typography>
@@ -147,7 +167,16 @@ const BudgetPage: React.FC = () => {
                     </CardContent>
                 </Card>
 
-                <Card variant="outlined">
+                <Card 
+                    variant="outlined"
+                    sx={{
+                        bgcolor: 'background.paper',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2,
+                        borderLeft: `6px solid ${theme.palette.success.main}`,
+                    }}
+                >
                     <CardContent>
                         <Typography variant="subtitle2">Pozostało</Typography>
                         <Typography variant="h5" color="success.main" fontWeight={700}>{money(totals.remaining)}</Typography>
@@ -155,7 +184,16 @@ const BudgetPage: React.FC = () => {
                     </CardContent>
                 </Card>
 
-                <Card variant="outlined">
+                <Card 
+                    variant="outlined"
+                    sx={{
+                        bgcolor: 'background.paper',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2,
+                        borderLeft: `6px solid ${theme.palette.secondary.main}`,
+                    }}
+                >
                     <CardContent>
                         <Typography variant="subtitle2">Średnia dzienna</Typography>
                         <Typography variant="h5" color="secondary" fontWeight={700}>{money(totals.avg)}</Typography>

@@ -43,8 +43,6 @@ const AccountSummaryCard: React.FC<AccountProps> = ({
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
 
-    const backgroundColor = hexToRgba(color, 0.2);
-
     return (
         <Card
             elevation={1}
@@ -52,16 +50,15 @@ const AccountSummaryCard: React.FC<AccountProps> = ({
                 position: 'relative',
                 overflow: 'hidden',
                 borderRadius: 2,
-                bgcolor: backgroundColor,
+                background: `linear-gradient(to bottom right, ${hexToRgba(color, 0.2)}, #FFFFFF)`,
                 border: '1px solid',
-                borderColor: color,
-                borderWidth: 5,
+                borderColor: 'divider',
                 ...sx,
             }}
         >
             <CardContent>
                 <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5}>
-                    <Typography variant="subtitle1" fontWeight={"bold"}>
+                    <Typography variant="subtitle1" fontWeight={"bold"} color={color}>
                         {name}
                     </Typography>
                     <Box display="flex" alignItems="center" gap={0.5}>
@@ -102,6 +99,7 @@ const AccountSummaryCard: React.FC<AccountProps> = ({
                         marginTop: 4,
                         fontWeight: 600,
                     }}
+                    color={color}
                 >
                     {balance.toLocaleString(undefined, {minimumFractionDigits: 2})} {currencySymbol}
                 </Typography>

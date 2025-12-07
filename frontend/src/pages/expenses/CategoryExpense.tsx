@@ -10,9 +10,27 @@ interface CategoryExpenseProps {
 
 const CategoryExpense: React.FC<CategoryExpenseProps> = ({categoryAmount, color}) => {
     const {t} = useTranslation();
+    
+    const hexToRgba = (hex: string, alpha: number) => {
+        if (!hex) return `rgba(0,0,0,${alpha})`;
+        const r = parseInt(hex.substring(1, 3), 16);
+        const g = parseInt(hex.substring(3, 5), 16);
+        const b = parseInt(hex.substring(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
 
     return (
-        <Box sx={{border: 3, borderColor: color, borderRadius: 1.5, p: 2, display: 'flex', gap: 1.5}}>
+        <Box 
+        sx={{
+            borderRadius: 2,
+            p: 2, 
+            display: 'flex', 
+            gap: 1.5,
+            background: `linear-gradient(to bottom right, ${hexToRgba(color, 0.3)}, #FFFFFF)`,
+            border: '1px solid',
+            borderColor: 'divider',
+            }}
+            >
             <Box sx={{width: 14, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 <Box sx={{width: 15, height: 15, borderRadius: '50%', bgcolor: color}}/>
             </Box>

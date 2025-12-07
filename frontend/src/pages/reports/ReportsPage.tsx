@@ -162,7 +162,7 @@ const ReportsPage: React.FC = () => {
                     // description="na podstawie 30 dni"
                     amount={savingsRate}
                     currency="%"
-                    accentColor={'secondary.main'}
+                    accentColor={'#A175BF'}
                     icon={<CrisisAlertIcon fontSize="medium"/>}
                 />
             </Box>

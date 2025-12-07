@@ -6,6 +6,7 @@ import type {Category} from '../../lib/types'
 import CategoryTree from './CategoryTree'
 import AddCategoryDialog from './AddCategoryDialog'
 import {useNotification} from '../../components/NotificationContext'
+import GeneralSettings from './GeneralSettings'
 
 const SettingsPage: React.FC = () => {
     const [view, setView] = useState<'CATEGORIES' | 'GENERAL'>('CATEGORIES')
@@ -102,12 +103,7 @@ const SettingsPage: React.FC = () => {
             )}
 
             {view === 'GENERAL' && (
-                <Card>
-                    <CardContent>
-                        <Typography variant="h6">Ustawienia ogólne</Typography>
-                        <Typography variant="body2" color="text.secondary">Tutaj pojawią się ustawienia globalne aplikacji.</Typography>
-                    </CardContent>
-                </Card>
+                <GeneralSettings />
             )}
 
             <AddCategoryDialog

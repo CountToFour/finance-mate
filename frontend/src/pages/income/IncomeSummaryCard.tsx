@@ -43,10 +43,11 @@ const IncomeSummaryCard: React.FC<Props> = ({
             sx={{
                 position: 'relative',
                 overflow: 'hidden',
-                borderRadius: 2,
                 bgcolor: 'background.paper',
                 border: '1px solid',
                 borderColor: 'divider',
+                borderRadius: 2,
+                borderLeft: `6px solid ${accentColor}`,
                 ...sx,
             }}
         >

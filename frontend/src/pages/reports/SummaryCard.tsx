@@ -33,6 +33,7 @@ const ExpenseSummaryCard: React.FC<Props> = ({
                 bgcolor: 'background.paper',
                 border: '1px solid',
                 borderColor: 'divider',
+                borderLeft: `6px solid ${accentColor}`,
                 ...sx,
             }}
         >

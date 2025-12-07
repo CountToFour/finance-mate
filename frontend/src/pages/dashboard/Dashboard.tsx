@@ -10,11 +10,8 @@ import {
     List,
     ListItem,
     ListItemText,
-    Chip,
-    useTheme,
-    Button
+    useTheme
 } from '@mui/material';
-import {LogOut} from 'lucide-react';
 import {useAuthStore} from "../../store/auth.ts";
 import {
     getAccounts,
@@ -36,49 +33,39 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 dayjs.locale('pl');
 
 function Dashboard() {
-    const {user, logout} = useAuthStore();
+    const {user} = useAuthStore();
     const theme = useTheme();
 
-    // --- State ---
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [recentExpenses, setRecentExpenses] = useState<Expense[]>([]);
     const [categoryAmounts, setCategoryAmounts] = useState<CategoryAmount[]>([]);
     const [allCategories, setAllCategories] = useState<Category[]>([]);
     const [weeklyExpenses, setWeeklyExpenses] = useState<{ day: string; amount: number; fullDate: string }[]>([]);
 
-    // --- Data Fetching ---
     useEffect(() => {
         const fetchData = async () => {
             const today = dayjs();
             const startOfMonth = today.startOf('month').format('YYYY-MM-DD');
             const endOfMonth = today.endOf('month').format('YYYY-MM-DD');
-            // Ostatnie 7 dni (włącznie z dziś)
             const startOfLast7Days = today.subtract(6, 'day').format('YYYY-MM-DD');
             const formattedToday = today.format('YYYY-MM-DD');
 
             try {
-                // 1. Pobierz konta
                 const accountsRes = await getAccounts();
                 setAccounts(accountsRes.data);
 
-                // 2. Pobierz wydatki z ostatnich 7 dni (do wykresu słupkowego)
                 const weeklyRes = await getExpenses(null, startOfLast7Days, formattedToday);
                 processWeeklyData(weeklyRes.data, startOfLast7Days);
 
-                // 3. Pobierz ostatnie wydatki (do listy) - pobieramy z miesiąca, sortujemy lokalnie
                 const recentRes = await getExpenses(null, startOfMonth, formattedToday);
                 const sorted = recentRes.data.sort((a: Expense, b: Expense) =>
                     dayjs(b.createdAt).diff(dayjs(a.createdAt))
                 );
                 setRecentExpenses(sorted.slice(0, 5));
 
-                // 4. Pobierz dane do wykresu kołowego (kategorie w tym miesiącu)
                 const catAmountRes = await getAllCategoriesAmount('EXPENSE', startOfMonth, endOfMonth);
-                // Sortujemy malejąco po kwocie, żeby ładniej wyglądało na wykresie i liście
                 const sortedCats = catAmountRes.data.sort((a: CategoryAmount, b: CategoryAmount) => b.amount - a.amount);
                 setCategoryAmounts(sortedCats);
-
-                // 5. Pobierz definicje kategorii (dla kolorów)
                 const catsRes = await getCategories('EXPENSE');
                 setAllCategories(catsRes.data);
 
@@ -90,18 +77,15 @@ function Dashboard() {
         fetchData();
     }, []);
 
-    // --- Helpers ---
 
     const processWeeklyData = (expenses: Expense[], startDateStr: string) => {
         const daysMap = new Map<string, number>();
 
-        // Inicjalizacja ostatnich 7 dni zerami
         for (let i = 0; i < 7; i++) {
             const date = dayjs(startDateStr).add(i, 'day');
             daysMap.set(date.format('YYYY-MM-DD'), 0);
         }
 
-        // Sumowanie
         expenses.forEach(exp => {
             const dateStr = dayjs(exp.createdAt).format('YYYY-MM-DD');
             if (daysMap.has(dateStr)) {
@@ -109,9 +93,7 @@ function Dashboard() {
             }
         });
 
-        // Formatowanie do Recharts (nazwy dni: Pon, Wt...)
         const chartData = Array.from(daysMap.entries()).map(([date, amount]) => {
-            // Pierwsza litera duża
             let dayName = dayjs(date).format('ddd');
             dayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
             return {
@@ -135,7 +117,6 @@ function Dashboard() {
     const formatMoney = (amount: number) =>
         amount.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' zł';
 
-    // Obliczenia statystyk dla wykresu słupkowego
     const weeklyStats = useMemo(() => {
         const total = weeklyExpenses.reduce((sum, item) => sum + item.amount, 0);
         const avg = weeklyExpenses.length > 0 ? Math.round(total / weeklyExpenses.length) : 0;
@@ -145,16 +126,14 @@ function Dashboard() {
             maxItem = weeklyExpenses.reduce((prev, current) => (prev.amount > current.amount) ? prev : current);
         }
 
-        // Pełna nazwa dnia dla "Najwyższy dzień"
         const maxDayFull = maxItem.day !== '-' ? dayjs(maxItem.fullDate).format('dddd') : '-';
-        // Pierwsza litera duża
         const maxDayCapitalized = maxDayFull.charAt(0).toUpperCase() + maxDayFull.slice(1);
 
         return { avg, maxDay: maxDayCapitalized, maxAmount: maxItem.amount };
     }, [weeklyExpenses]);
 
     const totalBalance = useMemo(() => {
-        return accounts.reduce((sum, acc) => sum + acc.balance, 0); // Uproszczenie: zakłada tę samą walutę lub sumuje liczby bezwzględne
+        return accounts.reduce((sum, acc) => sum + acc.balance, 0); 
     }, [accounts]);
 
     return (
@@ -166,15 +145,6 @@ function Dashboard() {
                     <Typography variant="h5" fontWeight="bold" color="secondary">Dashboard Finansowy</Typography>
                     <Typography variant="body2" sx={{mt: 1}}>Witaj {user?.username}, oto przegląd Twoich finansów</Typography>
                 </Box>
-
-                {/*<Button*/}
-                {/*    variant="outlined"*/}
-                {/*    color="inherit"*/}
-                {/*    startIcon={<LogOut size={16}/>}*/}
-                {/*    onClick={logout}*/}
-                {/*>*/}
-                {/*    Wyloguj*/}
-                {/*</Button>*/}
             </Stack>
 
             {/* --- KAFELKI KONT --- */}
@@ -217,12 +187,12 @@ function Dashboard() {
                 </Grid>
             </Grid>
 
-            {/* --- SEKCJA WYKRESÓW (Image Recreated) --- */}
-            <Grid container spacing={3} mb={4}>
+            {/* CHARTS */}
+            <Box display={'flex'} gap={2} mb={4}>
 
                 {/* LEWA STRONA: WYKRES KOŁOWY (Kategorie) */}
-                <Grid item xs={12} md={5}>
-                    <Card variant="outlined" sx={{ borderRadius: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Grid item xs={12} md={5} sx={{flex: 1}}>
+                    <Card flex={1} variant="outlined" sx={{ borderRadius: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
                         <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <Box mb={2}>
                                 <Typography variant="subtitle1" color="primary" fontWeight="bold">
@@ -279,7 +249,7 @@ function Dashboard() {
                 </Grid>
 
                 {/* PRAWA STRONA: WYKRES SŁUPKOWY (Tygodniowe) */}
-                <Grid item xs={12} md={7}>
+                <Grid item xs={12} md={7} sx={{flex: 1}}>
                     <Card variant="outlined" sx={{ borderRadius: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
                         <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <Box mb={3}>
@@ -346,9 +316,9 @@ function Dashboard() {
                         </CardContent>
                     </Card>
                 </Grid>
-            </Grid>
+            </Box>
 
-            {/* --- SEKCJA OSTATNICH TRANSAKCJI --- */}
+            {/* Last transactions */}
             <Card variant="outlined" sx={{ borderRadius: 2 }}>
                 <CardContent>
                     <Stack direction="row" alignItems="center" gap={1} mb={2}>
@@ -397,7 +367,7 @@ function Dashboard() {
                                             }
                                         />
                                         <Typography variant="body1" fontWeight="bold" color="error.main">
-                                            -{expense.price.toLocaleString('pl-PL', { minimumFractionDigits: 2 })} zł
+                                            {expense.price.toLocaleString('pl-PL', { minimumFractionDigits: 2 })} zł
                                         </Typography>
                                     </ListItem>
                                     {index < recentExpenses.length - 1 && <Divider component="li" variant="inset" />}

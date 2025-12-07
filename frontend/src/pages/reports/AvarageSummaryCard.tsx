@@ -1,5 +1,5 @@
 import React from 'react';
-import {Card, CardContent, Typography, Box, useTheme, hexToRgb} from '@mui/material';
+import {Card, CardContent, Typography, Box, useTheme} from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 type Props = {
@@ -19,7 +19,6 @@ const IncomeSummaryCard: React.FC<Props> = ({
                                                 startColor = '#e3f2fd',
                                                 icon
                                             }) => {
-    const theme = useTheme();
 
     const hexToRgba = (hex: string, alpha: number) => {
         const r = parseInt(hex.substring(1, 3), 16);

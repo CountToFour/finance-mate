@@ -16,6 +16,8 @@ api.interceptors.request.use((config) => {
     return config
 })
 
+//USER
+
 export const login = (email: string, password: string) => axios.post(
     'http://localhost:8080/api/auth/login',
     {
@@ -30,6 +32,29 @@ export const register = (email: string, password: string, username: string) => a
         email: email,
         password: password,
         username: username
+    }
+)
+
+export const changeUserCurrency = (code: string) => axios.put(
+    `http://localhost:8080/api/user/${code}`,
+    {},
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+//CURRENCY
+
+export const getExchangeRate = (from: string, to: string) => axios.get(
+    `http://localhost:8080/api/currency/exchange-rate/${from}/${to}`,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
     }
 )
 
