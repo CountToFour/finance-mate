@@ -183,7 +183,11 @@ function ExpensesPage() {
             field: 'price',
             headerName: t('expenses.page.expensesTable.price'),
             flex: 0.8,
-            valueFormatter: value => `${value} zł`,
+            renderCell: (params) => {
+                const account = accounts.find(a => a.name === params.row.accountName);
+                const symbol = account?.currency?.symbol ?? 'zł';
+                return `${params.value} ${symbol}`;
+            },
             cellClassName: 'priceNegative',
         },
         {
@@ -315,7 +319,11 @@ function ExpensesPage() {
             field: 'price',
             headerName: t('expenses.page.expensesTable.price'),
             flex: 0.8,
-            valueFormatter: value => `${value} zł`,
+            renderCell: (params) => {
+                const account = accounts.find(a => a.name === params.row.accountName);
+                const symbol = account?.currency?.symbol ?? 'zł';
+                return `${params.value} ${symbol}`;
+            },
             cellClassName: 'priceNegative',
         },
         {
@@ -383,7 +391,7 @@ function ExpensesPage() {
                     description=" względem poprzedniego miesiąca"
                     amount={overview?.totalAmount}
                     change={overview?.totalAmountChangePercentage}
-                    currency="zł"
+                    currency={user?.currency.symbol || 'zł'}
                     accentColor="#E53935" // czerwony jak na podglądzie; możesz też użyć 'error.main'
                     icon={<AttachMoneyOutlined fontSize="medium"/>}
                 />
@@ -401,7 +409,7 @@ function ExpensesPage() {
                     title="Średnia dzienna"
                     description="na podstawie 30 dni"
                     amount={overview?.averageAmount}
-                    currency="zł"
+                    currency={user?.currency.symbol || 'zł'}
                     accentColor="#5C86D3" // czerwony jak na podglądzie; możesz też użyć 'error.main'
                     icon={<TrendingUpIcon fontSize="medium"/>}
                 />
@@ -583,6 +591,7 @@ function ExpensesPage() {
                                         key={i}
                                         categoryAmount={cat}
                                         color={matchedCategory?.color}
+                                        currency={user?.currency.symbol || ""}
                                     />
                                 );
                             })}

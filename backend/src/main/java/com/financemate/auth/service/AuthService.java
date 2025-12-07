@@ -1,5 +1,6 @@
 package com.financemate.auth.service;
 
+import com.financemate.account.model.Currency;
 import com.financemate.account.service.CurrencyService;
 import com.financemate.auth.dto.AuthResponse;
 import com.financemate.auth.dto.LoginRequest;
@@ -102,7 +103,7 @@ public class AuthService implements UserDetailsService {
                 .revoked(false)
                 .build());
 
-        return new AuthResponse(access, refresh, user.getUsername(), user.getEmail(), user.getId(), user.getLocale());
+        return new AuthResponse(access, refresh, user.getUsername(), user.getEmail(), user.getId(), user.getLocale(), new Currency(user.getMainCurrency().getCode(), user.getMainCurrency().getName(), user.getMainCurrency().getSymbol()));
     }
 
     public void assignDefaultCategoriesToUser(User user) {

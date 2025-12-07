@@ -45,11 +45,13 @@ import RecurringIncomeDialog from "./RecurringIncomeDialog.tsx";
 import {ReceiptIcon, TrendingUpIcon } from "lucide-react";
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { useAuthStore } from "../../store/auth.ts";
 
 const currentYear = dayjs();
 
 function IncomePage() {
     const {t} = useTranslation();
+    const user = useAuthStore(s => s.user);
 
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [transactions, setTransactions] = useState<Income[]>([]);
@@ -184,7 +186,11 @@ function IncomePage() {
             field: 'price',
             headerName: t('income.page.table.amount') || 'Kwota',
             flex: 0.8,
-            valueFormatter: value => `+${value} zł`,
+            renderCell: (params) => {
+                const account = accounts.find(a => a.name === params.row.accountName);
+                const symbol = account?.currency?.symbol ?? 'zł';
+                return `+${params.value} ${symbol}`;
+            },
             cellClassName: 'pricePositive',
         },
         {
@@ -315,7 +321,11 @@ function IncomePage() {
                 field: 'price',
                 headerName: t('expenses.page.expensesTable.price'),
                 flex: 0.8,
-                valueFormatter: value => `+${value} zł`,
+                renderCell: (params) => {
+                const account = accounts.find(a => a.name === params.row.accountName);
+                const symbol = account?.currency?.symbol ?? 'zł';
+                return `+${params.value} ${symbol}`;
+            },
                 cellClassName: 'pricePositive',
             },
             {
@@ -378,7 +388,7 @@ function IncomePage() {
                     description=" względem poprzedniego miesiąca"
                     amount={overview?.totalAmount}
                     change={overview?.totalAmountChangePercentage}
-                    currency="zł"
+                    currency={user.currency.symbol || ""}
                     accentColor="green"
                     icon={<AttachMoneyOutlined fontSize="medium"/>}
                 
@@ -397,7 +407,7 @@ function IncomePage() {
                     title="Średnia dzienna"
                     description="na podstawie 30 dni"
                     amount={overview?.averageAmount}
-                    currency="zł"
+                    currency={user.currency.symbol || ""}
                     accentColor="#5C86D3"
                     icon={<TrendingUpIcon fontSize="medium"/>}
                 
@@ -531,6 +541,7 @@ function IncomePage() {
                                         key={i}
                                         categoryAmount={cat}
                                         color={matchedCategory?.color}
+                                        currency={user.currency.symbol || ""}
                                     />
                                 );
                             })}

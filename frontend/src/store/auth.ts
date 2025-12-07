@@ -16,11 +16,11 @@ export const useAuthStore = create<State>()(
                 try {
                     set({ loading: true, error: null })
                     const res = await login(mail, password)
-                    const { accessToken, refreshToken, tokenType, username, email, id} = res.data
+                    const { accessToken, refreshToken, tokenType, username, email, id, currency} = res.data
                     set({ accessToken,
                         refreshToken,
                         tokenType,
-                        user: { email, username, id },
+                        user: { email, username, id, currency },
                         loading: false })
                     return true
                 } catch (e: any) {
@@ -33,11 +33,11 @@ export const useAuthStore = create<State>()(
                 try {
                     set({ loading: true, error: null })
                     const res = await register(mail, password, name)
-                    const { accessToken, refreshToken, tokenType, username, email, id} = res.data
+                    const { accessToken, refreshToken, tokenType, username, email, id, currency} = res.data
                     set({ accessToken,
                         refreshToken,
                         tokenType,
-                        user: { email, username, id },
+                        user: { email, username, id, currency },
                         loading: false })
                     return true
                 } catch (e: any) {

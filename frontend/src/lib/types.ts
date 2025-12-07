@@ -4,6 +4,7 @@ export type User = {
     id: string;
     email: string;
     username: string;
+    currency: Currency;
 }
 
 export type State = {
@@ -193,4 +194,12 @@ export type SmartRecommendation = {
     savingsRate: number;
     recommendations: Recommendation[];
     message: string;
+}
+
+// CURRENCY
+
+export type ExchangeRate = {
+    base_code: string,
+    target_code: string,
+    conversion_rate: string
 }

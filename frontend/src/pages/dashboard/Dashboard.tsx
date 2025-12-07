@@ -115,7 +115,7 @@ function Dashboard() {
     };
 
     const formatMoney = (amount: number) =>
-        amount.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' zł';
+        amount.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ` ${user?.currency.symbol}` ;
 
     const weeklyStats = useMemo(() => {
         const total = weeklyExpenses.reduce((sum, item) => sum + item.amount, 0);
@@ -135,6 +135,12 @@ function Dashboard() {
     const totalBalance = useMemo(() => {
         return accounts.reduce((sum, acc) => sum + acc.balance, 0); 
     }, [accounts]);
+
+    const findTransactionCurrency = (transaction: Expense) => {
+            const account = accounts.find(a => a.name === transaction.accountName);
+            const symbol = account?.currency?.symbol ?? '';
+            return symbol
+        }
 
     return (
         <Box sx={{ minHeight: '100vh', p: 3 }}>
@@ -279,7 +285,7 @@ function Dashboard() {
                                             dy={10}
                                         />
                                         <YAxis
-                                            tickFormatter={(val) => `${val} zł`}
+                                            tickFormatter={(val) => `${val} ${user?.currency.symbol}`}
                                             tick={{ fontSize: 11, fill: '#aaa' }}
                                             axisLine={false}
                                             tickLine={false}
@@ -287,7 +293,7 @@ function Dashboard() {
                                         <RechartsTooltip
                                             cursor={{ fill: 'transparent' }}
                                             contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                            formatter={(value: number) => [`${value} zł`, 'Suma']}
+                                            formatter={(value: number) => [`${value} ${user?.currency.symbol}`, 'Suma']}
                                         />
                                         <Bar
                                             dataKey="amount"
@@ -304,12 +310,12 @@ function Dashboard() {
                             <Stack direction="row" justifyContent="space-between" alignItems="center">
                                 <Box>
                                     <Typography variant="caption" color="text.secondary">Średnia dzienna</Typography>
-                                    <Typography variant="body2" fontWeight="bold">{weeklyStats.avg} zł</Typography>
+                                    <Typography variant="body2" fontWeight="bold">{weeklyStats.avg} {user?.currency.symbol}</Typography>
                                 </Box>
                                 <Box textAlign="right">
                                     <Typography variant="caption" color="text.secondary">Najwyższy dzień</Typography>
                                     <Typography variant="body2" fontWeight="bold">
-                                        {weeklyStats.maxDay} ({weeklyStats.maxAmount} zł)
+                                        {weeklyStats.maxDay} ({weeklyStats.maxAmount} {user?.currency.symbol})
                                     </Typography>
                                 </Box>
                             </Stack>
@@ -367,7 +373,7 @@ function Dashboard() {
                                             }
                                         />
                                         <Typography variant="body1" fontWeight="bold" color="error.main">
-                                            {expense.price.toLocaleString('pl-PL', { minimumFractionDigits: 2 })} zł
+                                            {expense.price.toLocaleString('pl-PL', { minimumFractionDigits: 2 })} {findTransactionCurrency(expense)}
                                         </Typography>
                                     </ListItem>
                                     {index < recentExpenses.length - 1 && <Divider component="li" variant="inset" />}

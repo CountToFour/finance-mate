@@ -2,6 +2,7 @@ package com.financemate.transaction.service;
 
 import com.financemate.account.model.Account;
 import com.financemate.account.repository.AccountRepository;
+import com.financemate.account.repository.ExchangeRateRepository;
 import com.financemate.account.service.AccountService;
 import com.financemate.auth.model.user.User;
 import com.financemate.budget.service.BudgetService;
@@ -50,6 +51,7 @@ public class TransactionService {
     private final AccountService accountService;
     private final CategoryRepository categoryRepository;
     private final BudgetService budgetService;
+    private final ExchangeRateRepository exchangeRateRepository;
 
     @Transactional
     public TransactionResponse addTransaction(TransactionRequest dto, User user) {
@@ -293,7 +295,6 @@ public class TransactionService {
     }
 
     private List<Object> getMonthlyTransactionOverview(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
-        // zabezpieczenie: jeśli startDate > endDate, zamień je
         if (startDate.isAfter(endDate)) {
             LocalDate tmp = startDate;
             startDate = endDate;
@@ -305,10 +306,11 @@ public class TransactionService {
                 .and(TransactionSpecifications.type(type));
 
         List<Transaction> transactions = transactionRepository.findAll(spec);
-        double totalAmount = transactions.stream().map(Transaction::getPrice)
-                .mapToDouble(Double::doubleValue).sum();
+        double totalAmount = transactions.stream()
+                .mapToDouble(t -> getConvertedAmount(t, user))
+                .sum();
 
-        long days = ChronoUnit.DAYS.between(startDate, endDate) + 1; // liczba dni w okresie (włącznie)
+        long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
         if (days <= 0) days = 1;
 
         int expensesCount = transactions.size();
@@ -326,9 +328,7 @@ public class TransactionService {
         List<Transaction> transactions = transactionRepository.findAll(spec);
 
         double totalSum = transactions.stream()
-                .map(Transaction::getPrice)
-                .mapToDouble(Double::doubleValue)
-                .map(Math::abs)
+                .mapToDouble(t -> Math.abs(getConvertedAmount(t, user)))
                 .sum();
 
         Map<String, List<Transaction>> grouped = transactions.stream()
@@ -341,9 +341,7 @@ public class TransactionService {
                     List<Transaction> txs = entry.getValue();
                     int transactionsCount = txs.size();
                     double categorySum = txs.stream()
-                            .map(Transaction::getPrice)
-                            .mapToDouble(Double::doubleValue)
-                            .map(Math::abs)
+                            .mapToDouble(t -> Math.abs(getConvertedAmount(t, user)))
                             .sum();
                     double percentage = totalSum == 0.0 ? 0.0 : (categorySum / totalSum);
                     return new CategoryDto(category, categorySum, transactionsCount, percentage);
@@ -371,16 +369,13 @@ public class TransactionService {
                     List<Transaction> txs = entry.getValue();
 
                     double totalIncome = txs.stream()
-                            .map(Transaction::getPrice)
-                            .mapToDouble(Double::doubleValue)
-                            .filter(price -> price > 0)
+                            .filter(t -> t.getTransactionType() == TransactionType.INCOME)
+                            .mapToDouble(t -> getConvertedAmount(t, user))
                             .sum();
 
                     double totalExpense = txs.stream()
-                            .map(Transaction::getPrice)
-                            .mapToDouble(Double::doubleValue)
-                            .filter(price -> price < 0)
-                            .map(Math::abs)
+                            .filter(t -> t.getTransactionType() == TransactionType.EXPENSE)
+                            .mapToDouble(t -> Math.abs(getConvertedAmount(t, user)))
                             .sum();
 
                     return new MonthOverviewDto(month, totalIncome, totalExpense);
@@ -429,13 +424,12 @@ public class TransactionService {
 
         double totalIncome = transactions.stream()
                 .filter(t -> t.getTransactionType() == TransactionType.INCOME)
-                .mapToDouble(Transaction::getPrice)
+                .mapToDouble(t -> getConvertedAmount(t, user))
                 .sum();
 
         double totalExpense = transactions.stream()
                 .filter(t -> t.getTransactionType() == TransactionType.EXPENSE)
-                .mapToDouble(Transaction::getPrice)
-                .map(Math::abs)
+                .mapToDouble(t -> Math.abs(getConvertedAmount(t, user)))
                 .sum();
 
         //when there is no incomes
@@ -445,4 +439,18 @@ public class TransactionService {
 
         return (totalIncome - totalExpense) / totalIncome;
     }
+
+    private double getConvertedAmount(Transaction t, User user) {
+        String fromCurrency = t.getAccount().getCurrencyCode().getCode();
+        String toCurrency = user.getMainCurrency().getCode();
+
+        if (fromCurrency.equals(toCurrency)) {
+            return t.getPrice();
+        }
+
+        return exchangeRateRepository.findByFromCurrencyAndToCurrency(fromCurrency, toCurrency)
+                .map(rate -> t.getPrice() * rate.getRate())
+                .orElseThrow(() -> new IllegalArgumentException("Exchange rate not found for " + fromCurrency + " -> " + toCurrency));
+    }
+
 }

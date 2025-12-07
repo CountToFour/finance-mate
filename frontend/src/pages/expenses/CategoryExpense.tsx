@@ -6,9 +6,10 @@ import {useTranslation} from "react-i18next";
 interface CategoryExpenseProps {
     categoryAmount: CategoryAmount;
     color?: string;
+    currency?: string;
 }
 
-const CategoryExpense: React.FC<CategoryExpenseProps> = ({categoryAmount, color}) => {
+const CategoryExpense: React.FC<CategoryExpenseProps> = ({categoryAmount, color, currency}) => {
     const {t} = useTranslation();
     
     const hexToRgba = (hex: string, alpha: number) => {
@@ -39,7 +40,7 @@ const CategoryExpense: React.FC<CategoryExpenseProps> = ({categoryAmount, color}
                     <Typography variant="subtitle1"
                                 fontWeight={"bold"}>{categoryAmount.category}</Typography>
                     <Typography variant="subtitle1"
-                                fontWeight={"bold"}>{categoryAmount.amount} zł</Typography>
+                                fontWeight={"bold"}>{categoryAmount.amount.toFixed(2)} {currency}</Typography>
                 </Box>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="body2"

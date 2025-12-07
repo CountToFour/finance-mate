@@ -4,10 +4,11 @@ import {Box, Typography} from "@mui/material";
 
 interface Props { 
     categoryAmount: CategoryAmount; 
-    color?: string 
+    color?: string;
+    currency?: string;
 }
 
-const CategoryIncome: React.FC<Props> = ({categoryAmount, color}) => {
+const CategoryIncome: React.FC<Props> = ({categoryAmount, color, currency}) => {
 
     const hexToRgba = (hex: string, alpha: number) => {
         if (!hex) return `rgba(0,0,0,${alpha})`;
@@ -35,7 +36,7 @@ const CategoryIncome: React.FC<Props> = ({categoryAmount, color}) => {
             <Box sx={{flex: 1}}>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="subtitle1" fontWeight={'bold'}>{categoryAmount.category}</Typography>
-                    <Typography variant="subtitle1" fontWeight={'bold'}>{categoryAmount.amount} zł</Typography>
+                    <Typography variant="subtitle1" fontWeight={'bold'}>{categoryAmount.amount} {currency}</Typography>
                 </Box>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="body2" color={'text.secondary'}>{categoryAmount.transactions} transakcje</Typography>
