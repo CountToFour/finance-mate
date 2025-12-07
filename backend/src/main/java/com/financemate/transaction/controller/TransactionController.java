@@ -3,6 +3,7 @@ package com.financemate.transaction.controller;
 import com.financemate.auth.model.user.User;
 import com.financemate.auth.service.UserService;
 import com.financemate.transaction.dto.CategoryDto;
+import com.financemate.transaction.dto.DailyOverviewDto;
 import com.financemate.transaction.dto.EditTransactionDto;
 import com.financemate.transaction.dto.MonthOverviewDto;
 import com.financemate.transaction.dto.RecurringTransactionResponse;
@@ -211,6 +212,20 @@ public class TransactionController {
         try {
             User user = userService.getUserFromAuthentication(authentication);
             return ResponseEntity.ok(transactionService.getTopTransactionsByAmount(user, startDate, endDate, limit, type));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/overview/daily")
+    public ResponseEntity<List<DailyOverviewDto>> getDailyOverview(
+            Authentication authentication,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam TransactionType type) {
+        try {
+            User user = userService.getUserFromAuthentication(authentication);
+            return ResponseEntity.ok(transactionService.getDailyOverview(user, startDate, endDate, type));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {Card, CardContent, Typography, Box, List} from '@mui/material';
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, Legend,
@@ -7,23 +7,34 @@ import {
 } from 'recharts';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import type {Category, CategoryAmount, Expense, MonthlyOverview} from "../../../lib/types.ts";
+import type {Account, Category, CategoryAmount, Expense, MonthlyOverview} from "../../../lib/types.ts";
 import ExpenseListItem from "./ExpenseListItem.tsx";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import {getAccounts} from "../../../lib/api.ts";
 
 type Props = {
     categoriesOverview: CategoryAmount[],
     allExpenseCategories: Category[]
     monthlyOverview: MonthlyOverview[],
-    topExpenses: Expense[]
+    topExpenses: Expense[],
+    currency?: string,
 }
 
 const Overview: React.FC<Props> = ({
                                        categoriesOverview,
                                        allExpenseCategories,
                                        monthlyOverview,
-                                       topExpenses
+                                       topExpenses,
+                                       currency = ''
                                    }) => {
+
+    const [accounts, setAccounts] = useState<Account[]>([]);
+
+    useEffect(() => {
+        getAccounts().then((res) => {
+            setAccounts(res.data);
+        });
+    }, []);
 
     const comulativeData = useMemo(() => {
         let cumulativeSum = 0;
@@ -36,6 +47,12 @@ const Overview: React.FC<Props> = ({
             };
         });
     }, [monthlyOverview]);
+
+    const findTransactionCurrency = (transaction: Expense) => {
+        const account = accounts.find(a => a.name === transaction.accountName);
+        const symbol = account?.currency?.symbol ?? '';
+        return symbol
+    }
 
     return (
         <>
@@ -63,7 +80,7 @@ const Overview: React.FC<Props> = ({
                                     <XAxis dataKey="month" stroke="#555"/>
                                     <YAxis/>
                                     <Tooltip
-                                        formatter={(value, name) => [`${value} zł`, name]}
+                                        formatter={(value, name) => [`${value} ${currency}`, name]}
                                     />
                                     <Legend iconType="circle" wrapperStyle={{paddingTop: '10px'}}/>
                                     <Bar
@@ -118,7 +135,7 @@ const Overview: React.FC<Props> = ({
                                         })}
                                     </Pie>
                                     <Tooltip
-                                        formatter={(value) => [`${value} zł`, 'Kwota']}
+                                        formatter={(value) => [`${value} ${currency}`, 'Kwota']}
                                         labelFormatter={(label, payload) => payload[0]?.name || label}
                                     />
                                     <Legend
@@ -142,7 +159,7 @@ const Overview: React.FC<Props> = ({
             <Card sx={{mt: 4}}>
                 <CardContent>
                     <Box display="flex" alignItems="center" mb={1}>
-                        <TrendingUpIcon sx={{mr: 1, color: '#DEB887'}} />
+                        <TrendingUpIcon sx={{mr: 1, color: '#DEB887'}}/>
                         <Typography variant="h6" component="div" fontWeight="medium">
                             Wzrost oszczędności
                         </Typography>
@@ -150,24 +167,28 @@ const Overview: React.FC<Props> = ({
                     <Typography variant="body2" color="text.secondary" mb={2}>
                         Kumulatywne oszczędności w czasie
                     </Typography>
-                    <Box sx={{ width: '100%', height: 300 }}>
+                    <Box sx={{width: '100%', height: 300}}>
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart
                                 data={comulativeData}
-                                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                                margin={{top: 10, right: 30, left: 0, bottom: 0}}
                             >
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ccc" opacity={0.5} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ccc" opacity={0.5}/>
 
-                                <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                                <XAxis dataKey="month" tickLine={false} axisLine={false}/>
 
                                 <YAxis
-                                    tickFormatter={(value) => `${value}`} // Można tu dodać 'zł' lub separator
+                                    tickFormatter={(value) => `${value} ${currency}`}
                                     axisLine={false}
                                     tickLine={false}
                                 />
                                 <Tooltip
-                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
-                                    formatter={(value) => [`Oszczędności: ${value.toLocaleString('pl-PL')} zł`, '']}
+                                    contentStyle={{
+                                        borderRadius: '8px',
+                                        border: 'none',
+                                        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                                    }}
+                                    formatter={(value) => [`Oszczędności: ${value.toLocaleString('pl-PL')} ${currency}`, '']}
                                     labelFormatter={(label) => label}
                                 />
                                 <Area
@@ -205,6 +226,7 @@ const Overview: React.FC<Props> = ({
                                 key={index}
                                 item={expense}
                                 color={color}
+                                currency={findTransactionCurrency(expense)}
                             />;
                         })}
                     </List>

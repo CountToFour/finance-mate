@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import {
     Box,
     Button,
@@ -10,15 +10,15 @@ import {
     MenuItem,
     Stack
 } from "@mui/material";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
-import dayjs, { type Dayjs } from "dayjs";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {LocalizationProvider, DatePicker} from "@mui/x-date-pickers";
+import dayjs, {type Dayjs} from "dayjs";
 
 import {
     createBudget,
     updateBudget,
 } from "../../lib/api";
-import type {Budget, BudgetDto, Category} from "../../lib/types";
+import type {Budget, BudgetDto, Category, Currency} from "../../lib/types";
 import {useTranslation} from "react-i18next";
 import {useNotification} from "../../components/NotificationContext.tsx";
 
@@ -29,7 +29,8 @@ const BudgetDialog: React.FC<{
     categories: Category[];
     initial?: Budget | null;
     onSaved: (saved: Budget) => void;
-}> = ({ open, onClose, categories, initial, onSaved }) => {
+    currency?: Currency | null;
+}> = ({open, onClose, categories, initial, onSaved, currency}) => {
     const {success, error} = useNotification();
     const {t} = useTranslation();
     const isEdit = !!initial;
@@ -137,25 +138,33 @@ const BudgetDialog: React.FC<{
                             label="Start"
                             value={startDate}
                             onChange={(v) => setStartDate(v as Dayjs | null)}
-                            slotProps={{ textField: { fullWidth: true } }}
+                            slotProps={{textField: {fullWidth: true}}}
                         />
                         <DatePicker
                             disablePast={true}
                             label="Koniec"
                             value={endDate}
                             onChange={(v) => setEndDate(v as Dayjs | null)}
-                            slotProps={{ textField: { fullWidth: true } }}
+                            slotProps={{textField: {fullWidth: true}}}
                         />
                     </Stack>
                 </LocalizationProvider>
 
-                <Box sx={{display: 'grid', gap: 2, gridTemplateColumns: {xs: '1fr', sm: '1fr 1fr'}, mt: 2}}>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        gap: 2,
+                        mt: 2,
+                        alignItems: 'center'
+                    }}
+                >
                     <TextField
                         select
                         label="Okres"
                         value={periodType}
                         onChange={(e) => setPeriodType(e.target.value)}
                         fullWidth
+                        sx={{ flex: 1 }}
                     >
                         <MenuItem value="MONTHLY">Miesięczny</MenuItem>
                     </TextField>
@@ -173,7 +182,14 @@ const BudgetDialog: React.FC<{
                         }
                         error={!!errors.limitAmount}
                         helperText={errors.limitAmount}
-                        sx = {{flex: 1}}
+                        sx={{flex: 1}}
+                    />
+                    <TextField
+                        fullWidth
+                        label={"Waluta"}
+                        value={currency ?? ""}
+                        disabled
+                        sx={{flex: 0.5}}
                     />
                 </Box>
 
@@ -217,7 +233,8 @@ const BudgetDialog: React.FC<{
 
             <DialogActions sx={{display: 'flex', justifyContent: 'flex-end', gap: 1, p: 2}}>
                 <Button onClick={onClose} color="secondary">Anuluj</Button>
-                <Button onClick={handleSave} variant="contained" color="primary" disabled={saving}>{isEdit ? 'Zapisz' : 'Utwórz'}</Button>
+                <Button onClick={handleSave} variant="contained" color="primary"
+                        disabled={saving}>{isEdit ? 'Zapisz' : 'Utwórz'}</Button>
             </DialogActions>
         </Dialog>
     );

@@ -4,15 +4,16 @@ import type {Expense} from "../../../lib/types.ts";
 type Props = {
     item: Expense,
     color: string
+    currency?: string
 }
 
 
-const ExpenseListItem: React.FC<Props> = ({ item, color }) => {
+const ExpenseListItem: React.FC<Props> = ({ item, color, currency }) => {
 
     const formattedAmount = item.price.toLocaleString('pl-PL', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0
-    }) + ' zł';
+    }) + ` ${currency || ''}`;
 
     const hexToRgba = (hex: string, alpha: number) => {
         const r = parseInt(hex.substring(1, 3), 16);

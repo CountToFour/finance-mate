@@ -21,6 +21,7 @@ import BudgetDialog from "./BudgetDialog.tsx";
 import BudgetCard from "./BudgetCard.tsx";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import SmartInvestmentWidget from "./InvestmentWidget.tsx";
+import {useAuthStore} from "../../store/auth.ts";
 
 
 const hexToRgba = (hex: string, alpha = 0.2) => {
@@ -31,11 +32,10 @@ const hexToRgba = (hex: string, alpha = 0.2) => {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-const money = (v: number) =>
-    v.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " zł";
-
 const BudgetPage: React.FC = () => {
     const theme = useTheme();
+    const {user} = useAuthStore();
+
     const {success, error} = useNotification();
     const [budgets, setBudgets] = useState<Budget[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
@@ -55,6 +55,9 @@ const BudgetPage: React.FC = () => {
     useEffect(() => {
         loadAll();
     }, []);
+
+    const money = (v: number) =>
+        v.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ` ${user?.currency.symbol || ''}`;
 
     const totals = useMemo(() => {
         const totalLimit = budgets.reduce((s, b) => s + b.limitAmount, 0);
@@ -218,7 +221,7 @@ const BudgetPage: React.FC = () => {
                         {budgets.map((b) => {
                             const cat = categories.find(c => c.name === b.categoryName);
                             return (
-                                <BudgetCard key={b.id} budget={b} category={cat} onEdit={handleEdit} onDelete={handleDelete} />
+                                <BudgetCard key={b.id} budget={b} category={cat} onEdit={handleEdit} onDelete={handleDelete} currency={user?.currency.symbol}/>
                             );
                         })}
                     </Box>
@@ -237,6 +240,7 @@ const BudgetPage: React.FC = () => {
                 categories={categories}
                 initial={editing}
                 onSaved={handleSavedBudget}
+                currency={user?.currency.symbol}
             />
         </Box>
     );

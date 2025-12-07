@@ -2,6 +2,7 @@ package com.financemate.account.service;
 
 import com.financemate.account.dto.AccountDto;
 import com.financemate.account.dto.AccountResponse;
+import com.financemate.account.dto.BalanceResponse;
 import com.financemate.account.dto.CurrencyResponse;
 import com.financemate.account.exception.AccessException;
 import com.financemate.account.exception.AccountNotFoundException;
@@ -230,7 +231,7 @@ public class StandardAccountService implements AccountService {
     }
 
     @Override
-    public double getUserBalance(User user) {
+    public BalanceResponse getUserBalance(User user) {
         Currency mainCurrency = user.getMainCurrency();
         List<Account> accounts = accountRepository.findAllByUserIdAndIncludeInStatsIsTrue(user);
         double result = accounts.stream()
@@ -245,7 +246,7 @@ public class StandardAccountService implements AccountService {
                     }
                 })
                 .sum();
-        return round(result);
+        return new BalanceResponse(round(result), mainCurrency.getSymbol());
     }
 
     private double round(double value) {

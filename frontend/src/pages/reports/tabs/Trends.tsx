@@ -1,5 +1,5 @@
-import type {Category, CategoryAmount, MonthlyOverview} from "../../../lib/types.ts";
-import React, {useMemo} from "react";
+import type {Account, Category, CategoryAmount, Expense, MonthlyOverview} from "../../../lib/types.ts";
+import React, {useEffect, useMemo, useState} from "react";
 import {Card, CardContent, Typography, Box, List} from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -9,14 +9,15 @@ import {
     PieChart, Pie, Cell, Legend
 } from 'recharts';
 import CategoryTrendItem from "./CategoryTrendItem.tsx";
+import {getAccounts} from "../../../lib/api.ts";
 
 type Props = {
     categoriesOverview: CategoryAmount[],
     allIncomeCategories: Category[]
     monthlyOverview: MonthlyOverview[],
     expenseCategoriesOverview: CategoryAmount[],
-    previousExpenseCategoriesOverview: CategoryAmount[]
-    // topExpenses: Expense[]
+    previousExpenseCategoriesOverview: CategoryAmount[],
+    currency?: string
 }
 
 const Trends: React.FC<Props> = ({
@@ -25,7 +26,7 @@ const Trends: React.FC<Props> = ({
                                      monthlyOverview,
                                      expenseCategoriesOverview,
                                      previousExpenseCategoriesOverview,
-                                     // topExpenses
+                                     currency
                                  }) => {
 
     const balanceData = useMemo(() => {
@@ -59,7 +60,7 @@ const Trends: React.FC<Props> = ({
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ccc" opacity={0.5}/>
                                 <XAxis dataKey="month" tickLine={false} axisLine={true} stroke="#ccc"/>
                                 <YAxis
-                                    tickFormatter={(value) => `${value}`}
+                                    tickFormatter={(value) => `${value} ${currency}`}
                                     axisLine={false}
                                     tickLine={false}
                                     domain={[0, 'auto']}
@@ -70,7 +71,7 @@ const Trends: React.FC<Props> = ({
                                         border: 'none',
                                         boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
                                     }}
-                                    formatter={(value) => [`${value.toLocaleString('pl-PL')} zł`, 'Bilans miesięczny']}
+                                    formatter={(value) => [`${value.toLocaleString('pl-PL')} ${currency}`, 'Bilans miesięczny']}
                                     labelFormatter={(label) => label}
                                 />
                                 <Area
@@ -123,7 +124,7 @@ const Trends: React.FC<Props> = ({
                                         })}
                                     </Pie>
                                     <Tooltip
-                                        formatter={(value) => [`${value} zł`, 'Kwota']}
+                                        formatter={(value) => [`${value} ${currency}`, 'Kwota']}
                                         labelFormatter={(label, payload) => payload[0]?.name || label}
                                     />
                                     <Legend
@@ -182,6 +183,7 @@ const Trends: React.FC<Props> = ({
                                     previousAmount={previousAmount}
                                     changePercent={Math.abs(changePercentage)}
                                     isIncrease={isIncrease}
+                                    currency={currency}
                                 />;
                             })}
                         </List>

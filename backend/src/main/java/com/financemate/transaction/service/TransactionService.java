@@ -9,6 +9,7 @@ import com.financemate.budget.service.BudgetService;
 import com.financemate.category.model.Category;
 import com.financemate.category.repository.CategoryRepository;
 import com.financemate.transaction.dto.CategoryDto;
+import com.financemate.transaction.dto.DailyOverviewDto;
 import com.financemate.transaction.dto.EditTransactionDto;
 import com.financemate.transaction.dto.MonthOverviewDto;
 import com.financemate.transaction.dto.RecurringTransactionResponse;
@@ -74,7 +75,7 @@ public class TransactionService {
         transaction.setAccount(account);
         transaction.setCategory(category.getName());
 
-        budgetService.updateSpentAmount(category, Math.abs(transaction.getPrice()));
+        budgetService.updateSpentAmount(category, Math.abs(transaction.getPrice()), account.getCurrencyCode().getCode(), user.getMainCurrency().getCode());
 
         transactionRepository.save(transaction);
         accountService.changeBalance(account.getId(), transaction.getPrice(), user);
@@ -451,6 +452,29 @@ public class TransactionService {
         return exchangeRateRepository.findByFromCurrencyAndToCurrency(fromCurrency, toCurrency)
                 .map(rate -> t.getPrice() * rate.getRate())
                 .orElseThrow(() -> new IllegalArgumentException("Exchange rate not found for " + fromCurrency + " -> " + toCurrency));
+    }
+
+    public List<DailyOverviewDto> getDailyOverview(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
+        Specification<Transaction> spec = Specification.allOf(
+                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.dateBetween(startDate, endDate),
+                TransactionSpecifications.type(type)
+        );
+
+        List<Transaction> transactions = transactionRepository.findAll(spec);
+
+        Map<LocalDate, Double> sums = transactions.stream()
+                .collect(Collectors.groupingBy(
+                        Transaction::getCreatedAt,
+                        Collectors.summingDouble(t -> Math.abs(getConvertedAmount(t, user)))
+                ));
+
+        return startDate.datesUntil(endDate.plusDays(1))
+                .map(date -> new DailyOverviewDto(
+                        date,
+                        Math.round(sums.getOrDefault(date, 0.0) * 100.0) / 100.0
+                ))
+                .toList();
     }
 
 }

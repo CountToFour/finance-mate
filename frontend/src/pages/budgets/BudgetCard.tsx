@@ -25,23 +25,22 @@ const hexToRgba = (hex: string, alpha = 0.2) => {
 const percent = (spent: number, limit: number) =>
     limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
 
-const money = (v: number) =>
-    v.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + " zł";
-
 
 const BudgetCard: React.FC<{
     budget: Budget;
     category?: Category | null;
     onEdit: (b: Budget) => void;
     onDelete: (id: string) => void;
-}> = ({ budget, category, onEdit, onDelete }) => {
+    currency?: string;
+}> = ({ budget, category, onEdit, onDelete, currency }) => {
     const pct = percent(budget.spentAmount, budget.limitAmount);
     const accent = category?.color ?? "#6b7280";
-    // const bg = hexToRgba(accent, 0.12);
+
+    const money = (v: number) =>
+        v.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ` ${currency || ''}`;
 
     return (
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
-            {/* Pasek akcentu u góry */}
             <Box sx={{ height: 6, background: accent, width: "100%" }} />
 
             <CardContent>

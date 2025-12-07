@@ -2,6 +2,7 @@ package com.financemate.account.service;
 
 import com.financemate.account.dto.AccountDto;
 import com.financemate.account.dto.AccountResponse;
+import com.financemate.account.dto.BalanceResponse;
 import com.financemate.account.model.Account;
 import com.financemate.auth.model.user.User;
 
@@ -18,5 +19,5 @@ public interface AccountService {
     void includeInStats(String accountId, User user);
     void changeBalance(String accountId, double amount, User user);
     void transferBetweenAccounts(String fromAccountId, String toAccountId, double amount, User user);
-    double getUserBalance(User user);
+    BalanceResponse getUserBalance(User user);
 }

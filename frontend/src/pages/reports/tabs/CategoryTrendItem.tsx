@@ -8,9 +8,10 @@ type Props = {
     previousAmount: number,
     changePercent: number,
     isIncrease: boolean
+    currency?: string
 }
 
-const CategoryTrendItem: React.FC<Props> = ({ categoryName, currentAmount, previousAmount, changePercent, isIncrease}) => {
+const CategoryTrendItem: React.FC<Props> = ({ categoryName, currentAmount, previousAmount, changePercent, isIncrease, currency}) => {
 
     let changeColor = 'text.secondary';
     let ChangeIcon = null;
@@ -21,7 +22,7 @@ const CategoryTrendItem: React.FC<Props> = ({ categoryName, currentAmount, previ
     }
 
     const formatAmount = (amount: number) =>
-        amount.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' zł';
+        amount.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ` ${currency || ''}`;
 
     return (
         <ListItem

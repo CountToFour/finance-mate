@@ -21,12 +21,15 @@ import CrisisAlertIcon from "@mui/icons-material/CrisisAlert";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import Overview from "./tabs/Overview.tsx";
 import Trends from "./tabs/Trends.tsx";
+import {useAuthStore} from "../../store/auth.ts";
 
 const KategorieView = () => <Typography>Zawartość: Kategorie</Typography>;
 
 const TABS = ['Przegląd', 'Trendy', 'Kategorie', 'Przepływy', 'Budżet', 'Eksporty'];
 
 const ReportsPage: React.FC = () => {
+    const user = useAuthStore(s => s.user);
+
     const [expenseOverview, setExpenseOverview] = useState<TransactionOverview>();
     const [incomeOverview, setIncomeOverview] = useState<TransactionOverview>();
     const [monthlyOverview, setMonthlyOverview] = useState<MonthlyOverview[]>([])
@@ -81,6 +84,7 @@ const ReportsPage: React.FC = () => {
                     allExpenseCategories={allExpenseCategories}
                     monthlyOverview={monthlyOverview}
                     topExpenses={topExpenses}
+                    currency={user?.currency.symbol}
                 />;
             case 1:
                 return <Trends
@@ -89,6 +93,7 @@ const ReportsPage: React.FC = () => {
                     monthlyOverview={monthlyOverview}
                     expenseCategoriesOverview={categoriesExpenses}
                     previousExpenseCategoriesOverview={previousPeriodCategoriesExpenses}
+                    currency={user?.currency.symbol}
                 />;
             case 2:
                 return <KategorieView/>;
@@ -136,7 +141,7 @@ const ReportsPage: React.FC = () => {
                     // description=" względem poprzedniego miesiąca"
                     amount={totalExpenses}
                     change={expenseOverview?.totalAmountChangePercentage ?? 0}
-                    currency="zł"
+                    currency={user?.currency.symbol}
                     accentColor="#E53935"
                     icon={<AttachMoneyOutlined fontSize="medium"/>}
                 />
@@ -145,7 +150,7 @@ const ReportsPage: React.FC = () => {
                     // description=" transakcji w tym miesiącu"
                     amount={totalIncome}
                     change={incomeOverview?.totalAmountChangePercentage ?? 0}
-                    currency="zł"
+                    currency={user?.currency.symbol}
                     accentColor="#70B2B1"
                     icon={<ReceiptIcon fontSize="medium"/>}
                 />
@@ -153,7 +158,7 @@ const ReportsPage: React.FC = () => {
                     title="Bilans"
                     // description="na podstawie 30 dni"
                     amount={balance}
-                    currency="zł"
+                    currency={user?.currency.symbol}
                     accentColor="#5C86D3"
                     icon={<TrendingUpIcon fontSize="medium"/>}
                 />
@@ -175,6 +180,7 @@ const ReportsPage: React.FC = () => {
                     period="Ostatnie 30 dni"
                     startColor={"#5C86D3"}
                     icon={<TrendingUpIcon/>}
+                    currency={user?.currency.symbol}
                 />
                 <AvarageSummaryCard
                     title="Średnie miesięczne wydatki"
@@ -182,6 +188,7 @@ const ReportsPage: React.FC = () => {
                     period="Ostatnie 30 dni"
                     startColor={"#A175BF"}
                     icon={<TrendingDown/>}
+                    currency={user?.currency.symbol}
                 />
                 <AvarageSummaryCard
                     title="Oszczędności"
@@ -189,6 +196,7 @@ const ReportsPage: React.FC = () => {
                     period="Ostatnie 30 dni"
                     startColor={"#cda25d"}
                     icon={<AccountBalanceWalletIcon/>}
+                    currency={user?.currency.symbol}
                 />
             </Box>
 

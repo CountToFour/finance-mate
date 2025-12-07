@@ -1,6 +1,7 @@
 package com.financemate.account.controller;
 
 import com.financemate.account.dto.AccountDto;
+import com.financemate.account.dto.BalanceResponse;
 import com.financemate.account.dto.TransferDto;
 import com.financemate.account.exception.AccessException;
 import com.financemate.account.exception.AccountNotFoundException;
@@ -160,7 +161,7 @@ public class AccountController {
     public ResponseEntity<?> getUserBalance(Authentication authentication) {
         try {
             User user = userService.getUserFromAuthentication(authentication);
-            double balance = accountService.getUserBalance(user);
+            BalanceResponse balance = accountService.getUserBalance(user);
             return ResponseEntity.ok(balance);
         } catch (UserNotFoundException | CurrencyNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

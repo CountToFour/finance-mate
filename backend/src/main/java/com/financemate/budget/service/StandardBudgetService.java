@@ -1,5 +1,7 @@
 package com.financemate.budget.service;
 
+import com.financemate.account.dto.ExchangeRateDto;
+import com.financemate.account.service.CurrencyService;
 import com.financemate.auth.model.user.User;
 import com.financemate.budget.dto.BudgetDto;
 import com.financemate.budget.dto.BudgetResponseDto;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +29,7 @@ public class StandardBudgetService implements BudgetService {
     private final BudgetRepository budgetRepository;
     private final CategoryRepository categoryRepository;
     private final BudgetMapper budgetMapper;
+    private final CurrencyService currencyService;
 
     @Override
     public BudgetResponseDto createBudget(User user, BudgetDto dto) {
@@ -54,14 +58,19 @@ public class StandardBudgetService implements BudgetService {
     }
 
     @Override
-    public void updateSpentAmount(Category category, double amount) {
+    public void updateSpentAmount(Category category, double amount, String accountCurrency, String userCurrency) {
         Optional<Budget> budget = budgetRepository.findActiveByCategory(category);
         if (budget.isEmpty()) {
             log.warn("No active budget found for category: {}", category.getName());
             return;
         }
+        double newValue = amount;
+        if (!accountCurrency.equals(userCurrency)) {
+            ExchangeRateDto exchangeRateByPair = currencyService.getExchangeRateByPair(accountCurrency, userCurrency);
+            newValue = amount * exchangeRateByPair.getConversion_rate();
+        }
         Budget b = budget.get();
-        b.setSpentAmount(b.getSpentAmount() + amount);
+        b.setSpentAmount(b.getSpentAmount() + newValue);
         budgetRepository.save(b);
     }
 

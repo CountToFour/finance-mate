@@ -102,6 +102,11 @@ export type MonthlyOverview = {
     totalExpense: number
 }
 
+export type DailyOverview = {
+    date: string;
+    amount: number;
+}
+
 //ACCOUNTS
 
 export type Account = {
@@ -129,10 +134,9 @@ export type TransferDto = {
     amount: number
 }
 
-export type Currency = {
-    code: string
-    name: string
-    symbol: string
+export type BalanceResponse = {
+    balance: number;
+    currency: string;
 }
 
 //CATEGORY
@@ -202,4 +206,10 @@ export type ExchangeRate = {
     base_code: string,
     target_code: string,
     conversion_rate: string
+}
+
+export type Currency = {
+    code: string
+    name: string
+    symbol: string
 }

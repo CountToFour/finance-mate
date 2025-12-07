@@ -256,6 +256,21 @@ export const getTopExpenses = (startDate: string, endDate: string, limit: number
     }
 )
 
+export const getDailyOverview = (startDate: string, endDate: string, type: string) => axios.get(
+    `http://localhost:8080/api/transactions/overview/daily`,
+    {
+        params: {
+            startDate: startDate,
+            endDate: endDate,
+            type: type
+        },
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
 // ACCOUNTS
 
 export const getAccounts = () => axios.get(
@@ -325,6 +340,16 @@ export const includeInStatsAccount = (accountId: string) => axios.put(
 export const transferBetweenAccounts = (transferDto: TransferDto) => axios.put(
     `http://localhost:8080/api/account/transfer`,
     transferDto,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        },
+    }
+)
+
+export const getUserBalance = () => axios.get(
+    'http://localhost:8080/api/account/balance',
     {
         withCredentials: true,
         headers: {

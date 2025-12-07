@@ -1,6 +1,5 @@
 import React from 'react';
-import {Card, CardContent, Typography, Box, useTheme} from '@mui/material';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import {Card, CardContent, Typography, Box} from '@mui/material';
 
 type Props = {
     title: string;
@@ -11,11 +10,11 @@ type Props = {
     icon?: React.ReactNode;
 }
 
-const IncomeSummaryCard: React.FC<Props> = ({
+const AvarageSummaryCard: React.FC<Props> = ({
                                                 title,
                                                 amount,
                                                 period,
-                                                currency = 'zł',
+                                                currency = '',
                                                 startColor = '#e3f2fd',
                                                 icon
                                             }) => {
@@ -91,4 +90,4 @@ const IncomeSummaryCard: React.FC<Props> = ({
     );
 };
 
-export default IncomeSummaryCard;
+export default AvarageSummaryCard;
