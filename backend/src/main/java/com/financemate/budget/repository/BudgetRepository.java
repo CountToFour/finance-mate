@@ -14,5 +14,8 @@ import java.util.Optional;
 
 public interface BudgetRepository extends JpaRepository<Budget, String> {
     List<Budget> findAllByUser(User user);
-    Optional<Budget> findActiveByCategory(Category category);
+
+    Optional<Budget> findByCategoryAndActive(Category category, boolean active);
+
+    List<Budget> findByUserAndActive(User user, boolean active);
 }

@@ -36,7 +36,7 @@ public class StandardBudgetService implements BudgetService {
         Category category = categoryRepository.findById(dto.categoryId())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        Optional<Budget> existing = budgetRepository.findActiveByCategory(category);
+        Optional<Budget> existing = budgetRepository.findByCategoryAndActive(category, true);
         if (existing.isPresent()) {
             throw new IllegalStateException("Budżet dla tej kategorii już istnieje");
         }
@@ -50,6 +50,7 @@ public class StandardBudgetService implements BudgetService {
         budget.setCategory(category);
         budget.setStartDate(start);
         budget.setEndDate(end);
+        budget.setActive(true);
 
         budgetRepository.save(budget);
         BudgetResponseDto responseDto = budgetMapper.mapBudgetToResponseDto(budget);
@@ -59,7 +60,7 @@ public class StandardBudgetService implements BudgetService {
 
     @Override
     public void updateSpentAmount(Category category, double amount, String accountCurrency, String userCurrency) {
-        Optional<Budget> budget = budgetRepository.findActiveByCategory(category);
+        Optional<Budget> budget = budgetRepository.findByCategoryAndActive(category, true);
         if (budget.isEmpty()) {
             log.warn("No active budget found for category: {}", category.getName());
             return;
@@ -76,7 +77,7 @@ public class StandardBudgetService implements BudgetService {
 
     @Override
     public List<BudgetResponseDto> getBudgetsForUser(User user) {
-        return budgetRepository.findAllByUser(user).stream().map(budget -> {
+        return budgetRepository.findByUserAndActive(user, true).stream().map(budget -> {
             BudgetResponseDto dto = budgetMapper.mapBudgetToResponseDto(budget);
             dto.setCategoryName(budget.getCategory().getName());
             return dto;

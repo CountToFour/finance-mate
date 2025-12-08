@@ -63,9 +63,22 @@ const BudgetPage: React.FC = () => {
         const totalLimit = budgets.reduce((s, b) => s + b.limitAmount, 0);
         const totalSpent = budgets.reduce((s, b) => s + b.spentAmount, 0);
         const remaining = Math.max(totalLimit - totalSpent, 0);
-        const daysLeft = Math.max(dayjs().endOf("month").diff(dayjs(), "day"), 1);
-        const avg = Math.floor(remaining / daysLeft);
-        return { totalLimit, totalSpent, remaining, avg };
+        const dailyAllowance = budgets.reduce((sum, budget) => {
+            const budgetRemaining = Math.max(budget.limitAmount - budget.spentAmount, 0);
+            const end = dayjs(budget.endDate).endOf('day');
+            const now = dayjs();
+
+            const daysLeft = Math.max(end.diff(now, 'day') + 1, 1);
+
+            return sum + (budgetRemaining / daysLeft);
+        }, 0);
+
+        return {
+            totalLimit,
+            totalSpent,
+            remaining,
+            avg: Math.floor(dailyAllowance)
+        };
     }, [budgets]);
 
     const handleSavedBudget = (saved: Budget) => {
