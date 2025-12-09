@@ -1,5 +1,6 @@
 package com.financemate.recommendation.service;
 
+import com.financemate.account.service.AccountService;
 import com.financemate.auth.model.user.User;
 import com.financemate.category.model.Category;
 import com.financemate.category.model.CategoryGroup;
@@ -35,6 +36,7 @@ public class StandardRecommendationService implements RecommendationService {
     private final RsiRecommendationService rsiRecommendationService;
     private final RecommendationRepository recommendationRepository;
     private final TransactionService transactionService;
+    private final AccountService accountService;
 
     private static final String[] SYMBOLS = {"IVV", "BTC/USD", "ETH/USD", "NDAQ", "XAU/USD"};
 
@@ -107,13 +109,34 @@ public class StandardRecommendationService implements RecommendationService {
                 .filter(rec -> allowedSymbols.contains(rec.getSymbol()))
                 .toList();
 
+        double totalBalance = accountService.getUserBalance(user).balance();
+
+        double avgMonthlyExpenses = transactionService.getAverageMonthlyExpenses(user, 3);
+        if (avgMonthlyExpenses == 0) avgMonthlyExpenses = 1;
+
+        double monthsOfSafety = totalBalance / avgMonthlyExpenses;
+
+        String safetyNetStatus;
+        if (monthsOfSafety < 1) {
+            safetyNetStatus = "DANGER";
+        } else if (monthsOfSafety < 3) {
+            safetyNetStatus = "WARNING";
+        } else if (monthsOfSafety < 6) {
+            safetyNetStatus = "SAFE";
+        } else {
+            safetyNetStatus = "EXCELLENT";
+        }
+
         return SmartRecommendationDto.builder()
                 .profile(profile)
                 .savingsRate(savingsRate)
                 .recommendations(filtered)
                 .message(message)
+                .safetyNetStatus(safetyNetStatus)
+                .monthsOfSafety(monthsOfSafety)
                 .build();
     }
+
 
     @Override
     public SpendingStructureDto getSpendingAuditor(User user) {

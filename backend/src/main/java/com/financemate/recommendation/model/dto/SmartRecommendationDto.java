@@ -18,4 +18,7 @@ public class SmartRecommendationDto {
     private double savingsRate;
     private List<RsiRecommendation> recommendations;
     private String message;
+
+    private String safetyNetStatus;
+    private double monthsOfSafety;
 }

@@ -202,6 +202,8 @@ export type SmartRecommendation = {
     savingsRate: number;
     recommendations: Recommendation[];
     message: string;
+    safetyNetStatus: 'DANGER' | 'WARNING' | 'SAFE' | 'EXCELLENT';
+    monthsOfSafety: number;
 }
 
 export type SpendingStructure = {

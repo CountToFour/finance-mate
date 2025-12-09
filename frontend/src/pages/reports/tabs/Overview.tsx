@@ -11,6 +11,7 @@ import type {Account, Category, CategoryAmount, Expense, MonthlyOverview} from "
 import ExpenseListItem from "./ExpenseListItem.tsx";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import {getAccounts} from "../../../lib/api.ts";
+import SafetyNetWidget from "../SafetyNetWidget.tsx";
 
 type Props = {
     categoriesOverview: CategoryAmount[],
@@ -232,6 +233,7 @@ const Overview: React.FC<Props> = ({
                     </List>
                 </CardContent>
             </Card>
+            <SafetyNetWidget />
         </>
     )
 }

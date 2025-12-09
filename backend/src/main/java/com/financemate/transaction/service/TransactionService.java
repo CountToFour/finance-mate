@@ -525,4 +525,21 @@ public class TransactionService {
         return result;
     }
 
+    public double getAverageMonthlyExpenses(User user, int months) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusMonths(months);
+
+        Specification<Transaction> spec = Specification.allOf(
+                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.dateBetween(startDate, endDate),
+                TransactionSpecifications.type(TransactionType.EXPENSE)
+        );
+
+        double totalExpenses = transactionRepository.findAll(spec).stream()
+                .mapToDouble(t -> Math.abs(getConvertedAmount(t, user)))
+                .sum();
+
+        return totalExpenses / months;
+    }
+
 }
