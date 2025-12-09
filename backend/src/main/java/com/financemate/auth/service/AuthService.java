@@ -56,7 +56,7 @@ public class AuthService implements UserDetailsService {
                 .username(request.username())
                 .password(passwordEncoder.encode(request.password()))
                 .role(Role.USER)
-                .locale("en")
+                .locale("pl")
                 .mainCurrency(currencyService.getCurrencyByCode("PLN"))
                 .build();
         assignDefaultCategoriesToUser(user);
@@ -115,6 +115,7 @@ public class AuthService implements UserDetailsService {
                     .name(defaultCategory.getName())
                     .color(defaultCategory.getColor())
                     .transactionType(defaultCategory.getTransactionType())
+                    .categoryGroup(defaultCategory.getCategoryGroup())
                     .isDefault(false)
                     .user(user)
                     .locale(userLocale)

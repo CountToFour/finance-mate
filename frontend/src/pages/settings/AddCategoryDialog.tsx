@@ -1,6 +1,17 @@
 import React, {useMemo, useState, useEffect} from 'react'
-import {Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, Stack, Box} from '@mui/material'
-import type {Category, CategoryDto} from '../../lib/types'
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    TextField,
+    MenuItem,
+    Stack,
+    Box,
+    FormControl, InputLabel, Select
+} from '@mui/material'
+import type {Category, CategoryDto, CategoryGroup} from '../../lib/types'
 import {createCategory, updateCategory} from '../../lib/api'
 import {useNotification} from '../../components/NotificationContext'
 
@@ -41,6 +52,7 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
     const [name, setName] = useState('')
     const [color, setColor] = useState('#1976d2')
     const [parentId, setParentId] = useState<string | null>(null)
+    const [group, setGroup] = useState<CategoryGroup | ''>('')
     const {success, error} = useNotification()
 
     const options = useMemo(() => flattenForSelect(categories), [categories])
@@ -56,7 +68,7 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
             if (editing) {
                 setName(editing.name || '')
                 setParentId(editing.parentId || null)
-                // jeśli mamy parent, kolor będzie pobrany z rodzica
+                setGroup(editing.categoryGroup || '')
                 const pcol = findParentColor(editing.parentId || null)
                 setColor(pcol || editing.color || '#1976d2')
             } else if (parentForNew) {
@@ -64,10 +76,12 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
                 setParentId(parentForNew)
                 const pcol = findParentColor(parentForNew)
                 setColor(pcol || '#1976d2')
+                setGroup('')
             } else {
                 setName('')
                 setColor('#1976d2')
                 setParentId(null)
+                setGroup('')
             }
         }
     }, [open, editing, parentForNew, categories])
@@ -81,12 +95,17 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
     }, [parentId])
 
     const handleSubmit = async () => {
-        if (!name.trim()) return error('Podaj nazwę kategorii')
+        if (!name.trim()) {
+            return error('Podaj nazwę kategorii')
+        } else if (!group.trim() && transactionType === 'EXPENSE') {
+            return error('Podaj grupę kategorii')
+        }
         const dto: CategoryDto = { 
             name: name.trim(), 
             color, 
             parentId: parentId || undefined, 
-            transactionType: transactionType 
+            transactionType: transactionType,
+            categoryGroup: (transactionType === 'EXPENSE' && group) ? (group as CategoryGroup) : undefined
         }
         try {
             if (editing) {
@@ -101,6 +120,7 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
             setName('')
             setColor('#1976d2')
             setParentId(null)
+            setGroup('')
             onClose()
         } catch (e) {
             console.error(e)
@@ -123,6 +143,22 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
                             ))}
                         </TextField>
                     </Box>
+
+                    {transactionType === 'EXPENSE' && (
+                        <FormControl fullWidth>
+                            <InputLabel>Grupa kategorii</InputLabel>
+                            <Select
+                                value={group}
+                                label="Grupa kategorii"
+                                onChange={(e) => setGroup(e.target.value as CategoryGroup)}
+                            >
+                                <MenuItem value="NEEDS">Niezbędne</MenuItem>
+                                <MenuItem value="WANTS">Zachcianki</MenuItem>
+                                <MenuItem value="SAVINGS">Oszczędności/Długi</MenuItem>
+                            </Select>
+                        </FormControl>
+                    )}
+
                     <TextField label="Kolor" type="color" value={color} onChange={e => setColor(e.target.value)} disabled={colorLocked} helperText={colorLocked ? 'Kolor dziedziczony od rodzica' : ''} />
                 </Stack>
             </DialogContent>

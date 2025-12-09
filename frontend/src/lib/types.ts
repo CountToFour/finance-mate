@@ -141,12 +141,15 @@ export type BalanceResponse = {
 
 //CATEGORY
 
+export type CategoryGroup = 'NEEDS' | 'WANTS' | 'SAVINGS';
+
 export type Category = {
     id: string
     name: string
     color: string
     parentId?: string | null
-    TransactionType: string
+    transactionType: string
+    categoryGroup?: CategoryGroup | null
 }
 
 export type CategoryDto = {
@@ -154,6 +157,7 @@ export type CategoryDto = {
     color: string
     parentId?: string | null
     transactionType: string
+    categoryGroup?: CategoryGroup | null
 }
 
 // BUDGETS

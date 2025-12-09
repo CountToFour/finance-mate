@@ -6,6 +6,7 @@ import com.financemate.category.dto.CategoryDto;
 import com.financemate.category.exceptions.CategoryNotFoundExcpetion;
 import com.financemate.category.mapper.CategoryMapper;
 import com.financemate.category.model.Category;
+import com.financemate.category.model.CategoryGroup;
 import com.financemate.category.model.CategoryLocale;
 import com.financemate.category.repository.CategoryRepository;
 import com.financemate.transaction.model.TransactionType;
@@ -74,6 +75,13 @@ public class StandardCategoryService implements  CategoryService {
         "GIFTS", TransactionType.INCOME
     );
 
+    private static final Map<String, CategoryGroup> CATEGORY_GROUPS = Map.of(
+            "FOOD", CategoryGroup.NEEDS,
+            "TRANSPORT", CategoryGroup.NEEDS,
+            "HOUSING", CategoryGroup.NEEDS,
+            "ENTERTAINMENT", CategoryGroup.WANTS
+    );
+
     @PostConstruct
     public void initializeDefaultCategories() {
         if (categoryRepository.findByIsDefaultTrue().isEmpty()) {
@@ -84,18 +92,20 @@ public class StandardCategoryService implements  CategoryService {
     private void createDefaultCategories() {
         DEFAULT_CATEGORIES.forEach((key, translations) -> {
             translations.forEach((locale, name) -> {
-                createDefaultCategory(name, CATEGORY_COLORS.get(key), CATEGORY_TYPES.get(key), locale);
+                CategoryGroup group = CATEGORY_GROUPS.getOrDefault(key, null);
+                createDefaultCategory(name, CATEGORY_COLORS.get(key), CATEGORY_TYPES.get(key), locale, group);
             });
         });
     }
 
-    private void createDefaultCategory(String name, String color, TransactionType type, CategoryLocale locale) {
+    private void createDefaultCategory(String name, String color, TransactionType type, CategoryLocale locale, CategoryGroup group) {
         Category category = Category.builder()
                 .name(name)
                 .color(color)
                 .transactionType(type)
                 .locale(locale)
                 .isDefault(true)
+                .categoryGroup(group)
                 .build();
         categoryRepository.save(category);
     }
@@ -103,6 +113,10 @@ public class StandardCategoryService implements  CategoryService {
     @Override
     @Transactional
     public CategoryDto createCategory(CategoryDto dto, User user) {
+        if (dto.getCategoryGroup() == null && dto.getTransactionType() == TransactionType.EXPENSE) {
+            throw new CategoryNotFoundExcpetion("Category group not found");
+        }
+
         Category category = categoryMapper.mapToEntity(dto);
         category.setUser(user);
 
@@ -132,6 +146,7 @@ public class StandardCategoryService implements  CategoryService {
 
         category.setName(dto.getName());
         category.setColor(dto.getColor());
+        category.setCategoryGroup(dto.getCategoryGroup());
 
         if (dto.getParentId() != null) {
             Category parent = categoryRepository.findById(dto.getParentId())
