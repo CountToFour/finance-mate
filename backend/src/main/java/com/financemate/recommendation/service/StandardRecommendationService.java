@@ -127,6 +127,44 @@ public class StandardRecommendationService implements RecommendationService {
             safetyNetStatus = "EXCELLENT";
         }
 
+        boolean hasEnoughData = transactionService.hasSufficientExpenseData(user, 30, 10);
+
+        String forecastStatus;
+        double projectedBalance = 0;
+        double safeDailyLimit = 0;
+        double safetyMarginPercent = 0.0;
+
+        if (!hasEnoughData) {
+            forecastStatus = "INSUFFICIENT_DATA";
+        } else {
+            double avgDailySpend = transactionService.getAverageDailySpend(user, 30);
+
+            if (avgDailySpend < 1) avgDailySpend = 1;
+
+            LocalDate today = LocalDate.now();
+            LocalDate lastDayOfMonth = today.with(java.time.temporal.TemporalAdjusters.lastDayOfMonth());
+            long daysLeft = java.time.temporal.ChronoUnit.DAYS.between(today, lastDayOfMonth) + 1;
+
+            double projectedExpenses = daysLeft * avgDailySpend;
+            projectedBalance = totalBalance - projectedExpenses;
+
+            if (totalBalance > 0 && projectedBalance > 0) {
+                safetyMarginPercent = (projectedBalance / totalBalance) * 100.0;
+            } else if (projectedBalance <= 0) {
+                safetyMarginPercent = 0.0;
+            }
+
+            safeDailyLimit = daysLeft > 0 ? totalBalance / daysLeft : totalBalance;
+
+            if (projectedBalance < 0) {
+                forecastStatus = "CRITICAL";
+            } else if (projectedBalance < (totalBalance * 0.1)) {
+                forecastStatus = "WARNING";
+            } else {
+                forecastStatus = "STABLE";
+            }
+        }
+
         return SmartRecommendationDto.builder()
                 .profile(profile)
                 .savingsRate(savingsRate)
@@ -134,6 +172,10 @@ public class StandardRecommendationService implements RecommendationService {
                 .message(message)
                 .safetyNetStatus(safetyNetStatus)
                 .monthsOfSafety(monthsOfSafety)
+                .forecastStatus(forecastStatus)
+                .projectedBalanceEndOfMonth(projectedBalance)
+                .dailySafeSpend(safeDailyLimit)
+                .safetyMarginPercent(Math.round(safetyMarginPercent))
                 .build();
     }
 

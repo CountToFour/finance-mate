@@ -488,7 +488,7 @@ public class TransactionService {
         );
 
         return transactionRepository.findAll(spec).stream()
-                .mapToDouble(t -> getConvertedAmount(t, user)) // Używamy Twojej metody do walut
+                .mapToDouble(t -> getConvertedAmount(t, user))
                 .sum();
     }
 
@@ -540,6 +540,45 @@ public class TransactionService {
                 .sum();
 
         return totalExpenses / months;
+    }
+
+    public boolean hasSufficientExpenseData(User user, int daysBack, int minDistinctDays) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(daysBack);
+
+        Specification<Transaction> spec = Specification.allOf(
+                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.dateBetween(startDate, endDate),
+                TransactionSpecifications.type(TransactionType.EXPENSE)
+        );
+
+        List<Transaction> transactions = transactionRepository.findAll(spec);
+
+        long distinctDaysWithExpenses = transactions.stream()
+                .map(Transaction::getCreatedAt)
+                .distinct()
+                .count();
+
+        return distinctDaysWithExpenses >= minDistinctDays;
+    }
+
+    public double getAverageDailySpend(User user, int daysBack) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(daysBack);
+
+        Specification<Transaction> spec = Specification.allOf(
+                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.dateBetween(startDate, endDate),
+                TransactionSpecifications.type(TransactionType.EXPENSE)
+        );
+
+        double totalExpenses = transactionRepository.findAll(spec).stream()
+                .mapToDouble(t -> Math.abs(getConvertedAmount(t, user)))
+                .sum();
+
+        if (daysBack == 0) return totalExpenses;
+
+        return totalExpenses / daysBack;
     }
 
 }

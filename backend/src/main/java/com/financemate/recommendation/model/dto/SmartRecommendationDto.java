@@ -21,4 +21,9 @@ public class SmartRecommendationDto {
 
     private String safetyNetStatus;
     private double monthsOfSafety;
+
+    private String forecastStatus;
+    private double projectedBalanceEndOfMonth;
+    private double dailySafeSpend;
+    private double safetyMarginPercent;
 }

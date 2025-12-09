@@ -29,6 +29,7 @@ import {
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import AuditorWidget from "./AuditorWidget.tsx";
+import CashFlowWidget from "./CashFlowWidget.tsx";
 
 dayjs.locale('pl');
 
@@ -400,6 +401,10 @@ function Dashboard() {
                 </CardContent>
             </Card>
             <AuditorWidget />
+
+            <Grid item xs={12} md={6}>
+                <CashFlowWidget />
+            </Grid>
         </Box>
     );
 }

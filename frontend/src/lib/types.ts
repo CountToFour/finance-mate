@@ -204,6 +204,10 @@ export type SmartRecommendation = {
     message: string;
     safetyNetStatus: 'DANGER' | 'WARNING' | 'SAFE' | 'EXCELLENT';
     monthsOfSafety: number;
+    forecastStatus: 'STABLE' | 'WARNING' | 'CRITICAL' | 'INSUFFICIENT_DATA';
+    projectedBalanceEndOfMonth: number;
+    dailySafeSpend: number;
+    safetyMarginPercent: number;
 }
 
 export type SpendingStructure = {
