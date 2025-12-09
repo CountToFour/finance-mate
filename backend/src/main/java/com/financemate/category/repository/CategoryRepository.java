@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, String> {
@@ -16,4 +17,6 @@ public interface CategoryRepository extends JpaRepository<Category, String> {
     List<Category> findByUserAndParent(User user, Category parent);
     List<Category> findByIsDefaultTrue();
     List<Category> findByIsDefaultTrueAndLocale(CategoryLocale locale);
+    Optional<Category> findByUserAndName(User user, String name);
+    List<Category> findAllByUser(User user);
 }

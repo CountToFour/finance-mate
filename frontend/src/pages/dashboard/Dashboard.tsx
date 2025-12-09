@@ -28,6 +28,7 @@ import {
 } from 'recharts';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import AuditorWidget from "./AuditorWidget.tsx";
 
 dayjs.locale('pl');
 
@@ -209,7 +210,7 @@ function Dashboard() {
                                 alignItems: 'center',
                                 justifyContent: 'center'
                             }}>
-                                <ResponsiveContainer width="100%" height={250}>
+                                <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
                                             data={categoryAmounts}
@@ -398,7 +399,7 @@ function Dashboard() {
                     </List>
                 </CardContent>
             </Card>
-
+            <AuditorWidget />
         </Box>
     );
 }

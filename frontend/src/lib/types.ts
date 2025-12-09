@@ -204,6 +204,14 @@ export type SmartRecommendation = {
     message: string;
 }
 
+export type SpendingStructure = {
+    needsPercent: number;
+    wantsPercent: number;
+    savingsPercent: number;
+    totalIncome: number;
+    recommendation: string;
+}
+
 // CURRENCY
 
 export type ExchangeRate = {

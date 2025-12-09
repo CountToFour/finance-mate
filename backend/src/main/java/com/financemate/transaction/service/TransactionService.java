@@ -7,6 +7,7 @@ import com.financemate.account.service.AccountService;
 import com.financemate.auth.model.user.User;
 import com.financemate.budget.service.BudgetService;
 import com.financemate.category.model.Category;
+import com.financemate.category.model.CategoryGroup;
 import com.financemate.category.repository.CategoryRepository;
 import com.financemate.transaction.dto.CategoryDto;
 import com.financemate.transaction.dto.DailyOverviewDto;
@@ -36,9 +37,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -475,6 +478,51 @@ public class TransactionService {
                         Math.round(sums.getOrDefault(date, 0.0) * 100.0) / 100.0
                 ))
                 .toList();
+    }
+
+    public double getIncome(User user, LocalDate startDate, LocalDate endDate) {
+        Specification<Transaction> spec = Specification.allOf(
+                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.dateBetween(startDate, endDate),
+                TransactionSpecifications.type(TransactionType.INCOME)
+        );
+
+        return transactionRepository.findAll(spec).stream()
+                .mapToDouble(t -> getConvertedAmount(t, user)) // Używamy Twojej metody do walut
+                .sum();
+    }
+
+    public Map<CategoryGroup, Map<String, Double>> getSpendingDetailsByGroup(User user, LocalDate startDate, LocalDate endDate) {
+        Specification<Transaction> spec = Specification.allOf(
+                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.dateBetween(startDate, endDate),
+                TransactionSpecifications.type(TransactionType.EXPENSE)
+        );
+        List<Transaction> transactions = transactionRepository.findAll(spec);
+
+        Map<String, CategoryGroup> categoryGroupsMap = categoryRepository.findAllByUser(user).stream()
+                .filter(c -> c.getCategoryGroup() != null)
+                .collect(Collectors.toMap(
+                        Category::getName,
+                        Category::getCategoryGroup,
+                        (existing, replacement) -> existing
+                ));
+
+
+        Map<CategoryGroup, Map<String, Double>> result = new HashMap<>();
+
+        for (Transaction t : transactions) {
+            CategoryGroup group = categoryGroupsMap.get(t.getCategory());
+
+            if (group != null) {
+                double amount = Math.abs(getConvertedAmount(t, user));
+
+                result.computeIfAbsent(group, k -> new HashMap<>())
+                        .merge(t.getCategory(), amount, Double::sum);
+            }
+        }
+
+        return result;
     }
 
 }

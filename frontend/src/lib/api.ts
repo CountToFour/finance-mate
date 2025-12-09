@@ -492,3 +492,13 @@ export const getSmartRecommendations = () => axios.get(
         }
     }
 );
+
+export const getSpendingAuditor = () => api.get(
+    'http://localhost:8080/api/recommendation/auditor',
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    }
+);

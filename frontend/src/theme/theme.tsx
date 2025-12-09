@@ -21,13 +21,10 @@ export const lightTheme = createTheme({
         secondary: {
             main: commonColors.purple,
         },
-        warning: {
-            main: commonColors.gold,
-        },
         text: {
             primary: "#000000",
             secondary: "#4f4f4f",
-        },
+        }
     },
     typography: {
         fontFamily: "Roboto, Arial, sans-serif",

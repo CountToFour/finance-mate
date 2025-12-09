@@ -1,12 +1,18 @@
 package com.financemate.recommendation.service;
 
 import com.financemate.auth.model.user.User;
+import com.financemate.category.model.Category;
+import com.financemate.category.model.CategoryGroup;
+import com.financemate.category.repository.CategoryRepository;
 import com.financemate.recommendation.integration.TwelveDataClient;
 import com.financemate.recommendation.model.InvestmentProfile;
 import com.financemate.recommendation.model.RsiRecommendation;
 import com.financemate.recommendation.model.dto.SmartRecommendationDto;
+import com.financemate.recommendation.model.dto.SpendingStructureDto;
 import com.financemate.recommendation.model.dto.TwelveDataTimeSeriesResponse;
 import com.financemate.recommendation.repository.RecommendationRepository;
+import com.financemate.transaction.dto.TransactionResponse;
+import com.financemate.transaction.model.TransactionType;
 import com.financemate.transaction.service.TransactionService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +21,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,7 +44,7 @@ public class StandardRecommendationService implements RecommendationService {
     }
 
     @Scheduled(cron = "0 0 6,18 * * *")
-    @PostConstruct
+//    @PostConstruct
     public void updateRecommendations() {
         log.info("Starting updating stocks recommendations...");
 
@@ -105,4 +114,99 @@ public class StandardRecommendationService implements RecommendationService {
                 .message(message)
                 .build();
     }
+
+    @Override
+    public SpendingStructureDto getSpendingAuditor(User user) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(90);
+
+        double totalIncome90Days = transactionService.getIncome(user, startDate, endDate);
+
+        if (totalIncome90Days == 0) {
+            return new SpendingStructureDto(0, 0, 0, 0, "Brak danych o przychodach z ostatnich 90 dni.");
+        }
+
+        Map<CategoryGroup, Map<String, Double>> categoryDetails = transactionService.getSpendingDetailsByGroup(user, startDate, endDate);
+
+        double needsTotal = sumGroup(categoryDetails, CategoryGroup.NEEDS) / 3.0;
+        double wantsTotal = sumGroup(categoryDetails, CategoryGroup.WANTS) / 3.0;
+        double savingsTotal = sumGroup(categoryDetails, CategoryGroup.SAVINGS) / 3.0;
+
+        double avgMonthlyIncome = totalIncome90Days / 3.0;
+
+        double unallocated = avgMonthlyIncome - (needsTotal + wantsTotal + savingsTotal);
+        if (unallocated > 0) savingsTotal += unallocated;
+
+        double needsPct = (needsTotal / avgMonthlyIncome) * 100;
+        double wantsPct = (wantsTotal / avgMonthlyIncome) * 100;
+        double savingsPct = (savingsTotal / avgMonthlyIncome) * 100;
+
+        String recommendation = generateActionableRecommendation(
+                needsPct, wantsPct, savingsPct,
+                avgMonthlyIncome, categoryDetails
+        );
+
+        return new SpendingStructureDto(
+                Math.round(needsPct),
+                Math.round(wantsPct),
+                Math.round(savingsPct),
+                Math.round(avgMonthlyIncome * 100.0) / 100.0,
+                recommendation
+        );
+    }
+
+    private double sumGroup(Map<CategoryGroup, Map<String, Double>> details, CategoryGroup group) {
+        return details.getOrDefault(group, Map.of())
+                .values().stream()
+                .mapToDouble(Double::doubleValue)
+                .sum();
+    }
+
+    private String generateActionableRecommendation(
+            double needsPct, double wantsPct, double savingsPct,
+            double income, Map<CategoryGroup, Map<String, Double>> details) {
+
+        if (needsPct >= 51) {
+            double excessAmount = (needsPct - 50) / 100 * income;
+            String topCategory = findTopCategory(details.get(CategoryGroup.NEEDS));
+
+            return String.format(
+                    "Koszty życia wynoszą %.0f%% (limit 50%%). Główny winowajca to '%s'. " +
+                            "Spróbuj obniżyć te koszty średnio o %.0f zł miesięcznie w nadchodzącym kwartale.",
+                    needsPct, topCategory, excessAmount
+            );
+        }
+
+        if (wantsPct >= 31) {
+            double excessAmount = (wantsPct - 30) / 100 * income;
+            String topCategory = findTopCategory(details.get(CategoryGroup.WANTS));
+
+            return String.format(
+                    "Wydajesz na przyjemności %.0f%% (limit 30%%). Główny winowajca to '%s'. " +
+                            "Zmniejsz wydatki w nadchodzących 3 miesiącach o średnio %.0f zł.",
+                    wantsPct, topCategory, excessAmount
+            );
+        }
+
+        if (savingsPct <= 20) {
+            double missingSavings = (20 - savingsPct) / 100 * income;
+            return String.format(
+                    "Oszczędzasz %.0f%% (cel 20%%). Aby to naprawić, zwiększ kwotę przelewów na oszczędności " +
+                            "o średnio %.0f zł w kolejnych miesiącach.",
+                    savingsPct, missingSavings
+            );
+        }
+
+        return "Twoja struktura finansowa (50/30/20) jest wzorowa! Tak trzymaj.";
+    }
+
+    private String findTopCategory(Map<String, Double> categories) {
+        if (categories == null || categories.isEmpty()) return "Inne";
+
+        return categories.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse("Nieznana");
+    }
+
 }
