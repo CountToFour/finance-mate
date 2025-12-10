@@ -10,6 +10,7 @@ public record FinancialGoalDto(
         @Positive(message = "Taget amount is demand") double targetAmount,
         double initialAmount,
         boolean lockedFunds,
-        LocalDate deadline
+        LocalDate deadline,
+        String accountId
 ) {
 }

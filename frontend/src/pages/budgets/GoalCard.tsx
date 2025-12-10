@@ -1,16 +1,18 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box, LinearProgress, Chip } from '@mui/material';
+import {Card, CardContent, Typography, Box, LinearProgress, Chip, Button, Stack} from '@mui/material';
 import FlagIcon from '@mui/icons-material/Flag';
 import LockIcon from '@mui/icons-material/Lock';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import type { FinancialGoal } from '../../lib/types';
 import dayjs from 'dayjs';
 
 interface Props {
     goal: FinancialGoal;
+    onDeposit: (goal: FinancialGoal) => void;
 }
 
-const GoalCard: React.FC<Props> = ({ goal }) => {
-    const progress = Math.min((goal.savedAmount / goal.targetAmount) * 100, 100);
+const GoalCard: React.FC<Props> = ({ goal, onDeposit }) => {
+    const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
     const daysLeft = dayjs(goal.deadline).diff(dayjs(), 'day');
 
     return (
@@ -38,7 +40,7 @@ const GoalCard: React.FC<Props> = ({ goal }) => {
                 <Box mt={2}>
                     <Box display="flex" justifyContent="space-between" mb={0.5}>
                         <Typography variant="body2" fontWeight="bold">
-                            {goal.savedAmount.toLocaleString()} zł
+                            {goal.currentAmount.toLocaleString()} zł
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                             z {goal.targetAmount.toLocaleString()} zł
@@ -56,9 +58,22 @@ const GoalCard: React.FC<Props> = ({ goal }) => {
                             }
                         }}
                     />
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block', textAlign: 'right' }}>
-                        {progress.toFixed(1)}%
-                    </Typography>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" mt={1}>
+                        <Typography variant="caption" color="text.secondary">
+                            {progress.toFixed(1)}%
+                        </Typography>
+
+                        {!goal.completed && (
+                            <Button
+                                size="small"
+                                startIcon={<AddCircleOutlineIcon />}
+                                onClick={() => onDeposit(goal)}
+                                sx={{ textTransform: 'none' }}
+                            >
+                                Wpłać
+                            </Button>
+                        )}
+                    </Stack>
                 </Box>
             </CardContent>
         </Card>

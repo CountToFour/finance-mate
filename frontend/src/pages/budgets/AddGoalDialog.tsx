@@ -1,28 +1,31 @@
 import React, { useState } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
-    Button, TextField, FormControlLabel, Switch, Box
+    Button, TextField, FormControlLabel, Switch, Box, MenuItem
 } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import { createGoal } from '../../lib/api';
-import type { FinancialGoal, CreateGoalDto } from '../../lib/types';
+import type {FinancialGoal, CreateGoalDto, Account} from '../../lib/types';
 import { useNotification } from '../../components/NotificationContext';
 
 interface Props {
     open: boolean;
     onClose: () => void;
     onSaved: (goal: FinancialGoal) => void;
+    accounts: Account[];
+    currency: string;
 }
 
-const AddGoalDialog: React.FC<Props> = ({ open, onClose, onSaved }) => {
+const AddGoalDialog: React.FC<Props> = ({ open, onClose, onSaved, accounts, currency }) => {
     const { success, error } = useNotification();
     const [name, setName] = useState('');
     const [targetAmount, setTargetAmount] = useState('');
     const [initialAmount, setInitialAmount] = useState('');
-    const [deadline, setDeadline] = useState<Dayjs | null>(dayjs().add(1, 'year'));
+    const [deadline, setDeadline] = useState<Dayjs | null>(dayjs().add(1, 'month'));
     const [locked, setLocked] = useState(false);
+    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
 
     const handleSubmit = async () => {
         if (!name || !targetAmount || !deadline) {
@@ -35,7 +38,8 @@ const AddGoalDialog: React.FC<Props> = ({ open, onClose, onSaved }) => {
             targetAmount: parseFloat(targetAmount),
             initialAmount: parseFloat(initialAmount) || 0,
             lockedFunds: locked,
-            deadline: deadline.format('YYYY-MM-DD')
+            deadline: deadline.format('YYYY-MM-DD'),
+            accountId: selectedAccount?.id
         };
 
         try {
@@ -53,7 +57,7 @@ const AddGoalDialog: React.FC<Props> = ({ open, onClose, onSaved }) => {
         setName('');
         setTargetAmount('');
         setInitialAmount('');
-        setDeadline(dayjs().add(1, 'year'));
+        setDeadline(dayjs().add(1, 'month'));
         setLocked(false);
         onClose();
     };
@@ -78,6 +82,7 @@ const AddGoalDialog: React.FC<Props> = ({ open, onClose, onSaved }) => {
                         fullWidth
                         value={targetAmount}
                         onChange={e => setTargetAmount(e.target.value)}
+                        sx={{flex: 1}}
                     />
                     <TextField
                         label="Wpłata początkowa"
@@ -86,8 +91,38 @@ const AddGoalDialog: React.FC<Props> = ({ open, onClose, onSaved }) => {
                         value={initialAmount}
                         onChange={e => setInitialAmount(e.target.value)}
                         helperText="Opcjonalnie"
+                        sx={{flex: 1}}
+                    />
+                    <TextField
+                        fullWidth
+                        label={"Waluta"}
+                        value={currency ?? ""}
+                        disabled
+                        sx={{ flex: 0.5 }}
                     />
                 </Box>
+                {initialAmount && (
+                    <TextField
+                        select
+                        fullWidth
+                        margin="normal"
+                        //TODO WIELOJEZYCZNOSC
+                        label={'Konto'}
+                        value={selectedAccount ? selectedAccount.id : ""}
+                        onChange={(e) => {
+                            const id = e.target.value as string;
+                            const acct = accounts.find(a => a.id === id) ?? null;
+                            setSelectedAccount(acct);
+                        }
+                        }
+                    >
+                        {accounts.map((account) => (
+                            <MenuItem key={account.id} value={account.id}>
+                                {account.name}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                )}
 
                 <Box mt={2} mb={2}>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -108,7 +143,7 @@ const AddGoalDialog: React.FC<Props> = ({ open, onClose, onSaved }) => {
             </DialogContent>
             <DialogActions sx={{ p: 2 }}>
                 <Button onClick={handleClose} color="secondary">Anuluj</Button>
-                <Button onClick={handleSubmit} variant="contained" color="secondary">Utwórz cel</Button>
+                <Button onClick={handleSubmit} variant="contained" color="primary">Utwórz cel</Button>
             </DialogActions>
         </Dialog>
     );

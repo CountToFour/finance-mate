@@ -6,7 +6,7 @@ public record FinancialGoalResponseDto (
         String id,
         String name,
         double targetAmount,
-        double savedAmount,
+        double currentAmount,
         boolean completed,
         boolean lockedFunds,
         LocalDate deadline

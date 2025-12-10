@@ -14,9 +14,9 @@ import dayjs from "dayjs";
 import {
     getBudgets,
     deleteBudget,
-    getCategories, getGoals,
+    getCategories, getGoals, getAccounts,
 } from "../../lib/api";
-import type {Budget, Category, FinancialGoal} from "../../lib/types";
+import type {Account, Budget, Category, FinancialGoal} from "../../lib/types";
 import BudgetDialog from "./BudgetDialog.tsx";
 import BudgetCard from "./BudgetCard.tsx";
 import {useNotification} from "../../components/NotificationContext.tsx";
@@ -26,6 +26,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GoalCard from "./GoalCard.tsx";
 import AddGoalDialog from "./AddGoalDialog.tsx";
 import GoalAcceleratorWidget from "./GoalAcceleratorWidget.tsx";
+import DepositGoalDialog from "./DepositGoalDialog.tsx";
 
 
 const hexToRgba = (hex: string, alpha = 0.2) => {
@@ -47,9 +48,15 @@ const BudgetPage: React.FC = () => {
     const [editing, setEditing] = useState<Budget | null>(null);
     const [goals, setGoals] = useState<FinancialGoal[]>([]);
     const [openGoalDialog, setOpenGoalDialog] = useState(false);
+    const [accounts, setAccounts] = useState<Account[]>([]);
+    const [depositGoal, setDepositGoal] = useState<FinancialGoal | null>(null);
+    const [openDepositDialog, setOpenDepositDialog] = useState(false);
 
     const loadAll = async () => {
         try {
+            getAccounts().then((res) => {
+                setAccounts(res.data);
+            });
             const [bRes, cRes, goalsRes] = await Promise.all([
                 getBudgets(),
                 getCategories("EXPENSE"),
@@ -57,6 +64,7 @@ const BudgetPage: React.FC = () => {
             ]);
             setBudgets(bRes.data);
             setCategories(cRes.data);
+            console.log(goalsRes.data);
             setGoals(goalsRes.data);
         } catch (e) {
             console.error(e);
@@ -66,6 +74,11 @@ const BudgetPage: React.FC = () => {
     useEffect(() => {
         loadAll();
     }, []);
+
+    const refreshGoals = () => {
+        getGoals().then(res => setGoals(res.data));
+        getAccounts().then(res => setAccounts(res.data));
+    };
 
     const money = (v: number) =>
         v.toLocaleString(undefined, {
@@ -278,18 +291,31 @@ const BudgetPage: React.FC = () => {
             <Box mt={3}>
                 <SmartInvestmentWidget/>
             </Box>
+
+            {/*Financial Goals*/}
             <Box mb={3}>
                 <GoalAcceleratorWidget />
             </Box>
+
             <Card variant="outlined" sx={{p: 2, borderRadius: 2, mt: 3}}>
                 <CardContent>
-                    <Typography variant="h6" fontWeight="bold" mb={2} display="flex" alignItems="center" gap={1}>
-                        <EmojiEventsIcon color="warning"/> Twoje Cele Finansowe
-                    </Typography>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                        <Box>
+                            <Typography variant="h6" fontWeight="bold" mb={2} display="flex" alignItems="center" gap={1}>
+                                <EmojiEventsIcon color="warning"/> Twoje Cele Finansowe
+                            </Typography>
+                        </Box>
+                        <Button variant="outlined" startIcon={<EmojiEventsIcon/>} onClick={() => setOpenGoalDialog(true)}>
+                            Dodaj cel
+                        </Button>
+                    </Stack>
                     {goals.length > 0 && (
                         <Box display="grid" gridTemplateColumns={{xs: '1fr', md: 'repeat(3, 1fr)'}} gap={2}>
                             {goals.map(goal => (
-                                <GoalCard key={goal.id} goal={goal}/>
+                                <GoalCard key={goal.id} goal={goal} onDeposit={(g) => {
+                                    setDepositGoal(g);
+                                    setOpenDepositDialog(true);
+                                }}/>
                             ))}
                         </Box>
                     )}
@@ -311,6 +337,16 @@ const BudgetPage: React.FC = () => {
                 open={openGoalDialog}
                 onClose={() => setOpenGoalDialog(false)}
                 onSaved={(newGoal) => setGoals(prev => [...prev, newGoal])}
+                accounts={accounts}
+                currency={user?.currency.symbol}
+            />
+
+            <DepositGoalDialog
+                open={openDepositDialog}
+                onClose={() => setOpenDepositDialog(false)}
+                goal={depositGoal}
+                accounts={accounts}
+                onSuccess={refreshGoals}
             />
         </Box>
     );

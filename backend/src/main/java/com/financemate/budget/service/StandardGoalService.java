@@ -26,6 +26,13 @@ public class StandardGoalService implements GoalService {
         FinancialGoal goal = budgetMapper.mapDtoToGoal(dto);
         goal.setUser(user);
 
+        if (dto.initialAmount() > 0) {
+            goal.setCurrentAmount(dto.initialAmount());
+            accountService.changeBalance(dto.accountId(), -dto.initialAmount(), user);
+        } else {
+            goal.setCurrentAmount(0);
+        }
+
         FinancialGoal saved = goalRepository.save(goal);
         return budgetMapper.mapGoalToDto(saved);
     }
@@ -49,6 +56,11 @@ public class StandardGoalService implements GoalService {
             goal.setCurrentAmount(goal.getCurrentAmount() + amount);
 
             if (goal.getCurrentAmount() >= goal.getTargetAmount()) {
+                double overTarget = goal.getCurrentAmount() - goal.getTargetAmount();
+                if (overTarget > 0) {
+                    accountService.changeBalance(accountId, overTarget, user);
+                    goal.setCurrentAmount(goal.getTargetAmount());
+                }
                 goal.setCompleted(true);
             }
 
