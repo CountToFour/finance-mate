@@ -182,6 +182,24 @@ export type Budget = {
     endDate: string
 }
 
+export type FinancialGoal = {
+    id: string;
+    name: string;
+    targetAmount: number;
+    savedAmount: number;
+    completed: boolean;
+    lockedFunds: boolean;
+    deadline: string;
+}
+
+export type CreateGoalDto = {
+    name: string;
+    targetAmount: number;
+    initialAmount: number;
+    lockedFunds: boolean;
+    deadline: string;
+}
+
 // RECOMMENDATIONS
 
 export type RecommendationAction = 'BUY' | 'SELL' | 'HOLD';

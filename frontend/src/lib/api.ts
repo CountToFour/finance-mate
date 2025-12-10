@@ -1,6 +1,14 @@
 import axios from 'axios'
 import {useAuthStore} from "../store/auth.ts";
-import type {EditTransactionDto, TransactionDto, CreateAccountDto, TransferDto, BudgetDto, CategoryDto} from "./types.ts";
+import type {
+    EditTransactionDto,
+    TransactionDto,
+    CreateAccountDto,
+    TransferDto,
+    BudgetDto,
+    CategoryDto,
+    CreateGoalDto
+} from "./types.ts";
 
 export const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -104,7 +112,7 @@ export const getTransactions = (
 export const getAllRecurringExpenses = () => axios.get(
     `http://localhost:8080/api/transactions/recurring`,
     {
-        params : {
+        params: {
             type: 'EXPENSE',
         },
         withCredentials: true,
@@ -116,7 +124,7 @@ export const getAllRecurringExpenses = () => axios.get(
 export const getAllRecurringTransactions = (type: string) => axios.get(
     `http://localhost:8080/api/transactions/recurring`,
     {
-        params : {
+        params: {
             type: type,
         },
         withCredentials: true,
@@ -391,7 +399,7 @@ export const createCategory = (categoryDto: CategoryDto) => axios.post(
     {
         withCredentials: true,
         headers: {
-             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
         },
     }
 )
@@ -402,7 +410,7 @@ export const updateCategory = (categoryDto: CategoryDto, id: string) => axios.pu
     {
         withCredentials: true,
         headers: {
-             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
         },
     }
 )
@@ -412,7 +420,7 @@ export const deleteCategory = (id: string) => axios.delete(
     {
         withCredentials: true,
         headers: {
-             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
         },
     }
 )
@@ -471,6 +479,57 @@ export const deleteBudget = (id: string) => axios.delete(
     }
 )
 
+export const getGoals = () => api.get(
+    'http://localhost:8080/api/goals',
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    }
+)
+
+export const createGoal = (goal: CreateGoalDto) => api.post(
+    'http://localhost:8080/api/goals',
+    goal,
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    }
+);
+
+export const depositToGoal = (id: string, amount: number, accountId: string) => api.patch(
+    `http://localhost:8080/api/goals/${id}/deposit`,
+    null,
+    {
+        params: {
+            amount: amount,
+            accountId: accountId
+        },
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    }
+);
+
+export const withdrawFromGoal = (id: string, amount: number, accountId: string) => api.patch(
+    `http://localhost:8080/api/goals/${id}/withdraw`,
+    null,
+    {
+        params: {
+            amount: amount,
+            accountId: accountId
+        },
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    }
+);
+
 // RECOMMENDATIONS
 
 export const getRecommendations = () => axios.get(
@@ -481,7 +540,7 @@ export const getRecommendations = () => axios.get(
             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
         }
     }
-)        
+)
 
 export const getSmartRecommendations = () => axios.get(
     'http://localhost:8080/api/recommendation/smart',
