@@ -13,6 +13,8 @@ import com.financemate.category.repository.CategoryRepository;
 import com.financemate.recommendation.integration.TwelveDataClient;
 import com.financemate.recommendation.model.InvestmentProfile;
 import com.financemate.recommendation.model.RsiRecommendation;
+import com.financemate.recommendation.model.dto.MLRequest;
+import com.financemate.recommendation.model.dto.MLResponse;
 import com.financemate.recommendation.model.dto.RecommendationDto;
 import com.financemate.recommendation.model.dto.SmartRecommendationDto;
 import com.financemate.recommendation.model.dto.SpendingStructureDto;
@@ -25,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -46,6 +49,7 @@ public class StandardRecommendationService implements RecommendationService {
     private final FinancialGoalRepository goalRepository;
     private final CategoryRepository categoryRepository;
     private final ExchangeRateRepository exchangeRateRepository;
+    private final WebClient.Builder webClientBuilder;
 
     private static final Map<String, String> FRIENDLY_NAMES = Map.of(
             "IVV", "S&P 500 ETF",
@@ -220,10 +224,10 @@ public class StandardRecommendationService implements RecommendationService {
         LocalDate startDate = endDate.minusDays(90);
 
         double totalIncome90Days = transactionService.getIncome(user, startDate, endDate);
-
         if (totalIncome90Days == 0) {
             return new SpendingStructureDto(0, 0, 0, 0, "Brak danych o przychodach z ostatnich 90 dni.");
         }
+        double avgMonthlyIncome = totalIncome90Days / 3.0;
 
         Map<CategoryGroup, Map<String, Double>> categoryDetails = transactionService.getSpendingDetailsByGroup(user, startDate, endDate);
 
@@ -231,25 +235,160 @@ public class StandardRecommendationService implements RecommendationService {
         double wantsTotal = sumGroup(categoryDetails, CategoryGroup.WANTS) / 3.0;
         double savingsTotal = sumGroup(categoryDetails, CategoryGroup.SAVINGS) / 3.0;
 
-        double avgMonthlyIncome = totalIncome90Days / 3.0;
-
         double unallocated = avgMonthlyIncome - (needsTotal + wantsTotal + savingsTotal);
         if (unallocated > 0) savingsTotal += unallocated;
 
-        double needsPct = (needsTotal / avgMonthlyIncome) * 100;
-        double wantsPct = (wantsTotal / avgMonthlyIncome) * 100;
-        double savingsPct = (savingsTotal / avgMonthlyIncome) * 100;
+        double needsPct = (needsTotal / avgMonthlyIncome);
+        double wantsPct = (wantsTotal / avgMonthlyIncome);
+        double savingsPct = (savingsTotal / avgMonthlyIncome);
 
-        String recommendation = generateActionableRecommendation(
+        double needsTrend = transactionService.calculateNeedsTrend(user);
+        double volatility = transactionService.calculateSpendingVolatility(user, 6);
+        double smallTxRatio = transactionService.calculateSmallTransactionRatio(user, 3);
+        double safetyNet = transactionService.calculateSafetyNetRatio(user);
+
+        MLRequest request = new MLRequest(
                 needsPct, wantsPct, savingsPct,
-                avgMonthlyIncome, categoryDetails
+                needsTrend, volatility, smallTxRatio, safetyNet
         );
+
+        MLResponse mlResponse;
+        try {
+            mlResponse = webClientBuilder.build()
+                    .post()
+                    .uri("http://localhost:8000/predict")
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(MLResponse.class)
+                    .block();
+        } catch (Exception e) {
+            log.error("ML Service unavailable, using fallback logic", e);
+            return getLegacyAuditor(user, needsPct * 100, wantsPct * 100, savingsPct * 100, avgMonthlyIncome, categoryDetails);
+        }
+
+        String recommendation = generateMLBasedRecommendation(mlResponse, avgMonthlyIncome, categoryDetails, needsPct, wantsPct, user);
+
+        return new SpendingStructureDto(
+                Math.round(needsPct * 100),
+                Math.round(wantsPct * 100),
+                Math.round(savingsPct * 100),
+                Math.round(avgMonthlyIncome * 100.0) / 100.0,
+                recommendation
+        );
+    }
+
+    private String generateMLBasedRecommendation(MLResponse mlResponse, double income,
+                                                 Map<CategoryGroup, Map<String, Double>> details,
+                                                 double currentNeedsPct, double currentWantsPct, User user) {
+
+        String status = mlResponse.status();
+        String issue = mlResponse.primaryIssue();
+        int score = mlResponse.score();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("AI Score: %d/100 (%s). ", score, status));
+
+        if ("GOOD".equals(status)) {
+            sb.append("Twój profil finansowy jest stabilny. AI nie wykryło istotnych zagrożeń.");
+            return sb.toString();
+        }
+
+        switch (issue) {
+            case "wants" -> {
+                double targetAmount = income * 0.30;
+                double currentAmount = income * currentWantsPct;
+                double cutAmount = currentAmount - targetAmount;
+
+                String topCategory = findTopCategory(details.get(CategoryGroup.WANTS));
+
+                if (cutAmount > 0) {
+                    sb.append(String.format("Wykryto nadmierne wydatki na przyjemności. " +
+                                    "Aby poprawić wynik, spróbuj wydać o %.0f zł mniej na '%s' w przyszłym miesiącu.",
+                            cutAmount, topCategory));
+                } else {
+                    sb.append("Wydatki na zachcianki są ryzykowne w kontekście Twoich oszczędności.");
+                }
+            }
+            case "needs" -> {
+                double targetAmount = income * 0.50;
+                double currentAmount = income * currentNeedsPct;
+                double cutAmount = currentAmount - targetAmount;
+
+                String topCategory = findTopCategory(details.get(CategoryGroup.NEEDS));
+
+                if (cutAmount > 0) {
+                    sb.append(String.format("Koszty stałe obciążają budżet. " +
+                                    "Główny koszt to '%s'. Spróbuj obniżyć rachunki o ok. %.0f zł.",
+                            topCategory, cutAmount));
+                } else {
+                    sb.append("Koszty życia są wysokie. Rozważ renegocjację stałych umów.");
+                }
+            }
+            case "savings" -> {
+                double targetSavings = income * 0.20;
+                sb.append(String.format("Model wskazuje na zbyt niskie bezpieczeństwo finansowe. " +
+                        "Ustaw automatyczny przelew na %.0f zł zaraz po wypłacie.", targetSavings));
+            }
+            case "volatility" -> {
+                sb.append("Twoje wydatki są bardzo nieregularne. AI sugeruje stworzenie budżetu tygodniowego, aby ustabilizować przepływy.");
+            }
+            case "small_tx" -> {
+                sb.append("Wykryto dużą liczbę impulsywnych mikrotransakcji (<50zł). Spróbuj planować zakupy z wyprzedzeniem.");
+            }
+            case "trend" -> {
+                sb.append("Uwaga: Twoje stałe wydatki (Needs) rosną z miesiąca na miesiąc. " +
+                        "Zatrzymaj ten trend, zanim przekroczysz budżet. Sprawdź nowe subskrypcje lub rosnące rachunki.");
+            }
+            case "safety" -> {
+                double safetyMonths = transactionService.calculateSafetyNetRatio(user);
+                sb.append(String.format("Twoja poduszka finansowa wystarczy tylko na %.1f mies. " +
+                        "Priorytetem powinno być zbudowanie zapasu na min. 3 miesiące życia.", safetyMonths));
+            }
+            case "none" -> {
+                sb.append("Model wykrył podwyższone ryzyko (WARNING), mimo braku drastycznych przekroczeń w jednej kategorii. " +
+                        "Może to wynikać z połączenia kilku mniejszych czynników (np. rosnący trend wydatków przy średniej poduszce finansowej). " +
+                        "Zalecamy ostrożność i monitorowanie wszystkich grup wydatków.");
+            }
+            default -> sb.append("Zalecamy ogólny przegląd budżetu i zwiększenie oszczędności.");
+        }
+
+        return sb.toString();
+    }
+
+    private SpendingStructureDto getLegacyAuditor(User user, double needsPct, double wantsPct, double savingsPct, double income, Map<CategoryGroup, Map<String, Double>> details) {
+        String recommendation;
+        if (needsPct >= 51) {
+            double excessAmount = (needsPct - 50) / 100 * income;
+            String topCategory = findTopCategory(details.get(CategoryGroup.NEEDS));
+            recommendation = String.format(
+                    "Koszty życia wynoszą %.0f%% (limit 50%%). Główny winowajca to '%s'. " +
+                            "Spróbuj obniżyć te koszty średnio o %.0f zł miesięcznie.",
+                    needsPct, topCategory, excessAmount
+            );
+        } else if (wantsPct >= 31) {
+            double excessAmount = (wantsPct - 30) / 100 * income;
+            String topCategory = findTopCategory(details.get(CategoryGroup.WANTS));
+            recommendation = String.format(
+                    "Wydajesz na przyjemności %.0f%% (limit 30%%). Główny winowajca to '%s'. " +
+                            "Zmniejsz wydatki w nadchodzących 3 miesiącach o średnio %.0f zł.",
+                    wantsPct, topCategory, excessAmount
+            );
+        } else if (savingsPct <= 20) {
+            double missingSavings = (20 - savingsPct) / 100 * income;
+            recommendation = String.format(
+                    "Oszczędzasz %.0f%% (cel 20%%). Aby to naprawić, zwiększ kwotę przelewów na oszczędności " +
+                            "o średnio %.0f zł.",
+                    savingsPct, missingSavings
+            );
+        } else {
+            recommendation = "Twoja struktura finansowa (50/30/20) jest wzorowa! Tak trzymaj.";
+        }
 
         return new SpendingStructureDto(
                 Math.round(needsPct),
                 Math.round(wantsPct),
                 Math.round(savingsPct),
-                Math.round(avgMonthlyIncome * 100.0) / 100.0,
+                Math.round(income * 100.0) / 100.0,
                 recommendation
         );
     }
@@ -261,43 +400,6 @@ public class StandardRecommendationService implements RecommendationService {
                 .sum();
     }
 
-    private String generateActionableRecommendation(
-            double needsPct, double wantsPct, double savingsPct,
-            double income, Map<CategoryGroup, Map<String, Double>> details) {
-
-        if (needsPct >= 51) {
-            double excessAmount = (needsPct - 50) / 100 * income;
-            String topCategory = findTopCategory(details.get(CategoryGroup.NEEDS));
-
-            return String.format(
-                    "Koszty życia wynoszą %.0f%% (limit 50%%). Główny winowajca to '%s'. " +
-                            "Spróbuj obniżyć te koszty średnio o %.0f zł miesięcznie w nadchodzącym kwartale.",
-                    needsPct, topCategory, excessAmount
-            );
-        }
-
-        if (wantsPct >= 31) {
-            double excessAmount = (wantsPct - 30) / 100 * income;
-            String topCategory = findTopCategory(details.get(CategoryGroup.WANTS));
-
-            return String.format(
-                    "Wydajesz na przyjemności %.0f%% (limit 30%%). Główny winowajca to '%s'. " +
-                            "Zmniejsz wydatki w nadchodzących 3 miesiącach o średnio %.0f zł.",
-                    wantsPct, topCategory, excessAmount
-            );
-        }
-
-        if (savingsPct <= 20) {
-            double missingSavings = (20 - savingsPct) / 100 * income;
-            return String.format(
-                    "Oszczędzasz %.0f%% (cel 20%%). Aby to naprawić, zwiększ kwotę przelewów na oszczędności " +
-                            "o średnio %.0f zł w kolejnych miesiącach.",
-                    savingsPct, missingSavings
-            );
-        }
-
-        return "Twoja struktura finansowa (50/30/20) jest wzorowa! Tak trzymaj.";
-    }
 
     private String findTopCategory(Map<String, Double> categories) {
         if (categories == null || categories.isEmpty()) return "Inne";

@@ -35,13 +35,13 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -581,6 +581,13 @@ public class TransactionService {
         return distinctDaysWithExpenses >= minDistinctDays;
     }
 
+    public double calculateSafetyNetRatio(User user) {
+        double avgExpenses = getAverageMonthlyExpenses(user, 3);
+        double totalBalance = accountService.getUserBalance(user).balance(); // Masz to w AccountService
+        if (avgExpenses == 0) return 0.0;
+        return totalBalance / avgExpenses;
+    }
+
     public double getAverageDailySpend(User user, int daysBack) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(daysBack);
@@ -600,4 +607,91 @@ public class TransactionService {
         return totalExpenses / daysBack;
     }
 
+    public Map<YearMonth, Map<CategoryGroup, Double>> getMonthlyGroupSpending(User user, int monthsBack) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusMonths(monthsBack).withDayOfMonth(1);
+
+        List<Transaction> transactions = transactionRepository.findAll(
+                Specification.allOf(
+                        TransactionSpecifications.hasUserId(user.getId()),
+                        TransactionSpecifications.dateBetween(startDate, endDate),
+                        TransactionSpecifications.type(TransactionType.EXPENSE)
+                )
+        );
+
+        Map<String, CategoryGroup> categoryGroupsMap = categoryRepository.findAllByUser(user).stream()
+                .filter(c -> c.getCategoryGroup() != null)
+                .collect(Collectors.toMap(Category::getName, Category::getCategoryGroup, (a, b) -> a));
+
+        Map<YearMonth, Map<CategoryGroup, Double>> result = new HashMap<>();
+
+        for (Transaction t : transactions) {
+            YearMonth month = YearMonth.from(t.getCreatedAt());
+            CategoryGroup group = categoryGroupsMap.get(t.getCategory());
+
+            if (group != null) {
+                double amount = Math.abs(getConvertedAmount(t, user));
+                result.computeIfAbsent(month, k -> new HashMap<>())
+                        .merge(group, amount, Double::sum);
+            }
+        }
+        return result;
+    }
+
+    public double calculateSpendingVolatility(User user, int monthsBack) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusMonths(monthsBack).withDayOfMonth(1);
+
+        List<MonthOverviewDto> monthlyData = getMonthlyOverview(user, startDate, endDate);
+
+        if (monthlyData.isEmpty()) return 0.0;
+
+        List<Double> expenses = monthlyData.stream()
+                .map(MonthOverviewDto::getTotalExpense)
+                .toList();
+
+        double mean = expenses.stream().mapToDouble(val -> val).average().orElse(0.0);
+        double variance = expenses.stream()
+                .mapToDouble(val -> Math.pow(val - mean, 2))
+                .average()
+                .orElse(0.0);
+
+        return Math.sqrt(variance);
+    }
+
+    public double calculateSmallTransactionRatio(User user, int monthsBack) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusMonths(monthsBack);
+        double threshold = 50.0;
+
+        List<Transaction> transactions = transactionRepository.findAll(
+                Specification.allOf(
+                        TransactionSpecifications.hasUserId(user.getId()),
+                        TransactionSpecifications.dateBetween(startDate, endDate),
+                        TransactionSpecifications.type(TransactionType.EXPENSE)
+                )
+        );
+
+        if (transactions.isEmpty()) return 0.0;
+
+        long smallCount = transactions.stream()
+                .filter(t -> Math.abs(t.getPrice()) < threshold)
+                .count();
+
+        return (double) smallCount / transactions.size();
+    }
+
+    public double calculateNeedsTrend(User user) {
+        LocalDate now = LocalDate.now();
+        double currentNeeds = getSpendingDetailsByGroup(user, now.minusDays(30), now)
+                .getOrDefault(CategoryGroup.NEEDS, Map.of())
+                .values().stream().mapToDouble(d -> d).sum();
+
+        double prevNeeds = getSpendingDetailsByGroup(user, now.minusDays(60), now.minusDays(30))
+                .getOrDefault(CategoryGroup.NEEDS, Map.of())
+                .values().stream().mapToDouble(d -> d).sum();
+
+        if (prevNeeds == 0) return 0.0;
+        return (currentNeeds - prevNeeds) / prevNeeds;
+    }
 }
