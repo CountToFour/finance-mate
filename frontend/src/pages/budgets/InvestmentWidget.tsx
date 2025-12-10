@@ -80,10 +80,10 @@ const SmartInvestmentWidget: React.FC = () => {
                 ) : (
                     <Stack spacing={1}>
                         {data.recommendations.map((rec) => (
-                            <Box key={rec.symbol} 
-                                 sx={{ 
-                                     display: 'flex', 
-                                     justifyContent: 'space-between', 
+                            <Box key={rec.symbol}
+                                 sx={{
+                                     display: 'flex',
+                                     justifyContent: 'space-between',
                                      alignItems: 'center',
                                      p: 1.5,
                                      borderRadius: 2,
@@ -92,14 +92,23 @@ const SmartInvestmentWidget: React.FC = () => {
                                      borderLeft: `4px solid ${rec.action === 'BUY' ? '#4CAF50' : (rec.action === 'SELL' ? '#F44336' : '#9E9E9E')}`
                                  }}>
                                 <Box>
-                                    <Typography variant="subtitle2" fontWeight="bold">{rec.symbol}</Typography>
-                                    <Typography variant="caption" color="text.secondary">RSI: {rec.rsiValue.toFixed(1)}</Typography>
+                                    <Typography variant="subtitle2" fontWeight="bold">{rec.friendlyName}</Typography>
+
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                        <Typography variant="caption" fontWeight="medium" color="text.primary">
+                                            {rec.latestClose.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {rec.currency}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            • RSI: {rec.rsiValue.toFixed(1)}
+                                        </Typography>
+                                    </Stack>
                                 </Box>
-                                <Chip 
+
+                                <Chip
                                     label={rec.action === 'BUY' ? 'KUPUJ' : (rec.action === 'SELL' ? 'SPRZEDAJ' : 'TRZYMAJ')}
                                     size="small"
                                     icon={rec.action === 'BUY' ? <TrendingUpIcon /> : (rec.action === 'SELL' ? <TrendingDownIcon /> : undefined)}
-                                    sx={{ 
+                                    sx={{
                                         fontWeight: 'bold',
                                         bgcolor: rec.action === 'BUY' ? 'rgba(76, 175, 80, 0.1)' : (rec.action === 'SELL' ? 'rgba(244, 67, 54, 0.1)' : 'rgba(158, 158, 158, 0.1)'),
                                         color: rec.action === 'BUY' ? 'success.main' : (rec.action === 'SELL' ? 'error.main' : 'text.secondary')

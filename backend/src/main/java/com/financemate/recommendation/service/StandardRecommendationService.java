@@ -1,5 +1,7 @@
 package com.financemate.recommendation.service;
 
+import com.financemate.account.model.ExchangeRate;
+import com.financemate.account.repository.ExchangeRateRepository;
 import com.financemate.account.service.AccountService;
 import com.financemate.auth.model.user.User;
 import com.financemate.budget.dto.GoalRecommendationDto;
@@ -11,6 +13,7 @@ import com.financemate.category.repository.CategoryRepository;
 import com.financemate.recommendation.integration.TwelveDataClient;
 import com.financemate.recommendation.model.InvestmentProfile;
 import com.financemate.recommendation.model.RsiRecommendation;
+import com.financemate.recommendation.model.dto.RecommendationDto;
 import com.financemate.recommendation.model.dto.SmartRecommendationDto;
 import com.financemate.recommendation.model.dto.SpendingStructureDto;
 import com.financemate.recommendation.model.dto.TwelveDataTimeSeriesResponse;
@@ -42,8 +45,15 @@ public class StandardRecommendationService implements RecommendationService {
     private final AccountService accountService;
     private final FinancialGoalRepository goalRepository;
     private final CategoryRepository categoryRepository;
+    private final ExchangeRateRepository exchangeRateRepository;
 
-    private static final String[] SYMBOLS = {"IVV", "BTC/USD", "ETH/USD", "NDAQ", "XAU/USD"};
+    private static final Map<String, String> FRIENDLY_NAMES = Map.of(
+            "IVV", "S&P 500 ETF",
+            "BTC/USD", "Bitcoin",
+            "ETH/USD", "Ethereum",
+            "NDAQ", "Nasdaq",
+            "XAU/USD", "Złoto"
+    );
 
     @Override
     public List<RsiRecommendation> getRecommendation() {
@@ -57,9 +67,9 @@ public class StandardRecommendationService implements RecommendationService {
 
         LocalDate start = LocalDate.now().minusDays(60); // Potrzebujemy historii do RSI
 
-        for (String symbol : SYMBOLS) {
+        for (Map.Entry<String, String> entry : FRIENDLY_NAMES.entrySet()) {
             try {
-                TwelveDataTimeSeriesResponse series = twelveDataClient.getTimeSeries(symbol, "1day", start.toString());
+                TwelveDataTimeSeriesResponse series = twelveDataClient.getTimeSeries(entry.getKey(), "1day", start.toString());
 
                 RsiRecommendation calculated = rsiRecommendationService.calculateRsi(series);
 
@@ -70,14 +80,14 @@ public class StandardRecommendationService implements RecommendationService {
                             existing.setLatestClose(calculated.getLatestClose());
                             existing.setLatestDatetime(calculated.getLatestDatetime());
                             recommendationRepository.save(existing);
-                            log.debug("Updated: {}", symbol);
+                            log.debug("Updated: {}", entry.getKey());
                         }, () -> {
                             recommendationRepository.save(calculated);
-                            log.debug("Added new: {}", symbol);
+                            log.debug("Added new: {}", entry.getKey());
                         });
 
             } catch (Exception e) {
-                log.error("Failed to update symbol recommendation: {}", symbol, e);
+                log.error("Failed to update symbol recommendation: {}", entry.getKey(), e);
             }
         }
         log.info("Finished recommendation updates.");
@@ -96,22 +106,41 @@ public class StandardRecommendationService implements RecommendationService {
             profile = InvestmentProfile.CRITICAL;
             allowedSymbols = List.of();
             message = "Twoje wydatki przekraczają przychody. Skup się na naprawie budżetu domowego.";
-        } else if (savingsRate < 0.20) {
+        } else if (savingsRate >= 0.05 && savingsRate <= 0.15) {
             profile = InvestmentProfile.CONSERVATIVE;
             allowedSymbols = List.of("XAU/USD");
             message = "Niski bufor bezpieczeństwa. Sugerujemy aktywa chroniące kapitał (Złoto).";
-        } else if (savingsRate < 0.50) {
+        } else if (savingsRate < 0.35) {
             profile = InvestmentProfile.BALANCED;
             allowedSymbols = List.of("IVV", "XAU/USD");
             message = "Stabilna sytuacja. Buduj zrównoważony portfel (S&P 500, Złoto).";
         } else {
             profile = InvestmentProfile.AGGRESSIVE;
             allowedSymbols = List.of("BTC/USD", "ETH/USD", "NDAQ");
-            message = "Wysoka nadwyżka finansowa. Możesz pozwolić sobie na aktywa wzrostowe (Krypto, Tech).";
+            message = "Wysoka nadwyżka finansowa. Możesz pozwolić sobie na aktywa ryzykowne (Krypto, Tech).";
         }
 
-        List<RsiRecommendation> filtered = allRecommendations.stream()
+        String userCurrency = user.getMainCurrency().getCode();
+        double rateToUserCurrency = 1.0;
+
+        if (!"USD".equals(userCurrency)) {
+            rateToUserCurrency = exchangeRateRepository.findByFromCurrencyAndToCurrency("USD", userCurrency)
+                    .map(ExchangeRate::getRate)
+                    .orElse(1.0);
+        }
+
+        final double finalRate = rateToUserCurrency;
+
+        List<RecommendationDto> recommendations = allRecommendations.stream()
                 .filter(rec -> allowedSymbols.contains(rec.getSymbol()))
+                .map(rec -> new RecommendationDto(
+                        rec.getSymbol(),
+                        FRIENDLY_NAMES.getOrDefault(rec.getSymbol(), rec.getSymbol()),
+                        rec.getRsiValue(),
+                        rec.getAction(),
+                        rec.getLatestClose() * finalRate,
+                        userCurrency
+                ))
                 .toList();
 
         double totalBalance = accountService.getUserBalance(user).balance();
@@ -173,7 +202,7 @@ public class StandardRecommendationService implements RecommendationService {
         return SmartRecommendationDto.builder()
                 .profile(profile)
                 .savingsRate(savingsRate)
-                .recommendations(filtered)
+                .recommendations(recommendations)
                 .message(message)
                 .safetyNetStatus(safetyNetStatus)
                 .monthsOfSafety(monthsOfSafety)

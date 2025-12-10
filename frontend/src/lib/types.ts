@@ -206,12 +206,12 @@ export type CreateGoalDto = {
 export type RecommendationAction = 'BUY' | 'SELL' | 'HOLD';
 
 export type Recommendation = {
-    id: string;
     symbol: string;
+    friendlyName: string;
     rsiValue: number;
     action: RecommendationAction;
     latestClose: number;
-    latestDatetime: string;
+    currency: string;
 }
 
 export type InvestmentProfile = 'CRITICAL' | 'CONSERVATIVE' | 'BALANCED' | 'AGGRESSIVE';

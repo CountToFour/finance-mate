@@ -16,7 +16,7 @@ import java.util.List;
 public class SmartRecommendationDto {
     private InvestmentProfile profile;
     private double savingsRate;
-    private List<RsiRecommendation> recommendations;
+    private List<RecommendationDto> recommendations;
     private String message;
 
     private String safetyNetStatus;
