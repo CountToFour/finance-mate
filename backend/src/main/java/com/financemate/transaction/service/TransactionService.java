@@ -542,6 +542,25 @@ public class TransactionService {
         return totalExpenses / months;
     }
 
+    public double getAverageMonthlyIncome(User user, int months) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusMonths(months);
+
+        Specification<Transaction> spec = Specification.allOf(
+                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.dateBetween(startDate, endDate),
+                TransactionSpecifications.type(TransactionType.INCOME)
+        );
+
+        double totalIncome = transactionRepository.findAll(spec).stream()
+                .mapToDouble(t -> getConvertedAmount(t, user))
+                .sum();
+
+        if (months == 0) return totalIncome;
+
+        return totalIncome / months;
+    }
+
     public boolean hasSufficientExpenseData(User user, int daysBack, int minDistinctDays) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(daysBack);

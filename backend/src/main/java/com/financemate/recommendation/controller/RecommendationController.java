@@ -2,6 +2,7 @@ package com.financemate.recommendation.controller;
 
 import com.financemate.auth.model.user.User;
 import com.financemate.auth.service.UserService;
+import com.financemate.budget.dto.GoalRecommendationDto;
 import com.financemate.recommendation.model.RsiRecommendation;
 import com.financemate.recommendation.model.dto.SpendingStructureDto;
 import com.financemate.recommendation.service.RecommendationService;
@@ -51,6 +52,22 @@ public class RecommendationController {
             return ResponseEntity.ok(recommendationService.getSpendingAuditor(user));
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
+        }
+    }
+
+    @GetMapping("/goal-accelerator")
+    public ResponseEntity<?> getGoalAcceleratorRecommendation(Authentication authentication) {
+        try {
+            User user = userService.getUserFromAuthentication(authentication);
+            GoalRecommendationDto goalRecommendation = recommendationService.getGoalRecommendation(user);
+
+            if (goalRecommendation == null) {
+                return ResponseEntity.noContent().build();
+            }
+
+            return ResponseEntity.ok(goalRecommendation);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching goal recommendation: " + e.getMessage());
         }
     }
 

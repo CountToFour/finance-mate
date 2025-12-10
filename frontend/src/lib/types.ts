@@ -236,6 +236,14 @@ export type SpendingStructure = {
     recommendation: string;
 }
 
+export type GoalRecommendation = {
+    goalName: string;
+    categoryToCut: string;
+    monthlySavingsPotential: number;
+    monthsFaster: number;
+    message: string;
+}
+
 // CURRENCY
 
 export type ExchangeRate = {

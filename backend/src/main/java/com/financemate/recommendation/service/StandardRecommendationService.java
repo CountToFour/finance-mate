@@ -2,6 +2,9 @@ package com.financemate.recommendation.service;
 
 import com.financemate.account.service.AccountService;
 import com.financemate.auth.model.user.User;
+import com.financemate.budget.dto.GoalRecommendationDto;
+import com.financemate.budget.model.FinancialGoal;
+import com.financemate.budget.repository.FinancialGoalRepository;
 import com.financemate.category.model.Category;
 import com.financemate.category.model.CategoryGroup;
 import com.financemate.category.repository.CategoryRepository;
@@ -15,13 +18,13 @@ import com.financemate.recommendation.repository.RecommendationRepository;
 import com.financemate.transaction.dto.TransactionResponse;
 import com.financemate.transaction.model.TransactionType;
 import com.financemate.transaction.service.TransactionService;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +40,8 @@ public class StandardRecommendationService implements RecommendationService {
     private final RecommendationRepository recommendationRepository;
     private final TransactionService transactionService;
     private final AccountService accountService;
+    private final FinancialGoalRepository goalRepository;
+    private final CategoryRepository categoryRepository;
 
     private static final String[] SYMBOLS = {"IVV", "BTC/USD", "ETH/USD", "NDAQ", "XAU/USD"};
 
@@ -272,6 +277,79 @@ public class StandardRecommendationService implements RecommendationService {
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
                 .orElse("Nieznana");
+    }
+
+    @Override
+    public GoalRecommendationDto getGoalRecommendation(User user) {
+        List<FinancialGoal> goals = goalRepository.findByUser(user).stream()
+                .filter(g -> !g.isCompleted())
+                .sorted(Comparator.comparing(FinancialGoal::getDeadline))
+                .toList();
+
+        if (goals.isEmpty()) return null; // Brak celów do analizy
+        FinancialGoal targetGoal = goals.get(0);
+
+        LocalDate start = LocalDate.now().minusDays(30);
+        LocalDate end = LocalDate.now();
+
+        List<TransactionResponse> expenses = transactionService.getTransactionsByUser(
+                user, null, null, null, start, end, TransactionType.EXPENSE, null
+        );
+
+        Map<String, CategoryGroup> userCats = categoryRepository.findAllByUser(user).stream()
+                .collect(Collectors.toMap(
+                        Category::getName,
+                        c -> c.getCategoryGroup() != null ? c.getCategoryGroup() : CategoryGroup.NEEDS,
+                        (a, b) -> a
+                ));
+
+        Map<String, Double> wantsSpending = new HashMap<>();
+        for (TransactionResponse tx : expenses) {
+            if (userCats.get(tx.getCategory()) == CategoryGroup.WANTS) {
+                wantsSpending.merge(tx.getCategory(), Math.abs(tx.getPrice()), Double::sum);
+            }
+        }
+
+        if (wantsSpending.isEmpty()) return null;
+
+        Map.Entry<String, Double> topWant = wantsSpending.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .orElseThrow();
+
+        double potentialSavings = topWant.getValue() * 0.25;
+
+        double remainingAmount = targetGoal.getTargetAmount() - targetGoal.getCurrentAmount();
+
+        double avgMonthlyIncome = transactionService.getAverageMonthlyIncome(user, 3);
+
+        double savingsRate = transactionService.calculateQuarterlySavingsRate(user);
+
+        double currentMonthlySavings = (savingsRate > 0) ? avgMonthlyIncome * savingsRate : 0.0;
+
+        if (currentMonthlySavings < 1) currentMonthlySavings = 1.0;
+
+        double monthsCurrentPace = remainingAmount / currentMonthlySavings;
+        double monthsFasterPace = remainingAmount / (currentMonthlySavings + potentialSavings);
+
+        int monthsSaved = (int) Math.ceil(monthsCurrentPace - monthsFasterPace);
+
+        if (monthsSaved < 1) {
+            return null;
+        }
+
+        String message = String.format(
+                "Twój cel '%s' wymaga jeszcze %.0f zł. Obecnie oszczędzasz ok. %.0f zł/mies. " +
+                        "Gdybyś ograniczył wydatki na '%s' o połowę, osiągniesz cel o %d mies. szybciej!",
+                targetGoal.getName(), remainingAmount, currentMonthlySavings, topWant.getKey(), monthsSaved
+        );
+
+        return new GoalRecommendationDto(
+                targetGoal.getName(),
+                topWant.getKey(),
+                Math.round(potentialSavings),
+                monthsSaved,
+                message
+        );
     }
 
 }

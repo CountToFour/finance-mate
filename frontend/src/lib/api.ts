@@ -561,3 +561,13 @@ export const getSpendingAuditor = () => api.get(
         }
     }
 );
+
+export const getGoalAccelerator = () => api.get(
+    'http://localhost:8080/api/recommendation/goal-accelerator',
+    {
+        withCredentials: true,
+        headers: {
+            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
+        }
+    }
+);

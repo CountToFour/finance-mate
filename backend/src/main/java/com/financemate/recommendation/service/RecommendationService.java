@@ -2,6 +2,7 @@ package com.financemate.recommendation.service;
 
 
 import com.financemate.auth.model.user.User;
+import com.financemate.budget.dto.GoalRecommendationDto;
 import com.financemate.recommendation.model.RsiRecommendation;
 import com.financemate.recommendation.model.dto.SmartRecommendationDto;
 import com.financemate.recommendation.model.dto.SpendingStructureDto;
@@ -13,4 +14,6 @@ public interface RecommendationService {
     SmartRecommendationDto getSmartRecommendation(User user);
 
     SpendingStructureDto getSpendingAuditor(User user);
+
+    GoalRecommendationDto getGoalRecommendation(User user);
 }

@@ -25,6 +25,7 @@ import {useAuthStore} from "../../store/auth.ts";
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GoalCard from "./GoalCard.tsx";
 import AddGoalDialog from "./AddGoalDialog.tsx";
+import GoalAcceleratorWidget from "./GoalAcceleratorWidget.tsx";
 
 
 const hexToRgba = (hex: string, alpha = 0.2) => {
@@ -277,7 +278,9 @@ const BudgetPage: React.FC = () => {
             <Box mt={3}>
                 <SmartInvestmentWidget/>
             </Box>
-
+            <Box mb={3}>
+                <GoalAcceleratorWidget />
+            </Box>
             <Card variant="outlined" sx={{p: 2, borderRadius: 2, mt: 3}}>
                 <CardContent>
                     <Typography variant="h6" fontWeight="bold" mb={2} display="flex" alignItems="center" gap={1}>
