@@ -350,26 +350,39 @@ public class StandardRecommendationService implements RecommendationService {
         double remainingAmount = targetGoal.getTargetAmount() - targetGoal.getCurrentAmount();
 
         double avgMonthlyIncome = transactionService.getAverageMonthlyIncome(user, 3);
-
         double savingsRate = transactionService.calculateQuarterlySavingsRate(user);
 
-        double currentMonthlySavings = (savingsRate > 0) ? avgMonthlyIncome * savingsRate : 0.0;
+        double currentMonthlySavings;
+
+        if (targetGoal.getMonthlyContribution() > 0) {
+            currentMonthlySavings = targetGoal.getMonthlyContribution();
+        } else {
+            currentMonthlySavings = (savingsRate > 0) ? avgMonthlyIncome * savingsRate : 0.0;
+        }
 
         if (currentMonthlySavings < 1) currentMonthlySavings = 1.0;
 
         double monthsCurrentPace = remainingAmount / currentMonthlySavings;
         double monthsFasterPace = remainingAmount / (currentMonthlySavings + potentialSavings);
 
-        int monthsSaved = (int) Math.ceil(monthsCurrentPace - monthsFasterPace);
+        int monthsSaved = (int) Math.ceil(monthsCurrentPace) - (int) Math.ceil(monthsFasterPace);
+        double rawDiff = monthsCurrentPace - monthsFasterPace;
 
-        if (monthsSaved < 1) {
+        if (rawDiff < 0.5) {
             return null;
         }
+        if (monthsSaved < 1 && rawDiff >= 0.5) {
+            monthsSaved = 1;
+        }
+
+        String baseMessagePart = targetGoal.getMonthlyContribution() > 0
+                ? String.format("Przy Twojej wpłacie %.0f zł/mies", currentMonthlySavings)
+                : String.format("Przy obecnym tempie oszczędzania (ok. %.0f zł/mies)", currentMonthlySavings);
 
         String message = String.format(
-                "Twój cel '%s' wymaga jeszcze %.0f zł. Obecnie oszczędzasz ok. %.0f zł/mies. " +
-                        "Gdybyś ograniczył wydatki na '%s' o połowę, osiągniesz cel o %d mies. szybciej!",
-                targetGoal.getName(), remainingAmount, currentMonthlySavings, topWant.getKey(), monthsSaved
+                "Twój cel '%s' wymaga jeszcze %.0f zł. %s, " +
+                        "ograniczenie wydatków na '%s' o połowę pozwoli Ci osiągnąć cel o %d mies. szybciej!",
+                targetGoal.getName(), remainingAmount, baseMessagePart, topWant.getKey(), monthsSaved
         );
 
         return new GoalRecommendationDto(

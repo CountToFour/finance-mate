@@ -28,7 +28,7 @@ public class FinancialGoal {
     private String name;
     private double targetAmount;
     private double currentAmount = 0;
-
+    private double monthlyContribution;
     private boolean completed = false;
     private LocalDate deadline;
     private boolean lockedFunds;

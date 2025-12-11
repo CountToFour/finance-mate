@@ -187,6 +187,7 @@ export type FinancialGoal = {
     name: string;
     targetAmount: number;
     currentAmount: number;
+    monthlyContribution: number;
     completed: boolean;
     lockedFunds: boolean;
     deadline: string;
@@ -196,6 +197,7 @@ export type CreateGoalDto = {
     name: string;
     targetAmount: number;
     initialAmount: number;
+    monthlyContribution: number;
     lockedFunds: boolean;
     deadline: string;
     accountId: string;

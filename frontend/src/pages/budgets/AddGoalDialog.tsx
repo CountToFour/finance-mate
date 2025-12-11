@@ -26,6 +26,7 @@ const AddGoalDialog: React.FC<Props> = ({ open, onClose, onSaved, accounts, curr
     const [deadline, setDeadline] = useState<Dayjs | null>(dayjs().add(1, 'month'));
     const [locked, setLocked] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+    const [monthlyContribution, setMonthlyContribution] = useState('');
 
     const handleSubmit = async () => {
         if (!name || !targetAmount || !deadline) {
@@ -37,6 +38,7 @@ const AddGoalDialog: React.FC<Props> = ({ open, onClose, onSaved, accounts, curr
             name,
             targetAmount: parseFloat(targetAmount),
             initialAmount: parseFloat(initialAmount) || 0,
+            monthlyContribution: parseFloat(monthlyContribution) || 0,
             lockedFunds: locked,
             deadline: deadline.format('YYYY-MM-DD'),
             accountId: selectedAccount?.id
@@ -57,6 +59,7 @@ const AddGoalDialog: React.FC<Props> = ({ open, onClose, onSaved, accounts, curr
         setName('');
         setTargetAmount('');
         setInitialAmount('');
+        setMonthlyContribution('');
         setDeadline(dayjs().add(1, 'month'));
         setLocked(false);
         onClose();
@@ -91,6 +94,15 @@ const AddGoalDialog: React.FC<Props> = ({ open, onClose, onSaved, accounts, curr
                         value={initialAmount}
                         onChange={e => setInitialAmount(e.target.value)}
                         helperText="Opcjonalnie"
+                        sx={{flex: 1}}
+                    />
+                    <TextField
+                        label="Wpłata miesięczna"
+                        type="number"
+                        fullWidth
+                        value={monthlyContribution}
+                        onChange={e => setMonthlyContribution(e.target.value)}
+                        helperText="Do wyliczeń (stałe zlecenie)"
                         sx={{flex: 1}}
                     />
                     <TextField
