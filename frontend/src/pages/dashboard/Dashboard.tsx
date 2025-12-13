@@ -17,9 +17,9 @@ import {
     getAccounts,
     getAllCategoriesAmount,
     getCategories, getDailyOverview,
-    getExpenses, getUserBalance
+    getExpenses, getSpendingAuditor, getUserBalance
 } from "../../lib/api.ts";
-import type {Account, Category, CategoryAmount, DailyOverview, Expense} from "../../lib/types.ts";
+import type {Account, Category, CategoryAmount, DailyOverview, Expense, SpendingStructure} from "../../lib/types.ts";
 import dayjs from "dayjs";
 import 'dayjs/locale/pl';
 import {
@@ -30,6 +30,7 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import AuditorWidget from "./AuditorWidget.tsx";
 import CashFlowWidget from "./CashFlowWidget.tsx";
+import HealthScoreWidget from "./HealthScoreWidget.tsx";
 
 dayjs.locale('pl');
 
@@ -43,6 +44,7 @@ function Dashboard() {
     const [allCategories, setAllCategories] = useState<Category[]>([]);
     const [weeklyExpenses, setWeeklyExpenses] = useState<{ day: string; amount: number; fullDate: string }[]>([]);
     const [totalBalance, setTotalBalance] = useState<{ amount: number, currency: string }>({amount: 0, currency: ''});
+    const [auditorData, setAuditorData] = useState<SpendingStructure | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -76,7 +78,9 @@ function Dashboard() {
                 setCategoryAmounts(sortedCats);
                 const catsRes = await getCategories('EXPENSE');
                 setAllCategories(catsRes.data);
-
+                const auditorRes = await getSpendingAuditor();
+                setAuditorData(auditorRes.data);
+                console.log('Auditor ' + auditorRes);
             } catch (error) {
                 console.error("Błąd podczas pobierania danych do dashboardu:", error);
             }
@@ -400,7 +404,19 @@ function Dashboard() {
                     </List>
                 </CardContent>
             </Card>
-            <AuditorWidget />
+
+
+            <Box display={'flex'} gap={2} mb={3} mt={3}>
+                <Box flex={1}>
+                    {auditorData && (
+                        <HealthScoreWidget recommendationText={auditorData.recommendation} />
+                    )}
+                </Box>
+                <Box flex={1}>
+                    <AuditorWidget data={auditorData} />
+                </Box>
+            </Box>
+
 
             <Grid item xs={12} md={6}>
                 <CashFlowWidget />

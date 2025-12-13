@@ -49,7 +49,8 @@ public class RecommendationController {
     public ResponseEntity<SpendingStructureDto> getSpendingAuditor(Authentication authentication) {
         try {
             User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(recommendationService.getSpendingAuditor(user));
+            SpendingStructureDto spendingAuditor = recommendationService.getSpendingAuditor(user);
+            return ResponseEntity.ok(spendingAuditor);
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
         }
