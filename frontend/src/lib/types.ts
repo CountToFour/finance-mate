@@ -245,6 +245,10 @@ export type GoalRecommendation = {
     monthlySavingsPotential: number;
     monthsFaster: number;
     message: string;
+    recommendedReductionAmount?: number;
+    recommendedReductionPercent?: number;
+    scenario25Savings?: number;
+    scenario25MonthsSaved?: number;
 }
 
 // CURRENCY

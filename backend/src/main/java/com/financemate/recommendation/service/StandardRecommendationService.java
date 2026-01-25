@@ -106,7 +106,7 @@ public class StandardRecommendationService implements RecommendationService {
         List<String> allowedSymbols;
         String message;
 
-        if (savingsRate < 0) {
+        if (savingsRate < 0.05) {
             profile = InvestmentProfile.CRITICAL;
             allowedSymbols = List.of();
             message = "Twoje wydatki przekraczają przychody. Skup się na naprawie budżetu domowego.";
@@ -252,7 +252,7 @@ public class StandardRecommendationService implements RecommendationService {
                 needsTrend, volatility, smallTxRatio, safetyNet
         );
 
-        MLResponse mlResponse;
+        MLResponse mlResponse = null;
         try {
             mlResponse = webClientBuilder.build()
                     .post()
@@ -263,7 +263,12 @@ public class StandardRecommendationService implements RecommendationService {
                     .block();
         } catch (Exception e) {
             log.error("ML Service unavailable, using fallback logic", e);
-            return getLegacyAuditor(user, needsPct * 100, wantsPct * 100, savingsPct * 100, avgMonthlyIncome, categoryDetails);
+            return getLegacyAuditor(needsPct * 100, wantsPct * 100, savingsPct * 100, avgMonthlyIncome, categoryDetails);
+        }
+
+        if (mlResponse == null) {
+            log.warn("ML Service returned empty response, using fallback logic");
+            return getLegacyAuditor(needsPct * 100, wantsPct * 100, savingsPct * 100, avgMonthlyIncome, categoryDetails);
         }
 
         String recommendation = generateMLBasedRecommendation(mlResponse, avgMonthlyIncome, categoryDetails, needsPct, wantsPct, user);
@@ -355,7 +360,7 @@ public class StandardRecommendationService implements RecommendationService {
         return sb.toString();
     }
 
-    private SpendingStructureDto getLegacyAuditor(User user, double needsPct, double wantsPct, double savingsPct, double income, Map<CategoryGroup, Map<String, Double>> details) {
+    private SpendingStructureDto getLegacyAuditor(double needsPct, double wantsPct, double savingsPct, double income, Map<CategoryGroup, Map<String, Double>> details) {
         String recommendation;
         if (needsPct >= 51) {
             double excessAmount = (needsPct - 50) / 100 * income;
@@ -417,10 +422,10 @@ public class StandardRecommendationService implements RecommendationService {
                 .sorted(Comparator.comparing(FinancialGoal::getDeadline))
                 .toList();
 
-        if (goals.isEmpty()) return null; // Brak celów do analizy
+        if (goals.isEmpty()) return null;
         FinancialGoal targetGoal = goals.get(0);
 
-        LocalDate start = LocalDate.now().minusDays(30);
+        LocalDate start = LocalDate.now().minusDays(60);
         LocalDate end = LocalDate.now();
 
         List<TransactionResponse> expenses = transactionService.getTransactionsByUser(
@@ -436,6 +441,7 @@ public class StandardRecommendationService implements RecommendationService {
 
         Map<String, Double> wantsSpending = new HashMap<>();
         for (TransactionResponse tx : expenses) {
+            if (tx.getCategory() == null) continue;
             if (userCats.get(tx.getCategory()) == CategoryGroup.WANTS) {
                 wantsSpending.merge(tx.getCategory(), Math.abs(tx.getPrice()), Double::sum);
             }
@@ -447,51 +453,87 @@ public class StandardRecommendationService implements RecommendationService {
                 .max(Map.Entry.comparingByValue())
                 .orElseThrow();
 
-        double potentialSavings = topWant.getValue() * 0.25;
+        double monthlyTopSpend = topWant.getValue();
+        if (monthlyTopSpend <= 0) return null;
 
         double remainingAmount = targetGoal.getTargetAmount() - targetGoal.getCurrentAmount();
+        if (remainingAmount <= 0) return null;
 
         double avgMonthlyIncome = transactionService.getAverageMonthlyIncome(user, 3);
         double savingsRate = transactionService.calculateQuarterlySavingsRate(user);
 
-        double currentMonthlySavings;
-
-        if (targetGoal.getMonthlyContribution() > 0) {
-            currentMonthlySavings = targetGoal.getMonthlyContribution();
-        } else {
-            currentMonthlySavings = (savingsRate > 0) ? avgMonthlyIncome * savingsRate : 0.0;
-        }
+        double currentMonthlySavings = targetGoal.getMonthlyContribution() > 0
+                ? targetGoal.getMonthlyContribution()
+                : (savingsRate > 0 ? avgMonthlyIncome * savingsRate : 0.0);
 
         if (currentMonthlySavings < 1) currentMonthlySavings = 1.0;
 
         double monthsCurrentPace = remainingAmount / currentMonthlySavings;
-        double monthsFasterPace = remainingAmount / (currentMonthlySavings + potentialSavings);
 
-        int monthsSaved = (int) Math.ceil(monthsCurrentPace) - (int) Math.ceil(monthsFasterPace);
-        double rawDiff = monthsCurrentPace - monthsFasterPace;
+        double savings25 = monthlyTopSpend * 0.25;
+        double savings50 = monthlyTopSpend * 0.50;
 
-        if (rawDiff < 0.5) {
-            return null;
+        double monthsIfAdd25 = remainingAmount / (currentMonthlySavings + savings25);
+        double monthsIfAdd50 = remainingAmount / (currentMonthlySavings + savings50);
+
+        int monthsSaved25 = (int) Math.max(0, Math.ceil(monthsCurrentPace) - Math.ceil(monthsIfAdd25));
+        int monthsSaved50 = (int) Math.max(0, Math.ceil(monthsCurrentPace) - Math.ceil(monthsIfAdd50));
+
+        int desiredK = Math.max(1, monthsSaved50);
+
+        double requiredAdditional;
+        if (monthsCurrentPace - desiredK <= 0) {
+            requiredAdditional = Double.POSITIVE_INFINITY;
+        } else {
+            requiredAdditional = remainingAmount / (monthsCurrentPace - desiredK) - currentMonthlySavings;
         }
-        if (monthsSaved < 1 && rawDiff >= 0.5) {
-            monthsSaved = 1;
+
+        if (requiredAdditional <= 0 || Double.isInfinite(requiredAdditional) || Double.isNaN(requiredAdditional)) {
+            double recommendedReductionPercent = 25.0;
+            double recommendedReductionAmount = savings25;
+
+            String message = String.format(
+                    "Twój cel '%s' wymaga jeszcze %.0f zł. Największe wydatki masz na '%s' (ok. %.0f zł/mies). " +
+                            "Proponowane ograniczenie o 25%% oznacza oszczędność ~%.0f zł/mies i może skrócić czas osiągnięcia celu o %d mies.",
+                    targetGoal.getName(), remainingAmount, topWant.getKey(), monthlyTopSpend,
+                    savings25, monthsSaved25
+            );
+
+            return new GoalRecommendationDto(
+                    targetGoal.getName(),
+                    topWant.getKey(),
+                    savings25,
+                    monthsSaved25,
+                    recommendedReductionAmount,
+                    recommendedReductionPercent,
+                    savings25,
+                    monthsSaved25,
+                    message
+            );
         }
 
-        String baseMessagePart = targetGoal.getMonthlyContribution() > 0
-                ? String.format("Przy Twojej wpłacie %.0f zł/mies", currentMonthlySavings)
-                : String.format("Przy obecnym tempie oszczędzania (ok. %.0f zł/mies)", currentMonthlySavings);
+        double reductionFromTop = Math.min(requiredAdditional, monthlyTopSpend);
+        double reductionPercent = (reductionFromTop / monthlyTopSpend) * 100.0;
+
+        double newTopSpend = Math.max(0.0, monthlyTopSpend - reductionFromTop);
 
         String message = String.format(
-                "Twój cel '%s' wymaga jeszcze %.0f zł. %s, " +
-                        "ograniczenie wydatków na '%s' o połowę pozwoli Ci osiągnąć cel o %d mies. szybciej!",
-                targetGoal.getName(), remainingAmount, baseMessagePart, topWant.getKey(), monthsSaved
+                "Cel '%s' wymaga jeszcze %.0f zł. Obecnie odkładasz ok. %.0f zł/mies. Aby przyspieszyć o %d mies., zmniejsz wydatki na '%s' o ok. %.0f zł/mies (≈%.0f%% tej kategorii): z ~%.0f zł/mies do ~%.0f zł/mies. " +
+                        "Dla porównania: ograniczenie o 25%% dałoby ~%.0f zł/mies oszczędności i skróciłoby cel o ~%d mies.",
+                targetGoal.getName(), remainingAmount, currentMonthlySavings, desiredK,
+                topWant.getKey(), reductionFromTop, reductionPercent, monthlyTopSpend, newTopSpend,
+                savings25, monthsSaved25
         );
 
         return new GoalRecommendationDto(
                 targetGoal.getName(),
                 topWant.getKey(),
-                Math.round(potentialSavings),
-                monthsSaved,
+                savings25,
+                desiredK,
+                reductionFromTop,
+                reductionPercent,
+                savings25,
+                monthsSaved25,
                 message
         );
     }

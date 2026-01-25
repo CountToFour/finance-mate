@@ -32,13 +32,13 @@ const HealthScoreWidget: React.FC<Props> = ({recommendationText}) => {
                     <Typography variant="h6" fontWeight="bold" display="flex" alignItems="center" gap={1}>
                         <AutoGraphIcon color="secondary"/> Zdrowie Finansowe
                     </Typography>
-                    <Chip
-                        label="AI Powered"
-                        size="small"
-                        color="secondary"
-                        variant="outlined"
-                        sx={{fontSize: '0.65rem', height: 20}}
-                    />
+                    {/*<Chip*/}
+                    {/*    label="AI Powered"*/}
+                    {/*    size="small"*/}
+                    {/*    color="secondary"*/}
+                    {/*    variant="outlined"*/}
+                    {/*    sx={{fontSize: '0.65rem', height: 20}}*/}
+                    {/*/>*/}
                 </Box>
 
                 <Box sx={{position: 'relative', display: 'inline-flex', mb: 2}}>

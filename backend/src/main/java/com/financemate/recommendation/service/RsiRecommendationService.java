@@ -49,8 +49,8 @@ public class RsiRecommendationService {
         RecommendationAction action = RecommendationAction.HOLD;
 
         if (rsi >= 0) {
-            if (rsi < 30.0) action = RecommendationAction.BUY;
-            else if (rsi > 70.0) action = RecommendationAction.SELL;
+            if (rsi <= 30.0) action = RecommendationAction.BUY;
+            else if (rsi >= 70.0) action = RecommendationAction.SELL;
         }
 
         return RsiRecommendation.builder()
