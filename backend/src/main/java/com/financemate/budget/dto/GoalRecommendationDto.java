@@ -1,13 +1,14 @@
 package com.financemate.budget.dto;
 
 public record GoalRecommendationDto(
-        String goalName,
-        String categoryToCut,
-        double monthlySavingsPotential,
-        int monthsFaster,
-        double recommendedReductionAmount,
-        double recommendedReductionPercent,
-        double scenario25Savings,
-        int scenario25MonthsSaved,
-        String message
-) {}
+        String goalName,                    // Nazwa celu finansowego
+        String categoryToCut,               // Kategoria do optymalizacji
+        double monthlySavingsPotential,     // Potencjalna kwota oszczędności
+        int monthsFaster,                   // O ile miesięcy szybciej osiągniemy cel
+        double recommendedReductionAmount,  // Sugerowana redukcja wydatków
+        double recommendedReductionPercent, // Sugerowany % redukcji wydatków
+        double scenario25Savings,           // Oszczędności w scenariuszu 25%
+        int scenario25MonthsSaved,          // Miesiące zaoszczędzone w scenariuszu 25%
+        String message                      //Spersonalizowany komunikat
+) {
+}

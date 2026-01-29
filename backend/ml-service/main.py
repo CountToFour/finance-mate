@@ -14,6 +14,7 @@ class FinancialFeatures(BaseModel):
     needs_trend: float
     spending_volatility: float
     small_tx_ratio: float
+    safety_net_ratio: float
 
 
 def train_model():
