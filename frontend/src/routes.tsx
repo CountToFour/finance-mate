@@ -1,8 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom';
-import Login from './pages/Login';
+import Login from './pages/auth/Login.tsx';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import Register from "./pages/Register.tsx";
+import Register from "./pages/auth/Register.tsx";
 import Expenses from "./pages/expenses/Expenses.tsx";
 import Accounts from "./pages/accounts/Accounts.tsx";
 import BudgetPage from "./pages/budgets/BudgetPage.tsx";

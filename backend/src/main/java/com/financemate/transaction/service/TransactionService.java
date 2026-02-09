@@ -656,7 +656,9 @@ public class TransactionService {
                 .average()
                 .orElse(0.0);
 
-        return Math.sqrt(variance);
+        double standardDeviation = Math.sqrt(variance);
+
+        return standardDeviation / mean;
     }
 
     public double calculateSmallTransactionRatio(User user, int monthsBack) {

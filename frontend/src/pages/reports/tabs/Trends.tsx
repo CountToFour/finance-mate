@@ -1,5 +1,5 @@
-import type {Account, Category, CategoryAmount, Expense, MonthlyOverview} from "../../../lib/types.ts";
-import React, {useEffect, useMemo, useState} from "react";
+import type {Category, CategoryAmount, MonthlyOverview} from "../../../lib/types.ts";
+import React, {useMemo} from "react";
 import {Card, CardContent, Typography, Box, List} from '@mui/material';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -9,7 +9,6 @@ import {
     PieChart, Pie, Cell, Legend
 } from 'recharts';
 import CategoryTrendItem from "./CategoryTrendItem.tsx";
-import {getAccounts} from "../../../lib/api.ts";
 
 type Props = {
     categoriesOverview: CategoryAmount[],

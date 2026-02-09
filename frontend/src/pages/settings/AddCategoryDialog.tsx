@@ -154,7 +154,7 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
                             >
                                 <MenuItem value="NEEDS">Niezbędne</MenuItem>
                                 <MenuItem value="WANTS">Zachcianki</MenuItem>
-                                <MenuItem value="SAVINGS">Oszczędności/Długi</MenuItem>
+                                <MenuItem value="SAVINGS">Oszczędności</MenuItem>
                             </Select>
                         </FormControl>
                     )}

@@ -13,7 +13,7 @@
     "form": {
       "label": "Logowanie",
       "email": "Email",
-      "password": "Password",
+      "password": "Hasło",
       "createAccount": "Załóż konto",
       "logIn": "Zaloguj się"
     },
@@ -58,7 +58,7 @@
         }
       },
       "recurringTable": {
-        "label": "Wydatki okresowe",
+        "label": "Wydatki stałe",
         "secondLabel": "Przegląd wydatków okresowych"
       },
       "categories" : {

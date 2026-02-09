@@ -102,7 +102,7 @@ const AddGoalDialog: React.FC<Props> = ({ open, onClose, onSaved, accounts, curr
                         fullWidth
                         value={monthlyContribution}
                         onChange={e => setMonthlyContribution(e.target.value)}
-                        helperText="Do wyliczeń (stałe zlecenie)"
+                        helperText="Stałe zlecenie"
                         sx={{flex: 1}}
                     />
                     <TextField
@@ -148,10 +148,10 @@ const AddGoalDialog: React.FC<Props> = ({ open, onClose, onSaved, accounts, curr
                     </LocalizationProvider>
                 </Box>
 
-                <FormControlLabel
-                    control={<Switch checked={locked} onChange={e => setLocked(e.target.checked)} />}
-                    label="Zablokuj środki (brak możliwości wypłaty przed końcem)"
-                />
+                {/*<FormControlLabel*/}
+                {/*    control={<Switch checked={locked} onChange={e => setLocked(e.target.checked)} />}*/}
+                {/*    label="Zablokuj środki (brak możliwości wypłaty przed końcem)"*/}
+                {/*/>*/}
             </DialogContent>
             <DialogActions sx={{ p: 2 }}>
                 <Button onClick={handleClose} color="secondary">Anuluj</Button>

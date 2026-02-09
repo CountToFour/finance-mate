@@ -1,6 +1,6 @@
 import {Button, Container, TextField, Typography, Paper} from '@mui/material';
 import {useForm} from 'react-hook-form';
-import {useAuthStore} from '../store/auth';
+import {useAuthStore} from '../../store/auth.ts';
 import {useNavigate} from "react-router-dom";
 import axios from "axios";
 import {useTranslation} from "react-i18next";
@@ -17,7 +17,7 @@ function Login() {
     const onSubmit = async (data: { email: string; password: string }) => {
         try {
             await login(data.email, data.password);
-            navigate("/");
+            navigate("/dashboard");
         } catch (err) {
             console.log(err);
             const isAxios = axios.isAxiosError(err);

@@ -1,16 +1,10 @@
+version: '3.8'
 services:
-  postgres:
-    image: postgres:17
-    container_name: database
-    restart: always
-    environment:
-      POSTGRES_DB: financedb
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - "8080:8080"
+    restart: unless-stopped
 
-volumes:
-  postgres_data:

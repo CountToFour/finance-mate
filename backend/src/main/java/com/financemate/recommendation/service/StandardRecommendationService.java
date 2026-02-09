@@ -23,6 +23,7 @@ import com.financemate.recommendation.repository.RecommendationRepository;
 import com.financemate.transaction.dto.TransactionResponse;
 import com.financemate.transaction.model.TransactionType;
 import com.financemate.transaction.service.TransactionService;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -65,11 +66,11 @@ public class StandardRecommendationService implements RecommendationService {
     }
 
     @Scheduled(cron = "0 0 6,18 * * *")
-//    @PostConstruct
+    @PostConstruct
     public void updateRecommendations() {
         log.info("Starting updating stocks recommendations...");
 
-        LocalDate start = LocalDate.now().minusDays(60); // Potrzebujemy historii do RSI
+        LocalDate start = LocalDate.now().minusDays(60);
 
         for (Map.Entry<String, String> entry : FRIENDLY_NAMES.entrySet()) {
             try {
@@ -470,72 +471,75 @@ public class StandardRecommendationService implements RecommendationService {
 
         double monthsCurrentPace = remainingAmount / currentMonthlySavings;
 
-        double savings25 = monthlyTopSpend * 0.25;
-        double savings50 = monthlyTopSpend * 0.50;
+        double[] cutSteps = {0.10, 0.15, 0.20, 0.25};
 
-        double monthsIfAdd25 = remainingAmount / (currentMonthlySavings + savings25);
-        double monthsIfAdd50 = remainingAmount / (currentMonthlySavings + savings50);
+        double selectedCutPercent = 0.0;
+        double selectedCutAmount = 0.0;
+        int selectedMonthsSaved = 0;
 
-        int monthsSaved25 = (int) Math.max(0, Math.ceil(monthsCurrentPace) - Math.ceil(monthsIfAdd25));
-        int monthsSaved50 = (int) Math.max(0, Math.ceil(monthsCurrentPace) - Math.ceil(monthsIfAdd50));
+        for (double step : cutSteps) {
+            double potentialCut = monthlyTopSpend * step;
+            double newPaceAmount = currentMonthlySavings + potentialCut;
+            double newMonthsDuration = remainingAmount / newPaceAmount;
 
-        int desiredK = Math.max(1, monthsSaved50);
+            int saved = (int) Math.max(0, Math.ceil(monthsCurrentPace) - Math.ceil(newMonthsDuration));
 
-        double requiredAdditional;
-        if (monthsCurrentPace - desiredK <= 0) {
-            requiredAdditional = Double.POSITIVE_INFINITY;
-        } else {
-            requiredAdditional = remainingAmount / (monthsCurrentPace - desiredK) - currentMonthlySavings;
+            if (saved >= 1) {
+                selectedCutPercent = step * 100.0;
+                selectedCutAmount = potentialCut;
+                selectedMonthsSaved = saved;
+                break;
+            }
         }
 
-        if (requiredAdditional <= 0 || Double.isInfinite(requiredAdditional) || Double.isNaN(requiredAdditional)) {
-            double recommendedReductionPercent = 25.0;
-            double recommendedReductionAmount = savings25;
-
-            String message = String.format(
-                    "Twój cel '%s' wymaga jeszcze %.0f zł. Największe wydatki masz na '%s' (ok. %.0f zł/mies). " +
-                            "Proponowane ograniczenie o 25%% oznacza oszczędność ~%.0f zł/mies i może skrócić czas osiągnięcia celu o %d mies.",
-                    targetGoal.getName(), remainingAmount, topWant.getKey(), monthlyTopSpend,
-                    savings25, monthsSaved25
-            );
-
-            return new GoalRecommendationDto(
-                    targetGoal.getName(),
-                    topWant.getKey(),
-                    savings25,
-                    monthsSaved25,
-                    recommendedReductionAmount,
-                    recommendedReductionPercent,
-                    savings25,
-                    monthsSaved25,
-                    message
-            );
+        if (selectedMonthsSaved == 0) {
+            selectedCutPercent = 25.0;
+            selectedCutAmount = monthlyTopSpend * 0.25;
+            double newPaceAmount = currentMonthlySavings + selectedCutAmount;
+            selectedMonthsSaved = (int) Math.max(0, Math.ceil(monthsCurrentPace) - Math.ceil(remainingAmount / newPaceAmount));
         }
 
-        double reductionFromTop = Math.min(requiredAdditional, monthlyTopSpend);
-        double reductionPercent = (reductionFromTop / monthlyTopSpend) * 100.0;
+        double benchmarkCutPercent = 0.25;
+        double benchmarkCutAmount = monthlyTopSpend * benchmarkCutPercent;
 
-        double newTopSpend = Math.max(0.0, monthlyTopSpend - reductionFromTop);
+        if (selectedCutPercent >= 24.0) {
+            benchmarkCutAmount = monthlyTopSpend * 0.50;
+            benchmarkCutPercent = 0.50;
+        }
 
-        String message = String.format(
-                "Cel '%s' wymaga jeszcze %.0f zł. Obecnie odkładasz ok. %.0f zł/mies. Aby przyspieszyć o %d mies., zmniejsz wydatki na '%s' o ok. %.0f zł/mies (≈%.0f%% tej kategorii): z ~%.0f zł/mies do ~%.0f zł/mies. " +
-                        "Dla porównania: ograniczenie o 25%% dałoby ~%.0f zł/mies oszczędności i skróciłoby cel o ~%d mies.",
-                targetGoal.getName(), remainingAmount, currentMonthlySavings, desiredK,
-                topWant.getKey(), reductionFromTop, reductionPercent, monthlyTopSpend, newTopSpend,
-                savings25, monthsSaved25
-        );
+        double benchmarkNewPace = currentMonthlySavings + benchmarkCutAmount;
+        int benchmarkSaved = (int) Math.max(0, Math.ceil(monthsCurrentPace) - Math.ceil(remainingAmount / benchmarkNewPace));
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format(
+                "Cel '%s' wymaga jeszcze %.0f zł. Obecnie odkładasz ok. %.0f zł/mies (czas: %.0f mies). ",
+                targetGoal.getName(), remainingAmount, currentMonthlySavings, monthsCurrentPace
+        ));
+
+        sb.append(String.format(
+                "Zmniejszając wydatki na '%s' o %.0f%% (ok. %.0f zł), zaoszczędzisz dodatkowe %.0f zł miesięcznie i osiągniesz cel o %d mies. szybciej!",
+                topWant.getKey(), selectedCutPercent, selectedCutAmount, selectedCutAmount, selectedMonthsSaved
+        ));
+
+        if (benchmarkSaved > selectedMonthsSaved) {
+            sb.append(String.format(
+                    " Dla porównania: bardziej agresywne cięcie o %.0f%% skróciłoby czas o %d mies.",
+                    benchmarkCutPercent * 100, benchmarkSaved
+            ));
+        } else if (benchmarkSaved == selectedMonthsSaved && benchmarkCutPercent > (selectedCutPercent / 100.0)) {
+            sb.append(" (Większe cięcia wydatków w tym momencie nie przyspieszą znacząco osiągnięcia celu ze względu na harmonogram wpłat).");
+        }
 
         return new GoalRecommendationDto(
                 targetGoal.getName(),
                 topWant.getKey(),
-                savings25,
-                desiredK,
-                reductionFromTop,
-                reductionPercent,
-                savings25,
-                monthsSaved25,
-                message
+                selectedCutAmount,
+                selectedMonthsSaved,
+                selectedCutAmount,
+                selectedCutPercent,
+                benchmarkCutAmount,
+                benchmarkSaved,
+                sb.toString()
         );
     }
-
 }

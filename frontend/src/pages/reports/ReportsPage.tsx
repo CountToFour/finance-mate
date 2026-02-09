@@ -123,14 +123,14 @@ const ReportsPage: React.FC = () => {
                         />
                     </LocalizationProvider>
 
-                    <Button
-                        variant={'contained'}
-                        color={"secondary"}
-                        onClick={() => {
-                        }}
-                    >
-                        Button Akcji
-                    </Button>
+                    {/*<Button*/}
+                    {/*    variant={'contained'}*/}
+                    {/*    color={"secondary"}*/}
+                    {/*    onClick={() => {*/}
+                    {/*    }}*/}
+                    {/*>*/}
+                    {/*    Button Akcji*/}
+                    {/*</Button>*/}
                 </Box>
             </Box>
 

@@ -269,7 +269,7 @@ const BudgetPage: React.FC = () => {
                         <Button startIcon={<AddIcon/>} color="secondary" variant="contained" onClick={() => {
                             setEditing(null);
                             setOpenDialog(true);
-                        }}>Dodaj budżet</Button>
+                        }}>Ustaw budżet</Button>
                     </Stack>
 
                     <Box sx={{display: 'grid', gap: 2, gridTemplateColumns: {xs: '1fr', md: 'repeat(3, 1fr)'}}}>

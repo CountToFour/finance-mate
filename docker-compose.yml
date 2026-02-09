@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:17
+    container_name: financemate-db
+    restart: always
+    environment:
+      POSTGRES_DB: financemate
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - finance-network
+
+  ml-service:
+    build:
+      context: ./backend/ml-service
+      dockerfile: Dockerfile
+    container_name: financemate-ml
+    restart: on-failure
+    ports:
+      - "5000:5000"
+    networks:
+      - finance-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: financemate-backend
+    restart: on-failure
+    depends_on:
+      - db
+      - ml-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/financemate
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APPLICATION_ML_SERVICE_URL: http://ml-service:5000
+    ports:
+      - "8080:8080"
+    networks:
+      - finance-network
+    volumes:
+      - ./backend/.env:/app/.env  
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: financemate-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - finance-network
+
+volumes:
+  db_data:
+
+networks:
+  finance-network:
+    driver: bridge

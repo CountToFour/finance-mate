@@ -87,8 +87,7 @@ const AccountSummaryCard: React.FC<AccountProps> = ({
                             handleMenuClose();
                             editMethod();
                         }}>Edytuj</MenuItem>
-                        <MenuItem onClick={deleteMethod}>Usuń</MenuItem>
-                        <MenuItem onClick={handleMenuClose}>Inne opcje</MenuItem>
+                        <MenuItem onClick={deleteMethod}>Archiwizuj</MenuItem>
                     </Menu>
                 </Box>
 

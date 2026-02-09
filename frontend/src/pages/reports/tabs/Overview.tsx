@@ -109,7 +109,7 @@ const Overview: React.FC<Props> = ({
                             </Typography>
                         </Box>
                         <Typography variant="body2" color="text.secondary" mb={2}>
-                            Rozkład według kategorii (wrzesień)
+                            Rozkład według kategorii
                         </Typography>
 
                         <Box sx={{width: '100%', height: 380}}>

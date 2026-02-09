@@ -1,7 +1,7 @@
 import {Button, Container, TextField, Typography, Paper} from '@mui/material';
 import {useForm} from 'react-hook-form';
 import {useState} from 'react';
-import {useAuthStore} from '../store/auth';
+import {useAuthStore} from '../../store/auth.ts';
 import {useNavigate} from 'react-router-dom';
 import axios from "axios";
 import {useTranslation} from "react-i18next";
@@ -23,7 +23,7 @@ function Register() {
         setSubmitting(true);
         try {
             await login(data.email, data.password, data.username);
-            navigate("/");
+            navigate("/dashboard");
         } catch (err) {
             console.log(err);
             const isAxios = axios.isAxiosError(err);

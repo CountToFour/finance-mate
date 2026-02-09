@@ -28,11 +28,11 @@ interface AddExpenseDialogProps {
 
 //TODO ZROBIĆ Z TEGO ENUM W types.ts I ROZWAŻYĆ CUSTOM PERIOD
 const periodTypes = {
-    NONE: "None",
-    DAILY: "Daily",
-    WEEKLY: "Weekly",
-    MONTHLY: "Monthly",
-    YEARLY: "Yearly"
+    NONE: "Nie powtarzaj",
+    DAILY: "Co dzień",
+    WEEKLY: "Co tydzień",
+    MONTHLY: "Co miesiąc",
+    YEARLY: "Co rok"
 }
 
 const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initialExpense, accounts, categories}) => {
