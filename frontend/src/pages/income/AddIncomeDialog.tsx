@@ -108,7 +108,6 @@ const AddIncomeDialog: React.FC<Props> = ({open, onClose, initialTransaction, ac
                 }).catch(() => error('Błąd'));
             }
         } else {
-            // reuse editExpense endpoint (backend uses same edit path)
             editExpense(initialTransaction.id, dto).then(() => {
                 success('Zaktualizowano');
                 handleClose();
@@ -172,12 +171,14 @@ const AddIncomeDialog: React.FC<Props> = ({open, onClose, initialTransaction, ac
                     />
                 </Box>
                 <TextField
+                    data-testid='description-input'
                     fullWidth
                     margin="normal"
                     label={'Opis'}
                     value={description ?? ''}
                     onChange={(e) => setDescription(e.target.value)}/>
                 <TextField
+                    data-testid='account-input'
                     select
                     fullWidth
                     margin="normal"
@@ -196,6 +197,7 @@ const AddIncomeDialog: React.FC<Props> = ({open, onClose, initialTransaction, ac
                     {accounts.map(a => <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>)}
                 </TextField>
                 <TextField
+                    data-testid='category-input'
                     select
                     fullWidth
                     margin="normal"

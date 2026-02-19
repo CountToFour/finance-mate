@@ -54,7 +54,7 @@ const Trends: React.FC<Props> = ({
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart
                                 data={balanceData}
-                                margin={{top: 10, right: 30, left: -10, bottom: 0}} // Lekkie przesunięcie osi Y
+                                margin={{top: 10, right: 30, left: -10, bottom: 0}}
                             >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ccc" opacity={0.5}/>
                                 <XAxis dataKey="month" tickLine={false} axisLine={true} stroke="#ccc"/>

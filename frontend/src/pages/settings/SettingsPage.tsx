@@ -30,7 +30,6 @@ const SettingsPage: React.FC = () => {
     }, [transactionType])
 
     const handleSaved = () => {
-        // reload categories after creation
         getCategories(transactionType).then(res => setCategories(res.data)).catch(console.error)
         success('Kategoria dodana')
     }

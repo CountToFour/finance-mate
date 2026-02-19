@@ -38,7 +38,6 @@ const TreeNode: React.FC<{node: Node, level?: number, onAdd?: (parentId: string 
     const {success, error} = useNotification();
 
     const handleDelete = (id: string) => {
-        // Delegate deletion to parent if provided, otherwise use API directly
         if (onDelete) return onDelete(id)
         deleteCategory(id).then(() => {
             success("Udało usunąć kategorię")
@@ -50,7 +49,6 @@ const TreeNode: React.FC<{node: Node, level?: number, onAdd?: (parentId: string 
     return (
         <Box>
             <ListItem sx={{pl: level * 3, position: 'relative', display: 'flex', alignItems: 'center', '&:hover .actionIcons': { visibility: 'visible' }}}>
-                {/* collapse button on the left of the color square */}
                 {node.children && node.children.length > 0 ? (
                     <IconButton size="small" onClick={() => setOpen(s => !s)} sx={{mr:1}}>
                         {open ? <ExpandLess /> : <ExpandMore />}
@@ -65,7 +63,6 @@ const TreeNode: React.FC<{node: Node, level?: number, onAdd?: (parentId: string 
 
                 <ListItemText primary={node.name} />
 
-                {/* action icons - hidden by default, shown on parent hover via sx above */}
                 <Box className="actionIcons" sx={{visibility: 'hidden', display: 'flex', gap: 1, alignItems: 'center'}}>
                     <Tooltip title="Dodaj podkategorię" arrow>
                         <IconButton size="small" onClick={() => onAdd ? onAdd(node.id) : null}>

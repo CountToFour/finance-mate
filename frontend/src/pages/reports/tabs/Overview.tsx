@@ -77,7 +77,6 @@ const Overview: React.FC<Props> = ({
                                     data={monthlyOverview}
                                     margin={{top: 5, right: 30, left: 20, bottom: 5}}
                                 >
-                                    {/* 1. Oś X: Używamy pola 'month' zamiast 'name' */}
                                     <XAxis dataKey="month" stroke="#555"/>
                                     <YAxis/>
                                     <Tooltip
@@ -127,10 +126,9 @@ const Overview: React.FC<Props> = ({
                                         label={({
                                                     name,
                                                     percent
-                                                }) => `${(percent * 100).toFixed(0)}%`} // Etykieta procentowa
+                                                }) => `${(percent * 100).toFixed(0)}%`}
                                     >
                                         {categoriesOverview.map((entry, index) => {
-                                            // entry.category zakładam jako pole w CategoryAmount
                                             const color = allExpenseCategories.find(c => c.name === entry.category)?.color || '#CCCCCC';
                                             return <Cell key={`cell-${index}`} fill={color}/>;
                                         })}

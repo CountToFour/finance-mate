@@ -69,7 +69,6 @@ public class AuthService implements UserDetailsService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password()));
         User user = (User) loadUserByUsername(request.email());
-        // unieważnij stare refresh tokeny użytkownika
         tokenRepository.deleteByUserId(user.getId());
         return issueTokens(user);
     }
@@ -85,7 +84,6 @@ public class AuthService implements UserDetailsService {
 
         if (!valid) throw new IllegalArgumentException("Invalid refresh token");
 
-        // rotacja refresh tokenu
         tokenRepository.deleteByUserId(user.getId());
         return issueTokens(user);
     }

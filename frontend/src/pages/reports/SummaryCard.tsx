@@ -55,7 +55,7 @@ const ExpenseSummaryCard: React.FC<Props> = ({
                         color: accentColor,
                     }}
                 >
-                    {amount} {currency}
+                    {amount.toFixed(2)} {currency}
                 </Typography>
 
                     <Box display="flex">

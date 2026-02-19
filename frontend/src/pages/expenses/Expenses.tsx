@@ -373,6 +373,7 @@ function ExpensesPage() {
                 <Button
                     variant={'contained'}
                     color={"secondary"}
+                    data-testid="add-expense-button"
                     onClick={() => {
                         setSelectedExpense(null);
                         setOpenDialog(true)
@@ -392,7 +393,7 @@ function ExpensesPage() {
                     amount={overview?.totalAmount}
                     change={overview?.totalAmountChangePercentage}
                     currency={user?.currency.symbol || 'zł'}
-                    accentColor="#E53935" // czerwony jak na podglądzie; możesz też użyć 'error.main'
+                    accentColor="#E53935"
                     icon={<AttachMoneyOutlined fontSize="medium"/>}
                 />
                 <ExpenseSummaryCard
@@ -410,14 +411,16 @@ function ExpensesPage() {
                     description="na podstawie 30 dni"
                     amount={overview?.averageAmount}
                     currency={user?.currency.symbol || 'zł'}
-                    accentColor="#5C86D3" // czerwony jak na podglądzie; możesz też użyć 'error.main'
+                    accentColor="#5C86D3"
                     icon={<TrendingUpIcon fontSize="medium"/>}
                 />
 
             </Box>
             {/*// EXPENSES TABLE*/}
             <Box ml={2} mr={2}>
-                <Card>
+                <Card
+                    data-testid="expenses-table-card"
+                >
                     <CardContent>
                         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                             <Box>
@@ -521,7 +524,9 @@ function ExpensesPage() {
             </Box>
             {/*EXPENSES FOR CATEGORIES*/}
             <Box p={2}>
-                <Card>
+                <Card
+                    data-testid='categories-table-card'
+                >
                     <CardContent>
                         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                             <Box>
@@ -604,7 +609,9 @@ function ExpensesPage() {
             {/*// RECURRING EXPENSES TABLE*/}
             <Box p={2} display="flex" gap={3}>
                 <Box flex={1}>
-                    <Card>
+                    <Card
+                        data-testid='recurring-expenses-table-card'
+                    >
                         <CardContent>
                             <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                                 <Box>

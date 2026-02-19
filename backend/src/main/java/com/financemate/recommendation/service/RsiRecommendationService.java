@@ -73,14 +73,11 @@ public class RsiRecommendationService {
                 avgLoss += Math.abs(change);
             }
         }
-
         avgGain /= closes.size();
         avgLoss /= closes.size();
-
         if (avgLoss == 0) {
             return 100.0;
         }
-
         double rs = avgGain / avgLoss;
         return 100.0 - (100.0 / (1.0 + rs));
     }

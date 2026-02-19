@@ -40,6 +40,7 @@ const ExpenseSummaryCard: React.FC<Props> = ({
 
     return (
         <Card
+            data-testid='summary-card'
             elevation={0}
             sx={{
                 position: 'relative',

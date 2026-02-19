@@ -31,7 +31,7 @@ import {
     getAllCategoriesAmount,
     getAccounts,
     getCategories,
-    deleteRecurringTransaction, getAllRecurringExpenses, getAllRecurringTransactions,
+    deleteRecurringTransaction, getAllRecurringTransactions,
     deleteTransaction,
     deactivateRecurringTransaction,
     getTransactionOverview
@@ -78,7 +78,6 @@ function IncomePage() {
     const paginationModel = {page: 0, pageSize: 5};
 
     useEffect(() => {
-        // fetch transactions for INCOME
         if (filteredCategory === "Wszystkie") {
             getTransactions('INCOME', null, dateFrom, dateTo).then((res) => setTransactions(res.data));
         } else {
@@ -373,7 +372,7 @@ function IncomePage() {
                     <Typography variant="body2"
                                 sx={{mt: 1}}>{t('income.page.secondLabel') || 'Zarządzaj przychodami'}</Typography>
                 </Box>
-                <Button variant={'contained'} color={'secondary'} onClick={() => setOpenDialog(true)}>
+                <Button variant={'contained'} color={'secondary'} data-testid="add-income-button" onClick={() => setOpenDialog(true)}>
                     <Add sx={{mr: 1}}/>
                     {t('income.page.add') || 'Nowy przychód'}
                 </Button>
@@ -416,7 +415,7 @@ function IncomePage() {
 
             {/* Transactions table */}
             <Box ml={2} mr={2}>
-                <Card>
+                <Card data-testid="incomes-table-card">
                     <CardContent>
                         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                             <Box>
@@ -510,7 +509,7 @@ function IncomePage() {
 
             {/* Categories */}
             <Box p={2}>
-                <Card>
+                <Card data-testid="categories-table-card">
                     <CardContent>
                         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                             <Box>
@@ -553,7 +552,7 @@ function IncomePage() {
             {/* RECURRING INCOMES TABLE */}
             <Box p={2} display="flex" gap={3}>
                 <Box flex={1}>
-                    <Card>
+                    <Card data-testid='recurring-incomes-table-card'>
                         <CardContent>
                             <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                                 <Box>

@@ -250,7 +250,6 @@ public class TransactionService {
 
     public TransactionOverviewDto getTransactionOverview(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
 
-        // jeśli daty nie są przekazane, licz na podstawie ostatnich 30 dni
         boolean useLast30Days = (startDate == null || endDate == null);
         LocalDate currentStart;
         LocalDate currentEnd;
@@ -259,7 +258,7 @@ public class TransactionService {
 
         if (useLast30Days) {
             currentEnd = LocalDate.now();
-            currentStart = currentEnd.minusDays(29); // ostatnie 30 dni łącznie
+            currentStart = currentEnd.minusDays(29);
             previousEnd = currentStart.minusDays(1);
             previousStart = previousEnd.minusDays(29);
         } else {
@@ -277,11 +276,11 @@ public class TransactionService {
 
         double totalAmountChangePercentage;
         if (previousTotal == 0) {
-            totalAmountChangePercentage = actualTotal == 0 ? 0.0 : 100.0; // jeśli poprzedni okres miał 0, ustaw pragmatycznie 100% wzrostu
+            totalAmountChangePercentage = actualTotal == 0 ? 0.0 : 100.0;
         } else {
             totalAmountChangePercentage = ((actualTotal - previousTotal) / previousTotal) * 100.0;
         }
-        // zaokrąglenie do 1 miejsca po przecinku
+
         totalAmountChangePercentage = Math.round(totalAmountChangePercentage * 10.0) / 10.0;
 
         int expenseCountChange = (int) actualTotalOverview.get(2) - (int) previousTotalOverview.get(2);
@@ -436,7 +435,6 @@ public class TransactionService {
                 .mapToDouble(t -> Math.abs(getConvertedAmount(t, user)))
                 .sum();
 
-        //when there is no incomes
         if (totalIncome == 0) {
             return -1.0;
         }
@@ -583,7 +581,7 @@ public class TransactionService {
 
     public double calculateSafetyNetRatio(User user) {
         double avgExpenses = getAverageMonthlyExpenses(user, 3);
-        double totalBalance = accountService.getUserBalance(user).balance(); // Masz to w AccountService
+        double totalBalance = accountService.getUserBalance(user).balance();
         if (avgExpenses == 0) return 0.0;
         return totalBalance / avgExpenses;
     }

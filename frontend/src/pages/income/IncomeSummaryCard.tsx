@@ -1,32 +1,32 @@
 import React from 'react';
-import { Box, Card, CardContent, Typography, type SxProps, type Theme } from '@mui/material';
+import {Box, Card, CardContent, Typography, type SxProps, type Theme} from '@mui/material';
 
 type Props = {
     type: "totalIncomes" | "totalTransactions" | "Average";
-        title: string;
-        description?: string;
-        amount: number;
-        change?: number;
-        currency?: string;
-        accentColor?: string;
-        icon?: React.ReactNode;
-        sx?: SxProps<Theme>;
+    title: string;
+    description?: string;
+    amount: number;
+    change?: number;
+    currency?: string;
+    accentColor?: string;
+    icon?: React.ReactNode;
+    sx?: SxProps<Theme>;
 }
 
 const IncomeSummaryCard: React.FC<Props> = ({
-                                                 type,
-                                                 title,
-                                                 description,
-                                                 amount,
-                                                 change,
-                                                 currency,
-                                                 accentColor,
-                                                 icon,
-                                                 sx,
-}) => {
+                                                type,
+                                                title,
+                                                description,
+                                                amount,
+                                                change,
+                                                currency,
+                                                accentColor,
+                                                icon,
+                                                sx,
+                                            }) => {
 
     const changeIsPositive = typeof change === 'number' && change >= 0;
-    
+
     const changeText = () => {
         if (type === 'totalIncomes') {
             return changeIsPositive ? `+${change}%` : `-${change}%`;
@@ -38,7 +38,8 @@ const IncomeSummaryCard: React.FC<Props> = ({
     }
 
     return (
-<Card
+        <Card
+            data-testid='summary-card'
             elevation={0}
             sx={{
                 position: 'relative',
@@ -56,7 +57,7 @@ const IncomeSummaryCard: React.FC<Props> = ({
                     <Typography variant="subtitle1" fontWeight={"bold"}>
                         {title}
                     </Typography>
-                    <Box sx={{color:accentColor}}>
+                    <Box sx={{color: accentColor}}>
                         {icon}
                     </Box>
                 </Box>
@@ -72,19 +73,19 @@ const IncomeSummaryCard: React.FC<Props> = ({
                     {amount} {currency}
                 </Typography>
 
-                    <Box display="flex">
-                        <Typography
-                            variant="body2"
-                            sx={{
-                                color: accentColor,
-                            }}
-                        >
-                            {changeText()}
-                        </Typography >
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                            {description}
-                        </Typography>
-                    </Box>
+                <Box display="flex">
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            color: accentColor,
+                        }}
+                    >
+                        {changeText()}
+                    </Typography>
+                    <Typography variant="body2" sx={{whiteSpace: 'pre-wrap'}}>
+                        {description}
+                    </Typography>
+                </Box>
 
             </CardContent>
         </Card>

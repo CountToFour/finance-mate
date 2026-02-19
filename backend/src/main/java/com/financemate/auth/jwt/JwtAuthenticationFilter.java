@@ -34,16 +34,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         final String jwt = authHeader.substring(7);
-        System.out.println("Extracted JWT: " + jwt); // Debugging line
+        System.out.println("Extracted JWT: " + jwt);
         final String username = jwtService.extractUsername(jwt);
-        System.out.println("Extracted Username: " + username); // Debugging line
+        System.out.println("Extracted Username: " + username);
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails user = userRepository.findByUsername(username).orElse(null);
-            System.out.println("User found: " + (user != null)); // Debugging line
+            System.out.println("User found: " + (user != null));
             boolean tokenNotRevoked = tokenRepository.findByToken(jwt)
                     .map(t -> !t.isExpired() && !t.isRevoked())
-                    .orElse(true); // domyślnie true dla access tokenów nieprzechowywanych
+                    .orElse(true);
 
             if (user != null && tokenNotRevoked && jwtService.isTokenValid(jwt, user)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

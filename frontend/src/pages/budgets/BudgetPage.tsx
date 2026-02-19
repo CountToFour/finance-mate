@@ -146,7 +146,7 @@ const BudgetPage: React.FC = () => {
                 </Box>
 
                 <Stack direction="row" spacing={2}>
-                    <Button variant="outlined" startIcon={<EmojiEventsIcon/>} onClick={() => setOpenGoalDialog(true)}>
+                    <Button variant="outlined" startIcon={<EmojiEventsIcon/>} onClick={() => setOpenGoalDialog(true)} data-testid='add-goal-button'>
                         Dodaj cel
                     </Button>
                     <Button variant="contained" color="secondary" onClick={() => {
@@ -158,9 +158,7 @@ const BudgetPage: React.FC = () => {
                 </Stack>
             </Stack>
 
-            {/* Alerts (proste reguły) */}
             <Stack spacing={2} mb={3}>
-                {/* przykładowe reguły */}
                 {budgets.some(b => b.spentAmount > b.limitAmount) && (
                     <Card variant="outlined" sx={{borderColor: "error.light", background: hexToRgba("#ffcccc", 0.4)}}>
                         <CardContent>
@@ -185,6 +183,7 @@ const BudgetPage: React.FC = () => {
             {/* Summary cards */}
             <Box display="grid" gridTemplateColumns={{xs: '1fr', sm: 'repeat(4, 1fr)'}} gap={2} mb={3}>
                 <Card
+                    data-testid='summary-card'
                     variant="outlined"
                     sx={{
                         bgcolor: 'background.paper',
@@ -203,6 +202,7 @@ const BudgetPage: React.FC = () => {
                 </Card>
 
                 <Card
+                    data-testid='summary-card'
                     variant="outlined"
                     sx={{
                         bgcolor: 'background.paper',
@@ -222,6 +222,7 @@ const BudgetPage: React.FC = () => {
                 </Card>
 
                 <Card
+                    data-testid='summary-card'
                     variant="outlined"
                     sx={{
                         bgcolor: 'background.paper',
@@ -240,6 +241,7 @@ const BudgetPage: React.FC = () => {
                 </Card>
 
                 <Card
+                    data-testid='summary-card'
                     variant="outlined"
                     sx={{
                         bgcolor: 'background.paper',
@@ -258,7 +260,7 @@ const BudgetPage: React.FC = () => {
             </Box>
 
             {/* Budgets by categories */}
-            <Card variant="outlined" sx={{p: 2, borderRadius: 2}}>
+            <Card variant="outlined" sx={{p: 2, borderRadius: 2}} data-testid='budget-by-category'>
                 <CardContent>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                         <Box>
@@ -288,7 +290,7 @@ const BudgetPage: React.FC = () => {
             </Card>
 
             {/* Smart Investment Widget */}
-            <Box mt={3}>
+            <Box mt={3} data-testid='investment-widget'>
                 <SmartInvestmentWidget/>
             </Box>
 
@@ -297,7 +299,7 @@ const BudgetPage: React.FC = () => {
                 <GoalAcceleratorWidget />
             </Box>
 
-            <Card variant="outlined" sx={{p: 2, borderRadius: 2, mt: 3}}>
+            <Card variant="outlined" sx={{p: 2, borderRadius: 2, mt: 3}} data-testid='goals-card'>
                 <CardContent>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                         <Box>

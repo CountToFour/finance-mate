@@ -68,7 +68,6 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, recur
             }
 
             if ((recurringExpense as RecurringExpense).accountName) {
-                // znajdź konto w liście accounts
                 const acct = accounts.find(a => a.name === (recurringExpense as RecurringExpense).accountName);
                 if (acct) {
                     setSelectedAccount(acct);

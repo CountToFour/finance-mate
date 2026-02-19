@@ -86,7 +86,6 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
         }
     }, [open, editing, parentForNew, categories])
 
-    // kiedy użytkownik zmieni rodzica w select (dynamiczne ustawienie koloru i zablokowanie)
     useEffect(() => {
         if (parentId) {
             const pcol = findParentColor(parentId)

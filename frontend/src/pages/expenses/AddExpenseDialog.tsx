@@ -61,10 +61,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                 if (cat) setCategory(cat);
             }
             setDate(dayjs(initialExpense.createdAt));
-            // jeśli initialExpense zawiera id konta, ustaw odpowiednie konto w stanie
-            // zakładamy, że initialExpense ma pole accountId (string). Jeśli nie, nic nie zmieniamy.
             if ((initialExpense as Expense).accountName) {
-                // znajdź konto w liście accounts
                 const acct = accounts.find(a => a.name === (initialExpense as Expense).accountName);
                 if (acct) {
                     setSelectedAccount(acct);
@@ -201,6 +198,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     />
                 </Box>
                 <TextField
+                    data-testid='description-input'
                     fullWidth
                     margin="normal"
                     label={t('expenses.addExpense.description')}
@@ -208,6 +206,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     onChange={(e) => setDescription(e.target.value)}
                 />
                 <TextField
+                    data-testid='account-input'
                     select
                     fullWidth
                     margin="normal"
@@ -233,6 +232,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     ))}
                 </TextField>
                 <TextField
+                    data-testid='category-input'
                     select
                     fullWidth
                     margin="normal"
