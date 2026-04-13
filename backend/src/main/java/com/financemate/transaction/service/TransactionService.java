@@ -271,8 +271,8 @@ public class TransactionService {
         List<Object> actualTotalOverview = getMonthlyTransactionOverview(user, currentStart, currentEnd, type);
         List<Object> previousTotalOverview = getMonthlyTransactionOverview(user, previousStart, previousEnd, type);
 
-        double actualTotal = (double) actualTotalOverview.get(0);
-        double previousTotal = (double) previousTotalOverview.get(0);
+        double actualTotal = (double) actualTotalOverview.getFirst();
+        double previousTotal = (double) previousTotalOverview.getFirst();
 
         double totalAmountChangePercentage;
         if (previousTotal == 0) {

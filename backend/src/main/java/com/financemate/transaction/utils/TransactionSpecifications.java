@@ -2,10 +2,11 @@ package com.financemate.transaction.utils;
 
 import com.financemate.transaction.model.Transaction;
 import com.financemate.transaction.model.TransactionType;
+import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Objects;
 
 public class TransactionSpecifications {
     public static Specification<Transaction> hasUserId(String userId) {

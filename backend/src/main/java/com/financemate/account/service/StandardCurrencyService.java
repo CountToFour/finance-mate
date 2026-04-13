@@ -7,6 +7,7 @@ import com.financemate.account.repository.CurrencyRepository;
 import com.financemate.account.repository.ExchangeRateRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -30,27 +31,27 @@ public class StandardCurrencyService implements CurrencyService {
         this.exchangeRateRepository = exchangeRateRepository;
     }
 
-    @PostConstruct
-    public void setCurrencyRates() {
-        List<Currency> currencies = currencyRepository.findAll();
-
-        for (int i = 0; i < currencies.size(); i++) {
-            Currency fromCurrency = currencies.get(i);
-            for (int j = i + 1; j < currencies.size(); j++) {
-                Currency toCurrency = currencies.get(j);
-
-                try {
-                    double rate = getExchangeRate(fromCurrency.getCode(), toCurrency.getCode());
-                    saveExchangeRate(fromCurrency.getCode(), toCurrency.getCode(), rate);
-
-                    double reverseRate = 1.0 / rate;
-                    saveExchangeRate(toCurrency.getCode(), fromCurrency.getCode(), reverseRate);
-                } catch (Exception e) {
-                    log.error("Error fetching exchange rate for {} to {}: {}", fromCurrency.getCode(), toCurrency.getCode(), e.getMessage());
-                }
-            }
-        }
-    }
+//    @PostConstruct
+//    public void setCurrencyRates() {
+//        List<Currency> currencies = currencyRepository.findAll();
+//
+//        for (int i = 0; i < currencies.size(); i++) {
+//            Currency fromCurrency = currencies.get(i);
+//            for (int j = i + 1; j < currencies.size(); j++) {
+//                Currency toCurrency = currencies.get(j);
+//
+//                try {
+//                    double rate = getExchangeRate(fromCurrency.getCode(), toCurrency.getCode());
+//                    saveExchangeRate(fromCurrency.getCode(), toCurrency.getCode(), rate);
+//
+//                    double reverseRate = 1.0 / rate;
+//                    saveExchangeRate(toCurrency.getCode(), fromCurrency.getCode(), reverseRate);
+//                } catch (Exception e) {
+//                    log.error("Error fetching exchange rate for {} to {}: {}", fromCurrency.getCode(), toCurrency.getCode(), e.getMessage());
+//                }
+//            }
+//        }
+//    }
 
     @Override
     public List<Currency> findAllCurrencies() {
@@ -122,27 +123,28 @@ public class StandardCurrencyService implements CurrencyService {
         exchangeRateRepository.save(exchangeRate);
     }
 
-//    @Scheduled(cron = "0 30 * * * ?")
-//    private void updateExchangeRates() {
-//        List<Currency> currencies = currencyRepository.findAll();
-//
-//        for (int i = 0; i < currencies.size(); i++) {
-//            Currency fromCurrency = currencies.get(i);
-//            for (int j = i + 1; j < currencies.size(); j++) {
-//                Currency toCurrency = currencies.get(j);
-//                try {
-//                    double rate = getExchangeRate(fromCurrency.getCode(), toCurrency.getCode());
-//                    saveExchangeRate(fromCurrency.getCode(), toCurrency.getCode(), rate);
-//
-//                    double reverseRate = 1.0 / rate;
-//                    saveExchangeRate(toCurrency.getCode(), fromCurrency.getCode(), reverseRate);
-//                } catch (Exception e) {
-//                    log.error("Error fetching exchange rate for {} to {}: {}", fromCurrency.getCode(), toCurrency.getCode(), e.getMessage());
-//                }
-//            }
-//        }
-//
-//        log.info("Exchange rates updated at {}", LocalDateTime.now());
-//    }
+    @Scheduled(cron = "0 30 * * * ?")
+    @CacheEvict(value = "exchangeRates", allEntries = true)
+    public void updateExchangeRates() {
+        List<Currency> currencies = currencyRepository.findAll();
+
+        for (int i = 0; i < currencies.size(); i++) {
+            Currency fromCurrency = currencies.get(i);
+            for (int j = i + 1; j < currencies.size(); j++) {
+                Currency toCurrency = currencies.get(j);
+                try {
+                    double rate = getExchangeRate(fromCurrency.getCode(), toCurrency.getCode());
+                    saveExchangeRate(fromCurrency.getCode(), toCurrency.getCode(), rate);
+
+                    double reverseRate = 1.0 / rate;
+                    saveExchangeRate(toCurrency.getCode(), fromCurrency.getCode(), reverseRate);
+                } catch (Exception e) {
+                    log.error("Error fetching exchange rate for {} to {}: {}", fromCurrency.getCode(), toCurrency.getCode(), e.getMessage());
+                }
+            }
+        }
+
+        log.info("Exchange rates updated at {}", LocalDateTime.now());
+    }
 
 }
