@@ -8,11 +8,16 @@ import com.financemate.account.repository.ExchangeRateRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -96,7 +101,7 @@ public class StandardCurrencyService implements CurrencyService {
     }
 
     private double getExchangeRate(String fromCode, String toCode) {
-        ExchangeRateDto response  = webClient.get()
+        ExchangeRateDto response = webClient.get()
                 .uri("{fromCode}/{toCode}/", fromCode, toCode)
                 .retrieve()
                 .bodyToMono(ExchangeRateDto.class)
@@ -126,25 +131,51 @@ public class StandardCurrencyService implements CurrencyService {
     @Scheduled(cron = "0 30 * * * ?")
     @CacheEvict(value = "exchangeRates", allEntries = true)
     public void updateExchangeRates() {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         List<Currency> currencies = currencyRepository.findAll();
 
+        List<Pair<Currency, Currency>> currencyPairs = new ArrayList<>();
         for (int i = 0; i < currencies.size(); i++) {
-            Currency fromCurrency = currencies.get(i);
             for (int j = i + 1; j < currencies.size(); j++) {
-                Currency toCurrency = currencies.get(j);
-                try {
-                    double rate = getExchangeRate(fromCurrency.getCode(), toCurrency.getCode());
-                    saveExchangeRate(fromCurrency.getCode(), toCurrency.getCode(), rate);
-
-                    double reverseRate = 1.0 / rate;
-                    saveExchangeRate(toCurrency.getCode(), fromCurrency.getCode(), reverseRate);
-                } catch (Exception e) {
-                    log.error("Error fetching exchange rate for {} to {}: {}", fromCurrency.getCode(), toCurrency.getCode(), e.getMessage());
-                }
+                currencyPairs.add(Pair.of(currencies.get(i), currencies.get(j)));
             }
         }
 
+        Flux.fromIterable(currencyPairs)
+                .flatMap(pair -> {
+                    String from = pair.getFirst().getCode();
+                    String to = pair.getSecond().getCode();
+
+                    return webClient.get()
+                            .uri("{fromCode}/{toCode}/", from, to)
+                            .retrieve()
+                            .bodyToMono(ExchangeRateDto.class)
+                            .map(response -> {
+                                if (response != null && "success".equals(response.getResult())) {
+                                    return new ExchangeRateResult(from, to, response.getConversion_rate());
+                                }
+                                throw new RuntimeException("Failed");
+                            })
+                            .onErrorResume(e -> {
+                                log.error("Error for {} to {}", from, to, e);
+                                return Mono.empty();
+                            });
+                }, 5)
+                .doOnNext(result -> {
+                    saveExchangeRate(result.from, result.to, result.rate);
+                    saveExchangeRate(result.to, result.from, 1.0 / result.rate);
+                })
+                .blockLast();
+
+        stopWatch.stop();
+
+        log.info("Zakończono pobieranie. Czas trwania: {} milisekund ({} sekund)",
+                stopWatch.getTotalTimeMillis(),
+                stopWatch.getTotalTimeSeconds());
         log.info("Exchange rates updated at {}", LocalDateTime.now());
     }
 
+    private record ExchangeRateResult(String from, String to, double rate) {
+    }
 }
