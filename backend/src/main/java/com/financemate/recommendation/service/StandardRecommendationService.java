@@ -65,38 +65,38 @@ public class StandardRecommendationService implements RecommendationService {
         return recommendationRepository.findAll();
     }
 
-    @Scheduled(cron = "0 0 6,18 * * *")
-    @PostConstruct
-    public void updateRecommendations() {
-        log.info("Starting updating stocks recommendations...");
-
-        LocalDate start = LocalDate.now().minusDays(60);
-
-        for (Map.Entry<String, String> entry : FRIENDLY_NAMES.entrySet()) {
-            try {
-                TwelveDataTimeSeriesResponse series = twelveDataClient.getTimeSeries(entry.getKey(), "1day", start.toString());
-
-                RsiRecommendation calculated = rsiRecommendationService.calculateRsi(series);
-
-                recommendationRepository.findBySymbol(calculated.getSymbol())
-                        .ifPresentOrElse(existing -> {
-                            existing.setRsiValue(calculated.getRsiValue());
-                            existing.setAction(calculated.getAction());
-                            existing.setLatestClose(calculated.getLatestClose());
-                            existing.setLatestDatetime(calculated.getLatestDatetime());
-                            recommendationRepository.save(existing);
-                            log.debug("Updated: {}", entry.getKey());
-                        }, () -> {
-                            recommendationRepository.save(calculated);
-                            log.debug("Added new: {}", entry.getKey());
-                        });
-
-            } catch (Exception e) {
-                log.error("Failed to update symbol recommendation: {}", entry.getKey(), e);
-            }
-        }
-        log.info("Finished recommendation updates.");
-    }
+//    @Scheduled(cron = "0 0 6,18 * * *")
+//    @PostConstruct
+//    public void updateRecommendations() {
+//        log.info("Starting updating stocks recommendations...");
+//
+//        LocalDate start = LocalDate.now().minusDays(60);
+//
+//        for (Map.Entry<String, String> entry : FRIENDLY_NAMES.entrySet()) {
+//            try {
+//                TwelveDataTimeSeriesResponse series = twelveDataClient.getTimeSeries(entry.getKey(), "1day", start.toString());
+//
+//                RsiRecommendation calculated = rsiRecommendationService.calculateRsi(series);
+//
+//                recommendationRepository.findBySymbol(calculated.getSymbol())
+//                        .ifPresentOrElse(existing -> {
+//                            existing.setRsiValue(calculated.getRsiValue());
+//                            existing.setAction(calculated.getAction());
+//                            existing.setLatestClose(calculated.getLatestClose());
+//                            existing.setLatestDatetime(calculated.getLatestDatetime());
+//                            recommendationRepository.save(existing);
+//                            log.debug("Updated: {}", entry.getKey());
+//                        }, () -> {
+//                            recommendationRepository.save(calculated);
+//                            log.debug("Added new: {}", entry.getKey());
+//                        });
+//
+//            } catch (Exception e) {
+//                log.error("Failed to update symbol recommendation: {}", entry.getKey(), e);
+//            }
+//        }
+//        log.info("Finished recommendation updates.");
+//    }
 
     @Override
     public SmartRecommendationDto getSmartRecommendation(User user) {
