@@ -6,12 +6,17 @@ import com.financemate.transaction.model.RecurringTransaction;
 import com.financemate.transaction.repository.TransactionRepository;
 import com.financemate.transaction.repository.RecurringTransactionRepository;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
+@Slf4j
 public class RecurringTransactionService {
 
     private final RecurringTransactionRepository recurringTransactionRepository;
@@ -23,10 +28,18 @@ public class RecurringTransactionService {
         this.transactionRepository = transactionRepository;
     }
 
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 21 22 * * ?")
     @Transactional
     public void generateRecurringExpenses() {
-        LocalDate today = LocalDate.now().plusDays(1);
+
+        System.out.println("Staring recurring transaction generation at " + LocalDate.now());
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        LocalDate today = LocalDate.now().plusDays(0);
+
+        List<Transaction> transactionsToSave = new ArrayList<>();
+        List<RecurringTransaction> recurringToUpdate = new ArrayList<>();
+        List<RecurringTransaction> recurringToDelete = new ArrayList<>();
 
         for (RecurringTransaction recurring : recurringTransactionRepository.findAllByActive(true)) {
 
@@ -41,16 +54,31 @@ public class RecurringTransactionService {
                 transaction.setDescription(recurring.getDescription());
                 transaction.setTransactionType(recurring.getTransactionType());
                 transaction.setAccount(recurring.getAccount());
-                transactionRepository.save(transaction);
+                transactionsToSave.add(transaction);
 
                 if (recurring.getPeriodType() == PeriodType.ONCE) {
-                    recurringTransactionRepository.delete(recurring);
+                    recurringToDelete.add(recurring);
                 } else {
                     recurring.setCreatedAt(calculateNextDate(nextDate, recurring.getPeriodType()));
-                    recurringTransactionRepository.save(recurring);
+                    recurringToUpdate.add(recurring);
                 }
             }
         }
+
+        if (!transactionsToSave.isEmpty()) {
+            transactionRepository.saveAll(transactionsToSave);
+        }
+        if (!recurringToUpdate.isEmpty()) {
+            recurringTransactionRepository.saveAll(recurringToUpdate);
+        }
+        if (!recurringToDelete.isEmpty()) {
+            recurringTransactionRepository.deleteAll(recurringToDelete);
+        }
+
+        stopWatch.stop();
+        log.info("Zakończono pobieranie. Czas trwania: {} milisekund ({} sekund)",
+                stopWatch.getTotalTimeMillis(),
+                stopWatch.getTotalTimeSeconds());
     }
 
     private LocalDate calculateNextDate(LocalDate baseDate, PeriodType type) {
