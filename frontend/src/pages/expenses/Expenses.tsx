@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import {
     Box,
     Card,
@@ -20,6 +20,7 @@ import {
     getAllRecurringExpenses, getTransactionOverview,
     getExpenses, getAccounts, getCategories, deactivateRecurringTransaction
 } from "../../lib/api.ts";
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query'
 import {useAuthStore} from "../../store/auth.ts";
 import type {Account, Category, CategoryAmount, Expense, TransactionOverview, RecurringExpense} from "../../lib/types.ts";
 import {DataGrid, type GridColDef} from '@mui/x-data-grid';
@@ -45,15 +46,9 @@ function ExpensesPage() {
     const {t} = useTranslation();
     const user = useAuthStore(s => s.user);
 
-    const [accounts, setAccounts] = useState<Account[]>([]);
-    const [expenses, setExpenses] = useState<Expense[]>([]);
-    const [categories, setCategories] = useState<Category[]>([])
-    const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-    const [selectedRecurringExpense, setSelectedRecurringExpense] = useState<RecurringExpense>();
+    const [selectedRecurringExpense, setSelectedRecurringExpense] = useState<RecurringExpense | undefined>();
     const [filteredCategory, setFilteredCategory] = useState<string>("Wszystkie");
-    const [categoriesExpenses, setCategoriesExpenses] = useState<CategoryAmount[]>([])
-    const [overview, setOverview] = useState<TransactionOverview>();
 
     const {success, error} = useNotification();
     const [openDialog, setOpenDialog] = useState(false);
@@ -67,57 +62,75 @@ function ExpensesPage() {
     const categoryDateTo = categorySelectedDate.endOf("month").format("YYYY-MM-DD");
 
     const paginationModel = {page: 0, pageSize: 5};
-    const totalSpending = expenses.reduce((acc, e) => acc + e.price, 0);
+    const queryClient = useQueryClient();
 
-    useEffect(() => {
-        if (filteredCategory === "Wszystkie") {
-            getExpenses(null, dateFrom, dateTo).then((res) => setExpenses(res.data));
-        } else {
-            getExpenses(filteredCategory, dateFrom, dateTo).then((res) => setExpenses(res.data));
-        }
+    // ✅ POPRAWKA: Queries pozostają tak jak były, są napisane świetnie.
+    const expensesQuery = useQuery<Expense[]>({
+        queryKey: ['expenses', filteredCategory, dateFrom, dateTo],
+        queryFn: () => getExpenses(filteredCategory === "Wszystkie" ? null : filteredCategory, dateFrom, dateTo).then(r => r.data),
+        enabled: !!user?.id,
+    });
 
-        getTransactionOverview('EXPENSE', null, null).then((res) => setOverview(res.data));
+    const overviewQuery = useQuery<TransactionOverview | undefined>({
+        queryKey: ['transactionOverview', 'EXPENSE'],
+        queryFn: () => getTransactionOverview('EXPENSE', null, null).then(r => r.data),
+        enabled: !!user?.id,
+    });
 
-        getAccounts().then((res) => {
-            setAccounts(res.data);
-        });
+    const accountsQuery = useQuery<Account[]>({ queryKey: ['accounts'], queryFn: () => getAccounts().then(r => r.data), enabled: !!user?.id });
 
-        getCategories('EXPENSE').then((res) => setCategories(res.data))
-    }, [user?.id, openDialog, filteredCategory, dateFrom, dateTo]);
+    const categoriesQuery = useQuery<Category[]>({ queryKey: ['categories', 'EXPENSE'], queryFn: () => getCategories('EXPENSE').then(r => r.data), enabled: !!user?.id });
 
-    useEffect(() => {
-        getAllRecurringExpenses().then((res) => setRecurringExpenses(res.data));
-    }, [editRecurringExpense, user?.id, openDialog])
+    const recurringQuery = useQuery<RecurringExpense[]>({ queryKey: ['recurringExpenses'], queryFn: () => getAllRecurringExpenses().then(r => r.data), enabled: !!user?.id });
 
-    useEffect(() => {
-        getAllCategoriesAmount('EXPENSE', categoryDateFrom, categoryDateTo).then((res) => setCategoriesExpenses(res.data));
-    }, [user?.id, openDialog, categoryDateFrom, categoryDateTo])
+    const categoriesAmountQuery = useQuery<CategoryAmount[]>({ queryKey: ['categoriesAmount', 'EXPENSE', categoryDateFrom, categoryDateTo], queryFn: () => getAllCategoriesAmount('EXPENSE', categoryDateFrom, categoryDateTo).then(r => r.data), enabled: !!user?.id });
+
+    const accounts = accountsQuery.data ?? [];
+    const expenses = expensesQuery.data ?? [];
+    const categories = categoriesQuery.data ?? [];
+    const recurringExpenses = recurringQuery.data ?? [];
+    const categoriesExpenses = categoriesAmountQuery.data ?? [];
+    const overview = overviewQuery.data;
+
+    // ✅ POPRAWKA: Usunięto antywzorzec (dwa hooki useEffect)!
+    // Odświeżanie danych dzieje się teraz w propie onSuccess modalów.
+
+    const deleteMutation = useMutation({
+        mutationFn: (id: string) => deleteTransaction(id),
+        onSuccess: () => {
+            success(t('expenses.notifications.delete.success'))
+            queryClient.invalidateQueries({ queryKey: ['expenses'] });
+            queryClient.invalidateQueries({ queryKey: ['transactionOverview'] });
+        },
+        onError: () => error(t('expenses.notifications.delete.error'))
+    });
 
     const handleDeletion = (id: string) => {
-        deleteTransaction(id)
-            .then(() => {
-                success(t('expenses.notifications.delete.success'))
-                if (filteredCategory === "Wszystkie") {
-                    getExpenses(null, dateFrom, dateTo).then((res) => setExpenses(res.data));
-                } else {
-                    getExpenses(filteredCategory, dateFrom, dateTo).then((res) => setExpenses(res.data));
-                }
-            })
-            .catch(() => {
-                error(t('expenses.notifications.delete.error'))
-            });
+        deleteMutation.mutate(id);
     };
 
+    const deleteRecurringMutation = useMutation({
+        mutationFn: (id: string) => deleteRecurringTransaction(id),
+        onSuccess: () => {
+            success(t('expenses.notifications.delete.success'))
+            queryClient.invalidateQueries({ queryKey: ['recurringExpenses'] });
+        },
+        onError: () => error(t('expenses.notifications.delete.error'))
+    });
+
     const handleRecurringDeletion = (id: string) => {
-        deleteRecurringTransaction(id)
-            .then(() => {
-                success(t('expenses.notifications.delete.success'))
-                getAllRecurringExpenses().then((res) => setRecurringExpenses(res.data));
-            })
-            .catch(() => {
-                error(t('expenses.notifications.delete.error'))
-            });
+        deleteRecurringMutation.mutate(id);
     }
+
+    // ✅ POPRAWKA: Nowa mutacja do aktywacji/dezaktywacji subskrypcji
+    const toggleRecurringMutation = useMutation({
+        mutationFn: (id: string) => deactivateRecurringTransaction(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['recurringExpenses'] });
+            success("Pomyślnie zaktualizowano status.");
+        },
+        onError: () => error("Nie udało się zaktualizować statusu.")
+    });
 
     const hexToRgba = (hex: string, alpha: number) => {
         const r = parseInt(hex.substring(1, 3), 16);
@@ -126,12 +139,9 @@ function ExpensesPage() {
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
 
-
-    //COLUMNS WITH EXPENSES
     const columns: GridColDef[] = [
         {
             field: 'accountName',
-            //TODO ZMIENIC NA WIELOJEZYCZNOSC
             headerName: t('Nazwa konta'),
             flex: 1,
             renderCell: (params) => {
@@ -216,6 +226,7 @@ function ExpensesPage() {
                     <Tooltip title={t("expenses.page.expensesTable.tooltip.delete")} arrow>
                         <IconButton
                             color="error"
+                            disabled={deleteMutation.isPending} // Blokada przy usuwaniu
                             onClick={() => handleDeletion(params.row.id)}
                         >
                             <DeleteIcon/>
@@ -226,11 +237,9 @@ function ExpensesPage() {
         },
     ]
 
-    //COLUMNS WITH RECURRING EXPENSES
     const recurringColumns: GridColDef[] = [
         {
             field: 'accountName',
-            //TODO ZMIENIC NA WIELOJEZYCZNOSC
             headerName: t('Nazwa konta'),
             flex: 1,
             renderCell: (params) => {
@@ -280,32 +289,19 @@ function ExpensesPage() {
         },
         {
             field: 'active',
-            //TODO WIELOJĘZYCZNBOSC
             headerName: "Aktywność",
             flex: 0.5,
             renderCell: (params) => {
                 const isActive = params.row.active;
-
                 return (
                     <FormControlLabel
                         control={
                             <Switch
                                 checked={isActive}
-                                onChange={async () => {
-                                    try {
-                                        await deactivateRecurringTransaction(params.row.id);
-
-                                        setRecurringExpenses(prev =>
-                                            prev.map(exp =>
-                                                exp.id === params.row.id
-                                                    ? { ...exp, active: !exp.active }
-                                                    : exp
-                                            )
-                                        );
-                                    } catch (e) {
-                                        console.error(e);
-                                    }
-                                }}
+                                // ✅ POPRAWKA: Czyste użycie useMutation zamiast async/await
+                                onChange={() => toggleRecurringMutation.mutate(params.row.id)}
+                                // Blokuje przełącznik, gdy czekamy na serwer
+                                disabled={toggleRecurringMutation.isPending}
                                 color="secondary"
                             />
                         }
@@ -352,6 +348,7 @@ function ExpensesPage() {
                     <Tooltip title={t("expenses.page.expensesTable.tooltip.delete")} arrow>
                         <IconButton
                             color="error"
+                            disabled={deleteRecurringMutation.isPending}
                             onClick={() => handleRecurringDeletion(params.row.id)}
                         >
                             <DeleteIcon/>
@@ -383,15 +380,15 @@ function ExpensesPage() {
                     {t('expenses.page.add')}
                 </Button>
             </Box>
-            {/*// SHORT SUMMARY*/}
+
             <Box p={2} display="grid" gap={2}
                  sx={{gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'}}}>
                 <ExpenseSummaryCard
                     type="totalExpenses"
                     title="Całkowite wydatki"
                     description=" względem poprzedniego miesiąca"
-                    amount={overview?.totalAmount}
-                    change={overview?.totalAmountChangePercentage}
+                    amount={overview?.totalAmount ?? 0}
+                    change={overview?.totalAmountChangePercentage ?? 0}
                     currency={user?.currency.symbol || 'zł'}
                     accentColor="#E53935"
                     icon={<AttachMoneyOutlined fontSize="medium"/>}
@@ -400,8 +397,8 @@ function ExpensesPage() {
                     type="totalTransactions"
                     title="Transakcje"
                     description=" transakcji w tym miesiącu"
-                    amount={overview?.expenseCount}
-                    change={overview?.expenseCountChangePercentage}
+                    amount={overview?.expenseCount ?? 0}
+                    change={overview?.expenseCountChangePercentage ?? 0}
                     accentColor="#70B2B1"
                     icon={<ReceiptIcon fontSize="medium"/>}
                 />
@@ -409,18 +406,16 @@ function ExpensesPage() {
                     type="Average"
                     title="Średnia dzienna"
                     description="na podstawie 30 dni"
-                    amount={overview?.averageAmount}
+                    amount={overview?.averageAmount ?? 0}
                     currency={user?.currency.symbol || 'zł'}
                     accentColor="#5C86D3"
                     icon={<TrendingUpIcon fontSize="medium"/>}
                 />
 
             </Box>
-            {/*// EXPENSES TABLE*/}
+
             <Box ml={2} mr={2}>
-                <Card
-                    data-testid="expenses-table-card"
-                >
+                <Card data-testid="expenses-table-card">
                     <CardContent>
                         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                             <Box>
@@ -435,9 +430,7 @@ function ExpensesPage() {
                                         value={selectedDate}
                                         yearsOrder="desc"
                                         maxDate={currentYear}
-                                        onMonthChange={(newMonth) => {
-                                            setSelectedDate(dayjs(newMonth));
-                                        }}
+                                        onMonthChange={(newMonth) => setSelectedDate(dayjs(newMonth))}
                                         views={['month', 'year']}
                                         format={"MMMM YYYY"}
                                         slotProps={{
@@ -490,9 +483,7 @@ function ExpensesPage() {
                                         },
                                     }}
                                 >
-                                    {/*//TODO ZMIENIC NA WIELOJEZYCZNOSC*/}
                                     <MenuItem value="Wszystkie">Wszystkie</MenuItem>
-
                                     {Object.values(categories).map((cat) => (
                                         <MenuItem key={cat.id} value={cat.name}>
                                             {cat.name}
@@ -506,6 +497,7 @@ function ExpensesPage() {
                         <DataGrid
                             rows={expenses}
                             columns={columns}
+                            loading={expensesQuery.isLoading} // ✅ POPRAWKA: Automatyczny spinner z TanStack Query
                             initialState={{pagination: {paginationModel}}}
                             pageSizeOptions={[5, 10]}
                             disableColumnMenu={true}
@@ -522,11 +514,9 @@ function ExpensesPage() {
                     </CardContent>
                 </Card>
             </Box>
-            {/*EXPENSES FOR CATEGORIES*/}
+
             <Box p={2}>
-                <Card
-                    data-testid='categories-table-card'
-                >
+                <Card data-testid='categories-table-card'>
                     <CardContent>
                         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                             <Box>
@@ -541,9 +531,7 @@ function ExpensesPage() {
                                         value={categorySelectedDate}
                                         yearsOrder="desc"
                                         maxDate={currentYear}
-                                        onMonthChange={(newMonth) => {
-                                            setCategorySelectedDate(dayjs(newMonth));
-                                        }}
+                                        onMonthChange={(newMonth) => setCategorySelectedDate(dayjs(newMonth))}
                                         views={['month', 'year']}
                                         format={"MMMM YYYY"}
                                         slotProps={{
@@ -590,7 +578,6 @@ function ExpensesPage() {
                         >
                             {Object.values(categoriesExpenses).map((cat, i) => {
                                 const matchedCategory = categories.find(c => c.name === cat.category);
-
                                 return (
                                     <CategoryExpense
                                         key={i}
@@ -600,18 +587,14 @@ function ExpensesPage() {
                                     />
                                 );
                             })}
-
                         </Box>
                     </CardContent>
                 </Card>
             </Box>
 
-            {/*// RECURRING EXPENSES TABLE*/}
             <Box p={2} display="flex" gap={3}>
                 <Box flex={1}>
-                    <Card
-                        data-testid='recurring-expenses-table-card'
-                    >
+                    <Card data-testid='recurring-expenses-table-card'>
                         <CardContent>
                             <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                                 <Box>
@@ -625,6 +608,7 @@ function ExpensesPage() {
                             <DataGrid
                                 rows={recurringExpenses}
                                 columns={recurringColumns}
+                                loading={recurringQuery.isLoading} // ✅ POPRAWKA: Automatyczny spinner
                                 initialState={{pagination: {paginationModel}}}
                                 pageSizeOptions={[5, 10]}
                                 disableColumnMenu={true}
@@ -642,19 +626,34 @@ function ExpensesPage() {
                     </Card>
                 </Box>
             </Box>
+
             <AddExpenseDialog
                 open={openDialog}
                 onClose={() => {
                     setOpenDialog(false)
                     setSelectedExpense(null)
                 }}
+                // ✅ POPRAWKA: Przekazujemy funkcję odświeżającą do użycia po poprawnym zapisie w Dialogu!
+                onSuccess={() => {
+                    queryClient.invalidateQueries({ queryKey: ['expenses'] });
+                    queryClient.invalidateQueries({ queryKey: ['transactionOverview'] });
+                    queryClient.invalidateQueries({ queryKey: ['categoriesAmount'] });
+                    setOpenDialog(false);
+                    setSelectedExpense(null);
+                }}
                 initialExpense={selectedExpense}
                 accounts={accounts}
                 categories={categories}
             />
+
             <RecurringExpenseDialog
                 open={editRecurringExpense}
                 onClose={() => setEditRecurringExpense(false)}
+                // ✅ POPRAWKA: Przekazujemy funkcję odświeżającą analogicznie jak wyżej
+                onSuccess={() => {
+                    queryClient.invalidateQueries({ queryKey: ['recurringExpenses'] });
+                    setEditRecurringExpense(false);
+                }}
                 recurringExpense={selectedRecurringExpense}
                 accounts={accounts}
                 categories={categories}
