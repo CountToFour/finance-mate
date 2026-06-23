@@ -1,0 +1,23 @@
+package finance_mate.core.account.service;
+
+import com.financemate.account.dto.AccountDto;
+import com.financemate.account.dto.AccountResponse;
+import com.financemate.account.dto.BalanceResponse;
+import com.financemate.account.model.Account;
+import com.financemate.auth.model.user.User;
+
+import java.util.List;
+
+public interface AccountService {
+
+    List<AccountResponse> getAccountForUser(User user);
+    AccountResponse createAccount(AccountDto dto, User user);
+    AccountResponse updateAccount(String accountId, AccountDto dto, User user);
+    void deleteAccount(String accountId, User user);
+    AccountResponse getAccountById(String accountId, User user);
+    void archiveAccount(String accountId, User user);
+    void includeInStats(String accountId, User user);
+    void changeBalance(String accountId, double amount, User user);
+    void transferBetweenAccounts(String fromAccountId, String toAccountId, double amount, User user);
+    BalanceResponse getUserBalance(User user);
+}

@@ -1,0 +1,738 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="165b5c02-abd2-4515-974f-381057475d2b" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/api-gateway/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/api-gateway/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/api-gateway/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/api-gateway/src/main/java/finance_mate/gateway/ApiGatewayApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auth-service/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auth-service/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auth-service/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auth-service/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auth-service/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auth-service/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/AuthServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auth-service/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/auth-service/src/test/java/finance_mate/auth/AuthServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/BudgetApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/budget/BudgetApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/budget/controller/BudgetController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/budget/controller/FinancialGoalController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/budget/dto/BudgetDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/budget/dto/BudgetResponseDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/budget/dto/FinancialGoalDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/budget/dto/FinancialGoalResponseDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/budget/dto/GoalRecommendationDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/budget/src/test/java/finance_mate/budget/BudgetApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/containers/db/docker_pgadmin_servers.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/containers/db/docker_postgres_init.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/CoreFinanceServiceApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/controller/TransactionController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/dto/CategoryDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/dto/DailyOverviewDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/dto/EditTransactionDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/dto/MonthOverviewDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/dto/RecurringTransactionResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/dto/TransactionOverviewDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/dto/TransactionRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/dto/TransactionResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/exception/AccountNotFoundException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/exception/InvalidPeriodTypeException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/exception/TransactionNotFoundException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/transaction/exception/UserNotFoundException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core-finance-service/src/test/java/finance_mate/core/CoreFinanceServiceApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/eureka/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/eureka/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/eureka/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/eureka/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/eureka/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/eureka/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/eureka/src/main/java/finance_mate/eureka/EurekaApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/eureka/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/eureka/src/test/java/finance_mate/eureka/EurekaApplicationTests.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/recommendation/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/recommendation/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/recommendation/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/recommendation/mvnw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/recommendation/mvnw.cmd" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/recommendation/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/RecommendationApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/recommendation/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/recommendation/src/test/java/finance_mate/recommendation/RecommendationApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitattributes" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/.gitattributes" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/containers/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mvnw" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/mvnw" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mvnw.cmd" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/mvnw.cmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/FinanceMateApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/SchedulerConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/communication/WebClientConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/communication/WebClientConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/controller/AccountController.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/controller/AccountController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/controller/CurrencyController.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/controller/CurrencyController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/dto/AccountDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/dto/AccountDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/dto/AccountResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/dto/AccountResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/dto/BalanceResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/dto/BalanceResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/dto/CurrencyResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/dto/CurrencyResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/dto/ExchangeRateDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/dto/ExchangeRateDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/dto/TransferDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/dto/TransferDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/dto/validation/ColorHexValidator.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/dto/validation/ColorHexValidator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/dto/validation/CorrectColorHex.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/dto/validation/CorrectColorHex.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/exception/AccessException.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/exception/AccessException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/exception/AccountNotFoundException.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/exception/AccountNotFoundException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/exception/CurrencyNotFoundException.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/exception/CurrencyNotFoundException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/exception/IllegalOperationException.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/exception/IllegalOperationException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/exception/UserNotFoundException.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/exception/UserNotFoundException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/model/Account.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/model/Account.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/model/Currency.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/model/Currency.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/model/ExchangeRate.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/model/ExchangeRate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/repository/AccountRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/repository/AccountRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/repository/CurrencyRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/repository/CurrencyRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/repository/ExchangeRateRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/repository/ExchangeRateRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/service/AccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/service/AccountService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/service/CurrencyService.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/service/CurrencyService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/service/StandardAccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/service/StandardAccountService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/account/service/StandardCurrencyService.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/account/service/StandardCurrencyService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/controllers/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/controllers/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/controllers/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/controllers/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/dto/AuthResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/dto/AuthResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/dto/LoginRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/dto/LoginRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/dto/RegisterRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/dto/RegisterRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/exceptions/EmailAlreadyExistsException.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/exceptions/EmailAlreadyExistsException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/exceptions/UserNotFoundException.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/exceptions/UserNotFoundException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/jwt/JwtAuthenticationFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/jwt/JwtAuthenticationFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/jwt/JwtService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/jwt/JwtService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/model/token/Token.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/model/token/Token.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/model/user/Role.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/model/user/Role.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/model/user/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/model/user/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/repository/TokenRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/repository/TokenRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/service/AuthService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/service/CustomUserDetailsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/service/CustomUserDetailsService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/service/LogoutService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/service/LogoutService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/auth/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/finance_mate/auth/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/controller/BudgetController.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/controller/BudgetController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/controller/FinancialGoalController.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/controller/FinancialGoalController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/dto/BudgetDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/dto/BudgetDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/dto/BudgetResponseDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/dto/BudgetResponseDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/dto/FinancialGoalDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/dto/FinancialGoalDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/dto/FinancialGoalResponseDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/dto/FinancialGoalResponseDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/dto/GoalRecommendationDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/dto/GoalRecommendationDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/mapper/BudgetMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/mapper/BudgetMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/model/Budget.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/model/Budget.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/model/BudgetPeriodType.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/model/BudgetPeriodType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/model/BudgetStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/model/BudgetStatus.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/model/FinancialGoal.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/model/FinancialGoal.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/repository/BudgetRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/repository/BudgetRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/repository/FinancialGoalRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/repository/FinancialGoalRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/service/BudgetService.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/service/BudgetService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/service/GoalService.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/service/GoalService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/service/StandardBudgetService.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/service/StandardBudgetService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/budget/service/StandardGoalService.java" beforeDir="false" afterPath="$PROJECT_DIR$/budget/src/main/java/finance_mate/budget/service/StandardGoalService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/category/controller/CategoryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/category/controller/CategoryController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/category/dto/CategoryDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/category/dto/CategoryDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/category/dto/validation/ColorHexValidator.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/category/dto/validation/ColorHexValidator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/category/dto/validation/CorrectColorHex.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/category/dto/validation/CorrectColorHex.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/category/exceptions/CategoryNotFoundExcpetion.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/category/exceptions/CategoryNotFoundExcpetion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/category/exceptions/CategoryTypeMismatchException.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/category/exceptions/CategoryTypeMismatchException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/category/mapper/CategoryMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/category/mapper/CategoryMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/category/model/Category.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/category/model/Category.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/category/model/CategoryGroup.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/category/model/CategoryGroup.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/category/model/CategoryLocale.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/category/model/CategoryLocale.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/category/repository/CategoryRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/category/repository/CategoryRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/category/service/CategoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/category/service/CategoryService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/category/service/StandardCategoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/category/service/StandardCategoryService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/config/ClientConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/config/ClientConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/controller/RecommendationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/controller/RecommendationController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/integration/TwelveDataClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/integration/TwelveDataClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/model/InvestmentProfile.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/model/InvestmentProfile.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/model/RecommendationAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/model/RecommendationAction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/model/RsiRecommendation.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/model/RsiRecommendation.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/model/dto/MLRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/model/dto/MLRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/model/dto/MLResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/model/dto/MLResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/model/dto/MetaData.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/model/dto/MetaData.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/model/dto/RecommendationDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/model/dto/RecommendationDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/model/dto/SmartRecommendationDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/model/dto/SmartRecommendationDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/model/dto/SpendingStructureDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/model/dto/SpendingStructureDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/model/dto/TwelveDataTimeSeriesResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/model/dto/TwelveDataTimeSeriesResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/model/dto/Value.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/model/dto/Value.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/repository/RecommendationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/repository/RecommendationRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/service/RecommendationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/service/RecommendationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/service/RsiRecommendationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/service/RsiRecommendationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/recommendation/service/StandardRecommendationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/recommendation/src/main/java/finance_mate/recommendation/service/StandardRecommendationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/controller/TransactionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/controller/TransactionController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/dto/CategoryDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/dto/CategoryDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/dto/DailyOverviewDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/dto/DailyOverviewDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/dto/EditTransactionDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/dto/EditTransactionDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/dto/MonthOverviewDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/dto/MonthOverviewDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/dto/RecurringTransactionResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/dto/RecurringTransactionResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/dto/TransactionOverviewDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/dto/TransactionOverviewDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/dto/TransactionRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/dto/TransactionRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/dto/TransactionResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/dto/TransactionResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/exception/AccountNotFoundException.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/exception/AccountNotFoundException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/exception/InvalidPeriodTypeException.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/exception/InvalidPeriodTypeException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/exception/TransactionNotFoundException.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/exception/TransactionNotFoundException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/exception/UserNotFoundException.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/exception/UserNotFoundException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/mapper/TransactionMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/mapper/TransactionMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/model/PeriodType.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/model/PeriodType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/model/RecurringTransaction.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/model/RecurringTransaction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/model/Transaction.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/model/Transaction.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/model/TransactionType.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/model/TransactionType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/repository/RecurringTransactionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/repository/RecurringTransactionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/repository/TransactionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/repository/TransactionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/service/RecurringTransactionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/service/RecurringTransactionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/service/TransactionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/service/TransactionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/financemate/transaction/utils/TransactionSpecifications.java" beforeDir="false" afterPath="$PROJECT_DIR$/core-finance-service/src/main/java/finance_mate/core/transaction/utils/TransactionSpecifications.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/financemate/FinanceMateApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/test/java/finance_mate/gateway/ApiGatewayApplicationTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/financemate/recommendation/service/RsiRecommendationServiceTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/financemate/transaction/RecurringExpenseServiceTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/financemate/ui/BudgetTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/financemate/ui/DashboardTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/financemate/ui/ExpenseTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/financemate/ui/IncomeTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/financemate/ui/LoginTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/financemate/ui/RegisterTest.java" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/Users/Janek/Desktop/studia/praca inżynierska/finance-mate/backend" value="31sgYgJuIqR3H7vxkRRtQIW3lNz" />
+      <entry key="_C:/Users/Janek/Desktop/studia/praca inżynierska/finance-mate/backend/auth-service" value="3FVsKkjhe0UI6FZnjmWtfy2FK0d" />
+    </persistenceIdMap>
+  </component>
+  <component name="CopilotUserSelectedChatMode">
+    <option name="chatModeId" value="Ask" />
+  </component>
+  <component name="CopilotUserSelectedModel">
+    <selectedModels>
+      <entry key="chat-panel" value="GPT-5 mini" />
+      <entry key="agent-panel" value="GPT-5 mini" />
+    </selectedModels>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="package-info" />
+        <option value="Exception" />
+        <option value="Interface" />
+        <option value="Enum" />
+        <option value="Record" />
+        <option value="Dockerfile" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$/.." value="main" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;CountToFour&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/CountToFour/finance-mate.git&quot;,
+    &quot;accountId&quot;: &quot;0f1c3e9a-b2c4-4aa9-85db-f7a8cb4715ed&quot;
+  }
+}</component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="31sgYgJuIqR3H7vxkRRtQIW3lNz" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Docker.containers: Compose Deployment.executor": "Run",
+    "Docker.docker-compose.yml.postgres: Compose Deployment.executor": "Run",
+    "Docker.docker-compose.yml: Compose Deployment.executor": "Run",
+    "JUnit.BudgetTest.executor": "Run",
+    "JUnit.BudgetTest.testAddNewFinancialGoalSuccessfully.executor": "Run",
+    "JUnit.BudgetTest.testEmptyGoalFormValidation.executor": "Run",
+    "JUnit.DashboardE2ETest.executor": "Run",
+    "JUnit.ExpenseTest.executor": "Run",
+    "JUnit.ExpenseTest.testAddExpenseValidation.executor": "Run",
+    "JUnit.ExpenseTest.testAddNewExpenseSuccessfully.executor": "Run",
+    "JUnit.ExpenseTest.testExpensesPageLoadsCorrectly.executor": "Run",
+    "JUnit.IncomeTest.executor": "Run",
+    "JUnit.LoginE2ETest.executor": "Run",
+    "JUnit.LoginE2ETest.testInvalidCredentialsError.executor": "Run",
+    "JUnit.NavigationTest.executor": "Debug",
+    "JUnit.RecurringExpenseServiceTest.executor": "Run",
+    "JUnit.RegisterTest.executor": "Run",
+    "JUnit.RegisterTest.testEmailAlreadyTakenError.executor": "Run",
+    "JUnit.RsiRecommendationServiceTest.testCalculateRsiWithSyntheticData.executor": "Run",
+    "Maven.backend [clean].executor": "Run",
+    "Maven.backend [install].executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "Spring Boot.FinanceMateApplication.executor": "Debug",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "refactor-to-microservices",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/Janek/Desktop/studia/praca inżynierska/finance-mate/backend",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "run.configurations.included.in.services": "true",
+    "settings.editor.selected.configurable": "reference.settings.project.maven.repository.indices",
+    "ts.external.directory.path": "C:\\Users\\Janek\\AppData\\Roaming\\JetBrains\\IntelliJIdea2025.2\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="ReactorSettings">
+    <option name="notificationShown" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Janek\Desktop\studia\praca inżynierska\finance-mate\backend" />
+      <recent name="C:\Users\Janek\Desktop\studia\praca inżynierska\finance-mate\backend\recommendation\src\main\java\finance_mate\recommendation" />
+      <recent name="C:\Users\Janek\Desktop\studia\praca inżynierska\finance-mate\backend\recommendation\src\main\java\finance_mate\recommendation\config" />
+      <recent name="C:\Users\Janek\Desktop\studia\praca inżynierska\finance-mate\backend\core-finance-service\src\main\java\finance_mate\core" />
+      <recent name="C:\Users\Janek\Desktop\studia\praca inżynierska\finance-mate\backend\budget\src\main\java\finance_mate\budget" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Janek\Desktop\studia\praca inżynierska\finance-mate\backend\containers" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="KtorApplicationConfigurationType" />
+        <option value="MicronautRunConfigurationType" />
+        <option value="QuarkusRunConfigurationType" />
+        <option value="SpringBootApplicationConfigurationType" />
+      </set>
+    </option>
+  </component>
+  <component name="RunManager" selected="Docker.containers: Compose Deployment">
+    <configuration name="BudgetTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.financemate.ui.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.financemate.ui" />
+      <option name="MAIN_CLASS_NAME" value="com.financemate.ui.BudgetTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ExpenseTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.financemate.ui.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.financemate.ui" />
+      <option name="MAIN_CLASS_NAME" value="com.financemate.ui.ExpenseTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RegisterTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.financemate.ui.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.financemate.ui" />
+      <option name="MAIN_CLASS_NAME" value="com.financemate.ui.RegisterTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RegisterTest.testEmailAlreadyTakenError" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.financemate.ui.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.financemate.ui" />
+      <option name="MAIN_CLASS_NAME" value="com.financemate.ui.RegisterTest" />
+      <option name="METHOD_NAME" value="testEmailAlreadyTakenError" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="JetRunConfigurationType">
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
+    <configuration name="ApiGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="api-gateway" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="finance_mate.gateway.ApiGatewayApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="AuthServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="auth-service" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="finance_mate.auth.AuthServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="BudgetApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="budget" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="finance_mate.budget.BudgetApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="CoreFinanceServiceApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="core-finance-service" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="finance_mate.core.CoreFinanceServiceApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="EurekaApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="eureka" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="finance_mate.eureka.EurekaApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="FinanceMateApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="backend" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.financemate.FinanceMateApplication" />
+      <extension name="net.ashald.envfile">
+        <option name="IS_ENABLED" value="false" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+        </ENTRIES>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RecommendationApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <module name="recommendation" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="finance_mate.recommendation.RecommendationApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="docker-deploy" factoryName="docker-compose.yml" temporary="true">
+      <deployment type="docker-compose.yml">
+        <settings />
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <configuration name="containers: Compose Deployment" type="docker-deploy" factoryName="docker-compose.yml" temporary="true" server-name="Docker">
+      <deployment type="docker-compose.yml">
+        <settings>
+          <option name="sourceFilePath" value="containers/docker-compose.yml" />
+        </settings>
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Docker.containers: Compose Deployment" />
+      <item itemvalue="JUnit.BudgetTest" />
+      <item itemvalue="JUnit.ExpenseTest" />
+      <item itemvalue="JUnit.RegisterTest" />
+      <item itemvalue="JUnit.RegisterTest.testEmailAlreadyTakenError" />
+      <item itemvalue="Spring Boot.ApiGatewayApplication" />
+      <item itemvalue="Spring Boot.AuthServiceApplication" />
+      <item itemvalue="Spring Boot.BudgetApplication" />
+      <item itemvalue="Spring Boot.CoreFinanceServiceApplication" />
+      <item itemvalue="Spring Boot.EurekaApplication" />
+      <item itemvalue="Spring Boot.FinanceMateApplication" />
+      <item itemvalue="Spring Boot.RecommendationApplication" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Docker.containers: Compose Deployment" />
+        <item itemvalue="JUnit.RegisterTest.testEmailAlreadyTakenError" />
+        <item itemvalue="JUnit.RegisterTest" />
+        <item itemvalue="JUnit.ExpenseTest" />
+        <item itemvalue="JUnit.BudgetTest" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-bf35d07a577b-intellij.indexing.shared.core-IU-252.25557.131" />
+        <option value="bundled-js-predefined-d6986cc7102b-b598e85cdad2-JavaScript-IU-252.25557.131" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="165b5c02-abd2-4515-974f-381057475d2b" name="Changes" comment="" />
+      <created>1756318242824</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1756318242824</updated>
+      <workItem from="1756318243992" duration="5644000" />
+      <workItem from="1756469630023" duration="2374000" />
+      <workItem from="1756472552563" duration="209000" />
+      <workItem from="1756472780398" duration="11713000" />
+      <workItem from="1756577741781" duration="7363000" />
+      <workItem from="1756641896983" duration="2160000" />
+      <workItem from="1756644107371" duration="43000" />
+      <workItem from="1756644846984" duration="2072000" />
+      <workItem from="1756984032402" duration="8747000" />
+      <workItem from="1757265375801" duration="4829000" />
+      <workItem from="1757348636981" duration="6733000" />
+      <workItem from="1757423193376" duration="6991000" />
+      <workItem from="1757520722140" duration="4806000" />
+      <workItem from="1757866890540" duration="633000" />
+      <workItem from="1757956983832" duration="688000" />
+      <workItem from="1758027923056" duration="3798000" />
+      <workItem from="1758046991518" duration="5542000" />
+      <workItem from="1758139916020" duration="4960000" />
+      <workItem from="1758545522340" duration="8381000" />
+      <workItem from="1758641427950" duration="911000" />
+      <workItem from="1758997692658" duration="698000" />
+      <workItem from="1759158089609" duration="15421000" />
+      <workItem from="1759232473220" duration="3581000" />
+      <workItem from="1759251172141" duration="6111000" />
+      <workItem from="1759577948380" duration="12660000" />
+      <workItem from="1759659230033" duration="4926000" />
+      <workItem from="1759675776024" duration="10005000" />
+      <workItem from="1759865788942" duration="5407000" />
+      <workItem from="1760467065000" duration="51000" />
+      <workItem from="1760785412858" duration="1070000" />
+      <workItem from="1760786510215" duration="21541000" />
+      <workItem from="1760871985735" duration="2266000" />
+      <workItem from="1760874325177" duration="73000" />
+      <workItem from="1760877562987" duration="650000" />
+      <workItem from="1760909204061" duration="1795000" />
+      <workItem from="1761335194698" duration="22000" />
+      <workItem from="1762293096063" duration="1024000" />
+      <workItem from="1762630996869" duration="6291000" />
+      <workItem from="1762640934121" duration="22468000" />
+      <workItem from="1762802210803" duration="9346000" />
+      <workItem from="1762901377225" duration="2572000" />
+      <workItem from="1762967298693" duration="417000" />
+      <workItem from="1762982617105" duration="6450000" />
+      <workItem from="1762989774085" duration="3151000" />
+      <workItem from="1762994806120" duration="1387000" />
+      <workItem from="1763050335044" duration="59000" />
+      <workItem from="1763294868182" duration="13752000" />
+      <workItem from="1763656184928" duration="2213000" />
+      <workItem from="1763675541784" duration="3200000" />
+      <workItem from="1763683411322" duration="110000" />
+      <workItem from="1763683533979" duration="6000" />
+      <workItem from="1764450728954" duration="1476000" />
+      <workItem from="1764523386228" duration="55000" />
+      <workItem from="1764699684385" duration="19000" />
+      <workItem from="1764775861723" duration="3973000" />
+      <workItem from="1764843529590" duration="11312000" />
+      <workItem from="1765131512830" duration="5427000" />
+      <workItem from="1765297462114" duration="20025000" />
+      <workItem from="1765385597377" duration="19667000" />
+      <workItem from="1765631742639" duration="3266000" />
+      <workItem from="1765729261393" duration="4189000" />
+      <workItem from="1768585967477" duration="2637000" />
+      <workItem from="1768613289693" duration="1949000" />
+      <workItem from="1768694748496" duration="6260000" />
+      <workItem from="1768781004230" duration="739000" />
+      <workItem from="1768848109605" duration="503000" />
+      <workItem from="1768863130534" duration="2385000" />
+      <workItem from="1768924887695" duration="3378000" />
+      <workItem from="1769377710182" duration="5199000" />
+      <workItem from="1769532210604" duration="312000" />
+      <workItem from="1769712036566" duration="1692000" />
+      <workItem from="1769727249131" duration="8418000" />
+      <workItem from="1769817465532" duration="1225000" />
+      <workItem from="1769861676738" duration="2801000" />
+      <workItem from="1769903068140" duration="3339000" />
+      <workItem from="1769989099405" duration="1107000" />
+      <workItem from="1770026572452" duration="7385000" />
+      <workItem from="1770655538275" duration="3449000" />
+      <workItem from="1771182403119" duration="637000" />
+      <workItem from="1771322690076" duration="1631000" />
+      <workItem from="1771504011607" duration="10749000" />
+      <workItem from="1771543833115" duration="323000" />
+      <workItem from="1771941263665" duration="1370000" />
+      <workItem from="1771958680860" duration="1209000" />
+      <workItem from="1776092118167" duration="7701000" />
+      <workItem from="1776112212184" duration="4770000" />
+      <workItem from="1776776399236" duration="13219000" />
+      <workItem from="1776888009183" duration="2861000" />
+      <workItem from="1780338213619" duration="77000" />
+      <workItem from="1782169050702" duration="2411000" />
+      <workItem from="1782171511139" duration="23000" />
+      <workItem from="1782171565809" duration="1934000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/financemate/account/service/StandardCurrencyService.java</url>
+          <line>83</line>
+          <option name="timeStamp" value="26" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/financemate/account/service/StandardAccountService.java</url>
+          <line>143</line>
+          <properties>
+            <option name="lambda-ordinal" value="-1" />
+          </properties>
+          <option name="timeStamp" value="29" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/financemate/budget/service/StandardGoalService.java</url>
+          <line>50</line>
+          <option name="timeStamp" value="30" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/financemate/recommendation/controller/RecommendationController.java</url>
+          <line>64</line>
+          <option name="timeStamp" value="33" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/financemate/transaction/service/TransactionService.java</url>
+          <line>61</line>
+          <option name="timeStamp" value="34" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/financemate/recommendation/service/StandardRecommendationService.java</url>
+          <line>234</line>
+          <option name="timeStamp" value="35" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/financemate/recommendation/service/StandardRecommendationService.java</url>
+          <line>250</line>
+          <option name="timeStamp" value="36" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/financemate/transaction/service/TransactionService.java</url>
+          <line>136</line>
+          <option name="timeStamp" value="39" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/financemate/transaction/service/TransactionService.java</url>
+          <line>91</line>
+          <option name="timeStamp" value="41" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/financemate/transaction/service/RecurringTransactionService.java</url>
+          <line>34</line>
+          <option name="timeStamp" value="42" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <watches-manager>
+      <configuration name="SpringBootApplicationConfigurationType">
+        <watch expression="this.name" custom="com.financemate.account.model.Currency" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
+  </component>
+</project>
