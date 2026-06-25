@@ -1,13 +1,11 @@
 package finance_mate.auth.controller;
 
 import finance_mate.auth.model.dto.UserDto;
+import finance_mate.auth.model.dto.UserUpdateDto;
 import finance_mate.auth.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/user")
@@ -21,4 +19,8 @@ public class UserController {
         return ResponseEntity.ok(userService.getUser(userId));
     }
 
+    @PutMapping("/{userId}")
+    ResponseEntity<UserDto> updateUser(@RequestBody UserUpdateDto userDto, @PathVariable String userId) {
+        return ResponseEntity.ok(userService.updateUser(userDto, userId));
+    }
 }

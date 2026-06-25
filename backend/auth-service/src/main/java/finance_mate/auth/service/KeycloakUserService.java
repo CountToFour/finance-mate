@@ -2,8 +2,8 @@ package finance_mate.auth.service;
 
 import finance_mate.auth.exception.AuthException;
 import finance_mate.auth.exception.ErrorCode;
-import finance_mate.auth.model.User;
 import finance_mate.auth.model.dto.TokenResponseDto;
+import finance_mate.auth.model.dto.UserDto;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -140,7 +140,7 @@ public class KeycloakUserService {
             String keycloakUserId = path.substring(path.lastIndexOf("/") + 1);
 
             try {
-                User userEntity = userService.createUser(keycloakUserId, user.getFirstName(), user.getLastName(), user.getEmail());
+                UserDto userEntity = userService.createUser(keycloakUserId, user.getFirstName(), user.getLastName(), user.getEmail());
                 log.info("Successfully created user in Keycloak and local DB with ID: {}", keycloakUserId);
             } catch (Exception e) {
                 try {
