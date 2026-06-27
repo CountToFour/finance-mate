@@ -1,7 +1,8 @@
-package finance_mate.core.account.dto;
+package finance_mate.core.account.model.dto;
 
-import com.financemate.account.dto.CurrencyResponse;
+import lombok.Builder;
 
+@Builder
 public record AccountResponse(
         String id,
         String name,
@@ -9,6 +10,6 @@ public record AccountResponse(
         double balance,
         String color,
         boolean includeInStats,
-        boolean archived,
-        CurrencyResponse currency
+        boolean archived
+//        CurrencyResponse currency
 ) { }

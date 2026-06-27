@@ -1,6 +1,6 @@
-package finance_mate.core.account.dto;
+package finance_mate.core.account.model.dto;
 
-import com.financemate.account.dto.validation.CorrectColorHex;
+import finance_mate.core.account.model.dto.validation.CorrectColorHex;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 

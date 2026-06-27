@@ -1,23 +1,21 @@
 package finance_mate.core.account.service;
 
-import com.financemate.account.dto.AccountDto;
-import com.financemate.account.dto.AccountResponse;
-import com.financemate.account.dto.BalanceResponse;
-import com.financemate.account.model.Account;
-import com.financemate.auth.model.user.User;
+import finance_mate.core.account.model.dto.AccountDto;
+import finance_mate.core.account.model.dto.AccountResponse;
+import finance_mate.core.account.model.dto.BalanceResponse;
 
 import java.util.List;
 
 public interface AccountService {
 
-    List<AccountResponse> getAccountForUser(User user);
-    AccountResponse createAccount(AccountDto dto, User user);
-    AccountResponse updateAccount(String accountId, AccountDto dto, User user);
-    void deleteAccount(String accountId, User user);
-    AccountResponse getAccountById(String accountId, User user);
-    void archiveAccount(String accountId, User user);
-    void includeInStats(String accountId, User user);
-    void changeBalance(String accountId, double amount, User user);
-    void transferBetweenAccounts(String fromAccountId, String toAccountId, double amount, User user);
-    BalanceResponse getUserBalance(User user);
+    List<AccountResponse> getAccountForUser(String userId);
+    AccountResponse createAccount(AccountDto dto, String userId);
+    AccountResponse updateAccount(String accountId, AccountDto dto, String userId);
+    void deleteAccount(String accountId, String userId);
+    AccountResponse getAccountById(String accountId, String userId);
+    void archiveAccount(String accountId, String userId);
+    void includeInStats(String accountId, String userId);
+    void changeBalance(String accountId, double amount, String userId);
+    void transferBetweenAccounts(String fromAccountId, String toAccountId, double amount, String userId);
+    BalanceResponse getUserBalance(String userId);
 }

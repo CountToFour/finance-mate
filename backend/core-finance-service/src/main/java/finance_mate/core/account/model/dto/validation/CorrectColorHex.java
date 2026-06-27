@@ -1,4 +1,4 @@
-package finance_mate.core.account.dto.validation;
+package finance_mate.core.account.model.dto.validation;
 
 import com.financemate.account.dto.validation.ColorHexValidator;
 import jakarta.validation.Constraint;

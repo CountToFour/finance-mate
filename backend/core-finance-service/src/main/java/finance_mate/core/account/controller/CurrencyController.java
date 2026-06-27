@@ -1,11 +1,10 @@
 package finance_mate.core.account.controller;
 
-import com.financemate.account.model.Currency;
-import com.financemate.account.service.CurrencyService;
+import finance_mate.core.account.model.dto.CurrencyDto;
+import finance_mate.core.account.service.CurrencyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/currency")
-@CrossOrigin("*")
 public class CurrencyController {
+
     private final CurrencyService standardCurrencyService;
 
     @GetMapping
@@ -31,7 +30,7 @@ public class CurrencyController {
     }
 
     @PostMapping
-    public ResponseEntity<?> addCurrency(@RequestBody Currency currency) {
+    public ResponseEntity<?> addCurrency(@RequestBody CurrencyDto currency) {
         try {
             standardCurrencyService.addCurrency(currency);
             return ResponseEntity.ok().build();

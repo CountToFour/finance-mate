@@ -1,88 +1,92 @@
 package finance_mate.core.account.service;
 
-import com.financemate.account.dto.ExchangeRateDto;
-import com.financemate.account.model.Currency;
-import com.financemate.account.model.ExchangeRate;
-import com.financemate.account.repository.CurrencyRepository;
-import com.financemate.account.repository.ExchangeRateRepository;
+import finance_mate.core.account.communication.ExchangeRateApiClient;
+import finance_mate.core.account.model.Currency;
+import finance_mate.core.account.model.ExchangeRate;
+import finance_mate.core.account.model.dto.CurrencyDto;
+import finance_mate.core.account.model.dto.CurrencyResponse;
+import finance_mate.core.account.model.dto.ExchangeRateDto;
+import finance_mate.core.account.repository.CurrencyRepository;
+import finance_mate.core.account.repository.ExchangeRateRepository;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StopWatch;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class StandardCurrencyService implements CurrencyService {
 
     private final CurrencyRepository currencyRepository;
     private final ExchangeRateRepository exchangeRateRepository;
-    private final WebClient webClient;
+    private final ExchangeRateApiClient exchangeRateApiClient;
 
-    public StandardCurrencyService(CurrencyRepository currencyRepository,
-                                   ExchangeRateRepository exchangeRateRepository,
-                                   WebClient webClient) {
-        this.webClient = webClient;
-        this.currencyRepository = currencyRepository;
-        this.exchangeRateRepository = exchangeRateRepository;
-    }
+    @PostConstruct
+    public void setCurrencyRates() {
+        List<Currency> currencies = currencyRepository.findAll();
 
-//    @PostConstruct
-//    public void setCurrencyRates() {
-//        List<Currency> currencies = currencyRepository.findAll();
-//
-//        for (int i = 0; i < currencies.size(); i++) {
-//            Currency fromCurrency = currencies.get(i);
-//            for (int j = i + 1; j < currencies.size(); j++) {
-//                Currency toCurrency = currencies.get(j);
-//
-//                try {
-//                    double rate = getExchangeRate(fromCurrency.getCode(), toCurrency.getCode());
-//                    saveExchangeRate(fromCurrency.getCode(), toCurrency.getCode(), rate);
-//
-//                    double reverseRate = 1.0 / rate;
-//                    saveExchangeRate(toCurrency.getCode(), fromCurrency.getCode(), reverseRate);
-//                } catch (Exception e) {
-//                    log.error("Error fetching exchange rate for {} to {}: {}", fromCurrency.getCode(), toCurrency.getCode(), e.getMessage());
-//                }
-//            }
-//        }
-//    }
+        for (int i = 0; i < currencies.size(); i++) {
+            Currency fromCurrency = currencies.get(i);
+            for (int j = i + 1; j < currencies.size(); j++) {
+                Currency toCurrency = currencies.get(j);
 
-    @Override
-    public List<Currency> findAllCurrencies() {
-        return currencyRepository.findAll();
+                try {
+                    double rate = getExchangeRate(fromCurrency.getCode(), toCurrency.getCode());
+                    saveExchangeRate(fromCurrency.getCode(), toCurrency.getCode(), rate);
+
+                    double reverseRate = 1.0 / rate;
+                    saveExchangeRate(toCurrency.getCode(), fromCurrency.getCode(), reverseRate);
+                } catch (Exception e) {
+                    log.error("Error fetching exchange rate for {} to {}: {}", fromCurrency.getCode(), toCurrency.getCode(), e.getMessage());
+                }
+            }
+        }
     }
 
     @Override
-    public void addCurrency(Currency currency) {
+    public List<CurrencyResponse> findAllCurrencies() {
+        return currencyRepository.findAll().stream().map(this::mapCurrencyToDto).collect(Collectors.toList());
+    }
+
+    @Override
+    public void addCurrency(CurrencyDto currency) {
         if (currencyRepository.findById(currency.getCode().toUpperCase()).isPresent()) {
             throw new IllegalArgumentException("Currency with code " + currency.getCode() + " already exists.");
         }
-        currencyRepository.save(currency);
+
+        Currency newCurrency = Currency.builder()
+                .code(currency.getCode().toUpperCase())
+                .name(currency.getName())
+                .symbol(currency.getSymbol())
+                .build();
+
+        currencyRepository.save(newCurrency);
     }
 
     @Override
     public void deleteCurrency(String code) {
+        //TODO DELETE ALSO RATES
         currencyRepository.findById(code.toUpperCase()).orElseThrow(()
                 -> new IllegalArgumentException("Currency with code " + code + " does not exist."));
         currencyRepository.deleteById(code);
     }
 
     @Override
-    public Currency getCurrencyByCode(String code) {
-        currencyRepository.findById(code.toUpperCase()).orElseThrow(()
+    public CurrencyResponse getCurrencyByCode(String code) {
+        Currency currency = currencyRepository.findById(code.toUpperCase()).orElseThrow(()
                 -> new IllegalArgumentException("Currency with code " + code + " does not exist."));
-        return currencyRepository.findById(code).isPresent() ? currencyRepository.findById(code).get() : null;
+
+        return mapCurrencyToDto(currency);
     }
 
     @Override
@@ -95,24 +99,21 @@ public class StandardCurrencyService implements CurrencyService {
         dto.setBase_code(fromCurrency.toUpperCase());
         dto.setTarget_code(toCurrency.toUpperCase());
         dto.setConversion_rate(exchangeRate.getRate());
+
+        //TODO WHY HERE IS RESULT?
         dto.setResult("success");
 
         return dto;
     }
 
     private double getExchangeRate(String fromCode, String toCode) {
-        ExchangeRateDto response = webClient.get()
-                .uri("{fromCode}/{toCode}/", fromCode, toCode)
-                .retrieve()
-                .bodyToMono(ExchangeRateDto.class)
-                .block();
+        ExchangeRateDto response = exchangeRateApiClient.getExchangeRate(fromCode, toCode);
 
         if (response != null && "success".equals(response.getResult())) {
             return response.getConversion_rate();
         }
 
         throw new RuntimeException("Failed to fetch exchange rate");
-
     }
 
     private void saveExchangeRate(String fromCode, String toCode, double rate) {
@@ -131,8 +132,6 @@ public class StandardCurrencyService implements CurrencyService {
     @Scheduled(cron = "0 30 * * * ?")
     @CacheEvict(value = "exchangeRates", allEntries = true)
     public void updateExchangeRates() {
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
         List<Currency> currencies = currencyRepository.findAll();
 
         List<Pair<Currency, Currency>> currencyPairs = new ArrayList<>();
@@ -147,35 +146,22 @@ public class StandardCurrencyService implements CurrencyService {
                     String from = pair.getFirst().getCode();
                     String to = pair.getSecond().getCode();
 
-                    return webClient.get()
-                            .uri("{fromCode}/{toCode}/", from, to)
-                            .retrieve()
-                            .bodyToMono(ExchangeRateDto.class)
-                            .map(response -> {
-                                if (response != null && "success".equals(response.getResult())) {
-                                    return new ExchangeRateResult(from, to, response.getConversion_rate());
-                                }
-                                throw new RuntimeException("Failed");
-                            })
-                            .onErrorResume(e -> {
-                                log.error("Error for {} to {}", from, to, e);
-                                return Mono.empty();
-                            });
+                    return exchangeRateApiClient.fetchExchangeRate(from, to);
                 }, 5)
                 .doOnNext(result -> {
-                    saveExchangeRate(result.from, result.to, result.rate);
-                    saveExchangeRate(result.to, result.from, 1.0 / result.rate);
+                    saveExchangeRate(result.from(), result.to(), result.rate());
+                    saveExchangeRate(result.to(), result.from(), 1.0 / result.rate());
                 })
                 .blockLast();
 
-        stopWatch.stop();
-
-        log.info("Zakończono pobieranie. Czas trwania: {} milisekund ({} sekund)",
-                stopWatch.getTotalTimeMillis(),
-                stopWatch.getTotalTimeSeconds());
         log.info("Exchange rates updated at {}", LocalDateTime.now());
     }
 
-    private record ExchangeRateResult(String from, String to, double rate) {
+    private CurrencyResponse mapCurrencyToDto(Currency currency) {
+        return CurrencyResponse.builder()
+                .name(currency.getName())
+                .symbol(currency.getSymbol())
+                .code(currency.getCode())
+                .build();
     }
 }

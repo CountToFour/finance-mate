@@ -1,22 +1,19 @@
 package finance_mate.core.account.model;
 
-import com.financemate.account.model.Currency;
-import com.financemate.auth.model.user.User;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "accounts")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Account {
 
     @Id
@@ -24,12 +21,10 @@ public class Account {
     private String id;
     private String name;
     private String description;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User userId;
-    @ManyToOne
-    @JoinColumn(name = "currency_id", referencedColumnName = "code", nullable = false)
-    private Currency currencyCode;
+    private String userId;
+//    @ManyToOne
+//    @JoinColumn(name = "currency_id", referencedColumnName = "code", nullable = false)
+//    private Currency currencyCode;
     private double balance;
     private String color;
     private boolean includeInStats;

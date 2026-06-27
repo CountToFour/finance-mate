@@ -1,6 +1,6 @@
 package finance_mate.core.account.repository;
 
-import com.financemate.account.model.ExchangeRate;
+import finance_mate.core.account.model.ExchangeRate;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 

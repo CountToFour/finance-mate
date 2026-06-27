@@ -1,4 +1,4 @@
-package finance_mate.core.account.dto;
+package finance_mate.core.account.model.dto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,6 +6,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ExchangeRateDto {
+
 
     String result;
     String base_code;

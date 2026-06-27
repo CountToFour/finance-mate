@@ -1,45 +1,28 @@
 package finance_mate.core.account.controller;
 
-import com.financemate.account.dto.AccountDto;
-import com.financemate.account.dto.BalanceResponse;
-import com.financemate.account.dto.TransferDto;
-import com.financemate.account.exception.AccessException;
-import com.financemate.account.exception.AccountNotFoundException;
-import com.financemate.account.exception.CurrencyNotFoundException;
-import com.financemate.account.exception.IllegalOperationException;
-import com.financemate.account.exception.UserNotFoundException;
-import com.financemate.account.service.AccountService;
-import com.financemate.auth.model.user.User;
-import com.financemate.auth.service.UserService;
+
+import finance_mate.core.account.model.dto.AccountDto;
+import finance_mate.core.account.model.dto.BalanceResponse;
+import finance_mate.core.account.model.dto.TransferDto;
+import finance_mate.core.account.exception.*;
+import finance_mate.core.account.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/account")
-@CrossOrigin("*")
 public class AccountController {
 
     private final AccountService accountService;
-    private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<?> getAccountForUser(Authentication authentication) {
+    public ResponseEntity<?> getAccountsForUser(@RequestHeader("X-User-Id") String userId) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(accountService.getAccountForUser(user));
+            return ResponseEntity.ok(accountService.getAccountForUser(userId));
         } catch (UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
@@ -49,10 +32,9 @@ public class AccountController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createAccount(@Valid @RequestBody AccountDto dto,
-                                           Authentication authentication) {
+                                           @RequestHeader("X-User-Id") String userId) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(accountService.createAccount(dto, user));
+            return ResponseEntity.ok(accountService.createAccount(dto, userId));
         } catch (UserNotFoundException | CurrencyNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
@@ -63,10 +45,9 @@ public class AccountController {
     @PutMapping("/update/{accountId}")
     public ResponseEntity<?> updateAccount(@PathVariable String accountId,
                                            @RequestBody AccountDto dto,
-                                           Authentication authentication) {
+                                           @RequestHeader("X-User-Id") String userId) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(accountService.updateAccount(accountId, dto, user));
+            return ResponseEntity.ok(accountService.updateAccount(accountId, dto, userId));
         } catch (AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (IllegalOperationException e) {
@@ -80,10 +61,9 @@ public class AccountController {
 
     @DeleteMapping("/delete/{accountId}")
     public ResponseEntity<?> deleteAccount(@PathVariable String accountId,
-                                           Authentication authentication) {
+                                           @RequestHeader("X-User-Id") String userId) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            accountService.deleteAccount(accountId, user);
+            accountService.deleteAccount(accountId, userId);
             return ResponseEntity.ok("Account deleted successfully");
         } catch (AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -96,10 +76,9 @@ public class AccountController {
 
     @GetMapping("/{accountId}")
     public ResponseEntity<?> getAccountById(@PathVariable String accountId,
-                                            Authentication authentication) {
+                                            @RequestHeader("X-User-Id") String userId) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(accountService.getAccountById(accountId, user));
+            return ResponseEntity.ok(accountService.getAccountById(accountId, userId));
         } catch (AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (AccessException e) {
@@ -111,10 +90,9 @@ public class AccountController {
 
     @PutMapping("/archive/{accountId}")
     public ResponseEntity<?> archiveAccount(@PathVariable String accountId,
-                                            Authentication authentication) {
+                                            @RequestHeader("X-User-Id") String userId) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            accountService.archiveAccount(accountId, user);
+            accountService.archiveAccount(accountId, userId);
             return ResponseEntity.ok("Account archived successfully");
         } catch (AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -127,10 +105,9 @@ public class AccountController {
 
     @PutMapping("/include-in-stats/{accountId}")
     public ResponseEntity<?> includeInStats(@PathVariable String accountId,
-                                            Authentication authentication) {
+                                            @RequestHeader("X-User-Id") String userId) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            accountService.includeInStats(accountId, user);
+            accountService.includeInStats(accountId, userId);
             return ResponseEntity.ok("Account includeInStats toggled successfully");
         } catch (AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -143,10 +120,9 @@ public class AccountController {
 
     @PutMapping("/transfer")
     public ResponseEntity<?> transferBetweenAccounts(@RequestBody TransferDto request,
-                                                     Authentication authentication) {
+                                                     @RequestHeader("X-User-Id") String userId) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            accountService.transferBetweenAccounts(request.fromAccountId(), request.toAccountId(), request.amount(), user);
+            accountService.transferBetweenAccounts(request.fromAccountId(), request.toAccountId(), request.amount(), userId);
             return ResponseEntity.ok("Transfer completed successfully");
         } catch (AccountNotFoundException | UserNotFoundException | CurrencyNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -158,10 +134,9 @@ public class AccountController {
     }
 
     @GetMapping("/balance")
-    public ResponseEntity<?> getUserBalance(Authentication authentication) {
+    public ResponseEntity<?> getUserBalance(@RequestHeader("X-User-Id") String userId) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            BalanceResponse balance = accountService.getUserBalance(user);
+            BalanceResponse balance = accountService.getUserBalance(userId);
             return ResponseEntity.ok(balance);
         } catch (UserNotFoundException | CurrencyNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
