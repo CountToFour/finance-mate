@@ -1,7 +1,7 @@
 package finance_mate.core.transaction.repository;
 
-import com.financemate.transaction.model.RecurringTransaction;
-import com.financemate.transaction.model.TransactionType;
+import finance_mate.core.transaction.model.RecurringTransaction;
+import finance_mate.core.transaction.model.TransactionType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

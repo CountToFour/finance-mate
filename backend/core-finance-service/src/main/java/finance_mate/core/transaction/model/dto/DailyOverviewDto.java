@@ -1,4 +1,4 @@
-package finance_mate.core.transaction.dto;
+package finance_mate.core.transaction.model.dto;
 
 import java.time.LocalDate;
 

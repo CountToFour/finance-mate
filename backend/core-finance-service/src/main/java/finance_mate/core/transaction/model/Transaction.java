@@ -1,8 +1,6 @@
 package finance_mate.core.transaction.model;
 
-import com.financemate.account.model.Account;
-import com.financemate.auth.model.user.User;
-import com.financemate.transaction.model.TransactionType;
+import finance_mate.core.account.model.Account;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -27,9 +25,7 @@ public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private String userId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;

@@ -1,7 +1,7 @@
-package finance_mate.core.transaction.transaction.dto;
+package finance_mate.core.transaction.model.dto;
 
-import com.financemate.transaction.model.PeriodType;
-import com.financemate.transaction.model.TransactionType;
+import finance_mate.core.transaction.model.PeriodType;
+import finance_mate.core.transaction.model.TransactionType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

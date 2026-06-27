@@ -31,7 +31,7 @@ public class StandardCurrencyService implements CurrencyService {
     private final ExchangeRateRepository exchangeRateRepository;
     private final ExchangeRateApiClient exchangeRateApiClient;
 
-    @PostConstruct
+//    @PostConstruct
     public void setCurrencyRates() {
         List<Currency> currencies = currencyRepository.findAll();
 
@@ -129,7 +129,7 @@ public class StandardCurrencyService implements CurrencyService {
         exchangeRateRepository.save(exchangeRate);
     }
 
-    @Scheduled(cron = "0 30 * * * ?")
+//    @Scheduled(cron = "0 30 * * * ?")
     @CacheEvict(value = "exchangeRates", allEntries = true)
     public void updateExchangeRates() {
         List<Currency> currencies = currencyRepository.findAll();

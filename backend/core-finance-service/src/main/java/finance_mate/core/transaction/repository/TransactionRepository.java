@@ -1,6 +1,6 @@
 package finance_mate.core.transaction.repository;
 
-import com.financemate.transaction.model.Transaction;
+import finance_mate.core.transaction.model.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 

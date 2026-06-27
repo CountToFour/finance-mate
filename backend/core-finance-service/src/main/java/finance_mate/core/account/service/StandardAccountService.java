@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -189,6 +190,11 @@ public class StandardAccountService implements AccountService {
 //                .sum();
 //        return new BalanceResponse(round(result), mainCurrency.getSymbol());
         return new BalanceResponse(round(result), "zł");
+    }
+
+    @Override
+    public Optional<Account> findByIdAndUserId(String id, String userId) {
+        return accountRepository.findByIdAndUserId(id, userId);
     }
 
     private double round(double value) {

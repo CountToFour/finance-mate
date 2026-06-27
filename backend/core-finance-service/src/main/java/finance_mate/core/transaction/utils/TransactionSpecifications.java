@@ -1,7 +1,7 @@
 package finance_mate.core.transaction.utils;
 
-import com.financemate.transaction.model.Transaction;
-import com.financemate.transaction.model.TransactionType;
+import finance_mate.core.transaction.model.Transaction;
+import finance_mate.core.transaction.model.TransactionType;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;

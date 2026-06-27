@@ -1,15 +1,14 @@
 package finance_mate.core.transaction.service;
 
-import com.financemate.transaction.model.PeriodType;
-import com.financemate.transaction.model.RecurringTransaction;
-import com.financemate.transaction.model.Transaction;
-import com.financemate.transaction.repository.RecurringTransactionRepository;
-import com.financemate.transaction.repository.TransactionRepository;
+import finance_mate.core.transaction.model.PeriodType;
+import finance_mate.core.transaction.model.RecurringTransaction;
+import finance_mate.core.transaction.model.Transaction;
+import finance_mate.core.transaction.repository.RecurringTransactionRepository;
+import finance_mate.core.transaction.repository.TransactionRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StopWatch;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -32,9 +31,6 @@ public class RecurringTransactionService {
     @Transactional
     public void generateRecurringExpenses() {
 
-        System.out.println("Staring recurring transaction generation at " + LocalDate.now());
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
         LocalDate today = LocalDate.now().plusDays(0);
 
         List<Transaction> transactionsToSave = new ArrayList<>();
@@ -47,7 +43,7 @@ public class RecurringTransactionService {
 
             if (today.isAfter(nextDate) || today.equals(nextDate)) {
                 Transaction transaction = new Transaction();
-                transaction.setUser(recurring.getUser());
+                transaction.setUserId(recurring.getUserId());
                 transaction.setCategory(recurring.getCategory());
                 transaction.setPrice(recurring.getPrice());
                 transaction.setCreatedAt(nextDate);
@@ -74,11 +70,6 @@ public class RecurringTransactionService {
         if (!recurringToDelete.isEmpty()) {
             recurringTransactionRepository.deleteAll(recurringToDelete);
         }
-
-        stopWatch.stop();
-        log.info("Zakończono pobieranie. Czas trwania: {} milisekund ({} sekund)",
-                stopWatch.getTotalTimeMillis(),
-                stopWatch.getTotalTimeSeconds());
     }
 
     private LocalDate calculateNextDate(LocalDate baseDate, PeriodType type) {

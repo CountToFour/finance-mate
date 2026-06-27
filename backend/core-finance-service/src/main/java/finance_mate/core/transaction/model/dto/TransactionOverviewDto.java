@@ -1,4 +1,4 @@
-package finance_mate.core.transaction.transaction.dto;
+package finance_mate.core.transaction.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,38 +1,20 @@
 package finance_mate.core.transaction.controller;
 
-import com.financemate.auth.model.user.User;
-import com.financemate.auth.service.UserService;
-import com.financemate.transaction.dto.CategoryDto;
-import com.financemate.transaction.dto.DailyOverviewDto;
-import com.financemate.transaction.dto.EditTransactionDto;
-import com.financemate.transaction.dto.MonthOverviewDto;
-import com.financemate.transaction.dto.RecurringTransactionResponse;
-import com.financemate.transaction.dto.TransactionRequest;
-import com.financemate.transaction.dto.TransactionResponse;
-import com.financemate.transaction.exception.AccountNotFoundException;
-import com.financemate.transaction.exception.InvalidPeriodTypeException;
-import com.financemate.transaction.exception.TransactionNotFoundException;
-import com.financemate.transaction.exception.UserNotFoundException;
-import com.financemate.transaction.model.PeriodType;
-import com.financemate.transaction.model.TransactionType;
-import com.financemate.transaction.service.TransactionService;
+import finance_mate.core.transaction.exception.AccountNotFoundException;
+import finance_mate.core.transaction.exception.InvalidPeriodTypeException;
+import finance_mate.core.transaction.exception.TransactionNotFoundException;
+import finance_mate.core.transaction.exception.UserNotFoundException;
+import finance_mate.core.transaction.model.PeriodType;
+import finance_mate.core.transaction.model.TransactionType;
+import finance_mate.core.transaction.model.dto.*;
+import finance_mate.core.transaction.service.TransactionService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -40,19 +22,16 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/transactions")
-@CrossOrigin("*")
 public class TransactionController {
 
     private final TransactionService transactionService;
-    private final UserService userService;
 
     @PostMapping
     @Transactional
     public ResponseEntity<?> addTransaction(@Valid @RequestBody TransactionRequest transaction,
-                                            Authentication authentication) {
+                                            @RequestHeader("X-User-Id") String userId) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            TransactionResponse saved = transactionService.addTransaction(transaction, user);
+            TransactionResponse saved = transactionService.addTransaction(transaction, userId);
             return ResponseEntity.ok(saved);
         } catch (UserNotFoundException | AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -63,10 +42,9 @@ public class TransactionController {
 
     @PostMapping("/recurring")
     public ResponseEntity<?> addRecurringTransaction(@Valid @RequestBody TransactionRequest transaction,
-                                                     Authentication authentication) {
+                                                     @RequestHeader("X-User-Id") String userId) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(transactionService.addRecurringTransaction(transaction, user));
+            return ResponseEntity.ok(transactionService.addRecurringTransaction(transaction, userId));
         } catch (UserNotFoundException | AccountNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (InvalidPeriodTypeException e) {
@@ -85,10 +63,9 @@ public class TransactionController {
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate,
             @RequestParam(required = false) String accountName,
-            Authentication authentication) {
+            @RequestHeader("X-User-Id") String userId) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(transactionService.getTransactionsByUser(user, category, minPrice, maxPrice,
+            return ResponseEntity.ok(transactionService.getTransactionsByUser(userId, category, minPrice, maxPrice,
                     startDate, endDate, type, accountName));
         } catch (UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -98,11 +75,10 @@ public class TransactionController {
     }
 
     @GetMapping("/recurring")
-    public ResponseEntity<?> getAllRecurringTransactions(Authentication authentication,
+    public ResponseEntity<?> getAllRecurringTransactions(@RequestHeader("X-User-Id") String userId,
                                                          @RequestParam TransactionType type) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(transactionService.getAllRecurringTransactions(user, type));
+            return ResponseEntity.ok(transactionService.getAllRecurringTransactions(userId, type));
         } catch (UserNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
@@ -165,26 +141,24 @@ public class TransactionController {
     }
 
     @GetMapping("/categories/type/{type}")
-    public ResponseEntity<List<CategoryDto>> getAllCategoriesAmount(Authentication authentication,
+    public ResponseEntity<List<CategoryDto>> getAllCategoriesAmount(@RequestHeader("X-User-Id") String userId,
                                                                     @PathVariable TransactionType type,
                                                                     @RequestParam(required = false) LocalDate startDate,
                                                                     @RequestParam(required = false) LocalDate endDate) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(transactionService.getAllCategoriesAmount(user, startDate, endDate, type));
+            return ResponseEntity.ok(transactionService.getAllCategoriesAmount(userId, startDate, endDate, type));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @GetMapping("/overview/type/{type}")
-    public ResponseEntity<?> getTransactionOverview(Authentication authentication,
+    public ResponseEntity<?> getTransactionOverview(@RequestHeader("X-User-Id") String userId,
                                                     @PathVariable TransactionType type,
                                                     @RequestParam(required = false) LocalDate startDate,
                                                     @RequestParam(required = false) LocalDate endDate) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(transactionService.getTransactionOverview(user, startDate, endDate, type));
+            return ResponseEntity.ok(transactionService.getTransactionOverview(userId, startDate, endDate, type));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -192,26 +166,24 @@ public class TransactionController {
 
     @GetMapping("/overview/monthly")
     public ResponseEntity<List<MonthOverviewDto>> getMonthlyOverview(
-            Authentication authentication,
+            @RequestHeader("X-User-Id") String userId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(transactionService.getMonthlyOverview(user, startDate, endDate));
+            return ResponseEntity.ok(transactionService.getMonthlyOverview(userId, startDate, endDate));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
     @GetMapping("overview/top")
-    public ResponseEntity<?> getTopExpenses(Authentication authentication,
+    public ResponseEntity<?> getTopExpenses(@RequestHeader("X-User-Id") String userId,
                                             @RequestParam(required = false) LocalDate startDate,
                                             @RequestParam(required = false) LocalDate endDate,
                                             @RequestParam(defaultValue = "5") int limit,
                                             @RequestParam TransactionType type) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(transactionService.getTopTransactionsByAmount(user, startDate, endDate, limit, type));
+            return ResponseEntity.ok(transactionService.getTopTransactionsByAmount(userId, startDate, endDate, limit, type));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -219,13 +191,12 @@ public class TransactionController {
 
     @GetMapping("/overview/daily")
     public ResponseEntity<List<DailyOverviewDto>> getDailyOverview(
-            Authentication authentication,
+            @RequestHeader("X-User-Id") String userId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam TransactionType type) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(transactionService.getDailyOverview(user, startDate, endDate, type));
+            return ResponseEntity.ok(transactionService.getDailyOverview(userId, startDate, endDate, type));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

@@ -1,34 +1,22 @@
 package finance_mate.core.transaction.service;
 
-import com.financemate.account.model.Account;
-import com.financemate.account.repository.AccountRepository;
-import com.financemate.account.repository.ExchangeRateRepository;
-import com.financemate.account.service.AccountService;
-import com.financemate.auth.model.user.User;
-import com.financemate.budget.service.BudgetService;
-import com.financemate.category.model.Category;
-import com.financemate.category.model.CategoryGroup;
-import com.financemate.category.repository.CategoryRepository;
-import com.financemate.transaction.dto.CategoryDto;
-import com.financemate.transaction.dto.DailyOverviewDto;
-import com.financemate.transaction.dto.EditTransactionDto;
-import com.financemate.transaction.dto.MonthOverviewDto;
-import com.financemate.transaction.dto.RecurringTransactionResponse;
-import com.financemate.transaction.dto.TransactionOverviewDto;
-import com.financemate.transaction.dto.TransactionRequest;
-import com.financemate.transaction.dto.TransactionResponse;
-import com.financemate.transaction.exception.AccountNotFoundException;
-import com.financemate.transaction.exception.InvalidPeriodTypeException;
-import com.financemate.transaction.exception.TransactionNotFoundException;
-import com.financemate.transaction.exception.UserNotFoundException;
-import com.financemate.transaction.mapper.TransactionMapper;
-import com.financemate.transaction.model.PeriodType;
-import com.financemate.transaction.model.RecurringTransaction;
-import com.financemate.transaction.model.Transaction;
-import com.financemate.transaction.model.TransactionType;
-import com.financemate.transaction.repository.RecurringTransactionRepository;
-import com.financemate.transaction.repository.TransactionRepository;
-import com.financemate.transaction.utils.TransactionSpecifications;
+import finance_mate.core.account.model.Account;
+import finance_mate.core.account.service.AccountService;
+import finance_mate.core.category.model.Category;
+import finance_mate.core.category.model.CategoryGroup;
+import finance_mate.core.category.service.CategoryService;
+import finance_mate.core.transaction.exception.AccountNotFoundException;
+import finance_mate.core.transaction.exception.InvalidPeriodTypeException;
+import finance_mate.core.transaction.exception.TransactionNotFoundException;
+import finance_mate.core.transaction.mapper.TransactionMapper;
+import finance_mate.core.transaction.model.PeriodType;
+import finance_mate.core.transaction.model.RecurringTransaction;
+import finance_mate.core.transaction.model.Transaction;
+import finance_mate.core.transaction.model.TransactionType;
+import finance_mate.core.transaction.model.dto.*;
+import finance_mate.core.transaction.repository.RecurringTransactionRepository;
+import finance_mate.core.transaction.repository.TransactionRepository;
+import finance_mate.core.transaction.utils.TransactionSpecifications;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
@@ -51,18 +39,15 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final RecurringTransactionRepository recurringTransactionRepository;
     private final TransactionMapper transactionMapper;
-    private final AccountRepository accountRepository;
     private final AccountService accountService;
-    private final CategoryRepository categoryRepository;
-    private final BudgetService budgetService;
-    private final ExchangeRateRepository exchangeRateRepository;
+    private final CategoryService categoryService;
 
     @Transactional
-    public TransactionResponse addTransaction(TransactionRequest dto, User user) {
+    public TransactionResponse addTransaction(TransactionRequest dto, String userId) {
         Transaction transaction = transactionMapper.transactionToEntity(dto);
-        Account account = accountRepository.findByIdAndUserId(dto.getAccountId(), user)
+        Account account = accountService.findByIdAndUserId(dto.getAccountId(), userId)
                 .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + dto.getAccountId()));
-        Category category = categoryRepository.findById(dto.getCategoryId())
+        Category category = categoryService .findById(dto.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + dto.getCategoryId()));
 
         if (transaction.getCreatedAt() == null) {
@@ -74,25 +59,26 @@ public class TransactionService {
             transaction.setPrice(Math.abs(transaction.getPrice()));
         }
 
-        transaction.setUser(user);
+        transaction.setUserId(userId);
         transaction.setAccount(account);
         transaction.setCategory(category.getName());
 
-        budgetService.updateSpentAmount(category, Math.abs(transaction.getPrice()), account.getCurrencyCode().getCode(), user.getMainCurrency().getCode());
+        //TODO MAKE IT AFTER BUDGET SERVICE REFACTOR
+//        budgetService.updateSpentAmount(category, Math.abs(transaction.getPrice()), account.getCurrencyCode().getCode(), user.getMainCurrency().getCode());
 
         transactionRepository.save(transaction);
-        accountService.changeBalance(account.getId(), transaction.getPrice(), user);
+        accountService.changeBalance(account.getId(), transaction.getPrice(), userId);
         TransactionResponse savedDto = transactionMapper.transactionToDto(transaction);
         savedDto.setAccountName(account.getName());
         return savedDto;
     }
 
     @Transactional
-    public RecurringTransactionResponse addRecurringTransaction(TransactionRequest dto, User user) {
+    public RecurringTransactionResponse addRecurringTransaction(TransactionRequest dto, String userId) {
         if (dto.getPeriodType() != PeriodType.NONE) {
-            Account account = accountRepository.findByIdAndUserId(dto.getAccountId(), user)
+            Account account = accountService.findByIdAndUserId(dto.getAccountId(), userId)
                     .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + dto.getAccountId()));
-            Category category = categoryRepository.findById(dto.getCategoryId())
+            Category category = categoryService.findById(dto.getCategoryId())
                     .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + dto.getCategoryId()));
 
             RecurringTransaction recurringTransaction = transactionMapper.recurringTransactionToEntity(dto);
@@ -105,12 +91,12 @@ public class TransactionService {
             }
 
             if (recurringTransaction.getCreatedAt() != null && !recurringTransaction.getCreatedAt().isAfter(LocalDate.now())) {
-                addTransaction(dto, user);
+                addTransaction(dto, userId);
                 recurringTransaction.setCreatedAt(calculateNextDate(recurringTransaction.getCreatedAt(), recurringTransaction.getPeriodType()));
             }
 
             recurringTransaction.setAccount(account);
-            recurringTransaction.setUser(user);
+            recurringTransaction.setUserId(userId);
             recurringTransaction.setCategory(category.getName());
             recurringTransactionRepository.save(recurringTransaction);
             RecurringTransactionResponse savedDto = transactionMapper.recurringTransactionToDto(recurringTransaction);
@@ -121,11 +107,11 @@ public class TransactionService {
         }
     }
 
-    public List<TransactionResponse> getTransactionsByUser(User user, String category, Double minPrice, Double maxPrice,
+    public List<TransactionResponse> getTransactionsByUser(String userId, String category, Double minPrice, Double maxPrice,
                                                            LocalDate startDate, LocalDate endDate, TransactionType type,
-                                                           String accountName) throws UserNotFoundException {
+                                                           String accountName) {
 
-        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(user.getId()))
+        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(userId))
                 .and(TransactionSpecifications.hasCategory(category))
                 .and(TransactionSpecifications.amountBetween(minPrice, maxPrice))
                 .and(TransactionSpecifications.dateBetween(startDate, endDate))
@@ -141,10 +127,9 @@ public class TransactionService {
                 .toList();
     }
 
-    public List<RecurringTransactionResponse> getAllRecurringTransactions(User user, TransactionType type)
-            throws UserNotFoundException {
+    public List<RecurringTransactionResponse> getAllRecurringTransactions(String userId, TransactionType type) {
 
-        return recurringTransactionRepository.findAllByUserIdAndTransactionType(user.getId(), type).stream()
+        return recurringTransactionRepository.findAllByUserIdAndTransactionType(userId, type).stream()
                 .map(transaction -> {
                     RecurringTransactionResponse dto = transactionMapper.recurringTransactionToDto(transaction);
                     dto.setAccountName(transaction.getAccount().getName());
@@ -157,7 +142,9 @@ public class TransactionService {
     public void deleteTransaction(String id) {
         transactionRepository.findById(id)
                 .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
+        //TODO AFTER TRANSACTION DELETE UPDATE ACCOUNT SALDO
         transactionRepository.deleteById(id);
+
     }
 
     @Transactional
@@ -182,7 +169,7 @@ public class TransactionService {
                 .orElseThrow(() -> new TransactionNotFoundException("Transaction not found with id: " + id));
 
         if (Objects.nonNull(dto.categoryId())) {
-            Category category = categoryRepository.findById(dto.categoryId())
+            Category category = categoryService.findById(dto.categoryId())
                     .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + dto.categoryId()));
             if (!category.getName().equals(existingTransaction.getCategory())) {
                 existingTransaction.setCategory(category.getName());
@@ -198,7 +185,7 @@ public class TransactionService {
                 existingTransaction.setPrice(Math.abs(dto.price()));
                 change = Math.abs(dto.price()) - existingTransaction.getPrice();
             }
-            accountService.changeBalance(existingTransaction.getAccount().getId(), change, existingTransaction.getUser());
+            accountService.changeBalance(existingTransaction.getAccount().getId(), change, existingTransaction.getUserId());
         }
         if (dto.description() != null && !dto.description().equals(existingTransaction.getDescription())) {
             existingTransaction.setDescription(dto.description());
@@ -216,7 +203,7 @@ public class TransactionService {
                 .orElseThrow(() -> new IllegalArgumentException("Recurring transaction not found with id: " + id));
 
         if (Objects.nonNull(dto.categoryId())) {
-            Category category = categoryRepository.findById(dto.categoryId())
+            Category category = categoryService.findById(dto.categoryId())
                     .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + dto.categoryId()));
             if (!category.getName().equals(transaction.getCategory())) {
                 transaction.setCategory(category.getName());
@@ -240,7 +227,7 @@ public class TransactionService {
             transaction.setPeriodType(dto.periodType());
         }
         if (dto.accountId() != null && !dto.accountId().equals(transaction.getAccount().getId())) {
-            Account account = accountRepository.findByIdAndUserId(dto.accountId(), transaction.getUser())
+            Account account = accountService.findByIdAndUserId(dto.accountId(), transaction.getUserId())
                     .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + dto.accountId()));
             transaction.setAccount(account);
         }
@@ -248,7 +235,7 @@ public class TransactionService {
         return transactionMapper.recurringTransactionToDto(transaction);
     }
 
-    public TransactionOverviewDto getTransactionOverview(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
+    public TransactionOverviewDto getTransactionOverview(String userId, LocalDate startDate, LocalDate endDate, TransactionType type) {
 
         boolean useLast30Days = (startDate == null || endDate == null);
         LocalDate currentStart;
@@ -268,8 +255,8 @@ public class TransactionService {
             previousEnd = currentEnd.minusMonths(1);
         }
 
-        List<Object> actualTotalOverview = getMonthlyTransactionOverview(user, currentStart, currentEnd, type);
-        List<Object> previousTotalOverview = getMonthlyTransactionOverview(user, previousStart, previousEnd, type);
+        List<Object> actualTotalOverview = getMonthlyTransactionOverview(userId, currentStart, currentEnd, type);
+        List<Object> previousTotalOverview = getMonthlyTransactionOverview(userId, previousStart, previousEnd, type);
 
         double actualTotal = (double) actualTotalOverview.getFirst();
         double previousTotal = (double) previousTotalOverview.getFirst();
@@ -297,20 +284,20 @@ public class TransactionService {
         );
     }
 
-    private List<Object> getMonthlyTransactionOverview(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
+    private List<Object> getMonthlyTransactionOverview(String userId, LocalDate startDate, LocalDate endDate, TransactionType type) {
         if (startDate.isAfter(endDate)) {
             LocalDate tmp = startDate;
             startDate = endDate;
             endDate = tmp;
         }
 
-        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(user.getId()))
+        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(userId))
                 .and(TransactionSpecifications.dateBetween(startDate, endDate))
                 .and(TransactionSpecifications.type(type));
 
         List<Transaction> transactions = transactionRepository.findAll(spec);
         double totalAmount = transactions.stream()
-                .mapToDouble(t -> getConvertedAmount(t, user))
+                .mapToDouble(t -> getConvertedAmount(t, userId))
                 .sum();
 
         long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
@@ -322,16 +309,16 @@ public class TransactionService {
         return List.of(totalAmount, averageAmount, expensesCount);
     }
 
-    public List<CategoryDto> getAllCategoriesAmount(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
+    public List<CategoryDto> getAllCategoriesAmount(String userId, LocalDate startDate, LocalDate endDate, TransactionType type) {
 
-        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(user.getId()))
+        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(userId))
                 .and(TransactionSpecifications.dateBetween(startDate, endDate))
                 .and(TransactionSpecifications.type(type));
 
         List<Transaction> transactions = transactionRepository.findAll(spec);
 
         double totalSum = transactions.stream()
-                .mapToDouble(t -> Math.abs(getConvertedAmount(t, user)))
+                .mapToDouble(t -> Math.abs(getConvertedAmount(t, userId)))
                 .sum();
 
         Map<String, List<Transaction>> grouped = transactions.stream()
@@ -344,7 +331,7 @@ public class TransactionService {
                     List<Transaction> txs = entry.getValue();
                     int transactionsCount = txs.size();
                     double categorySum = txs.stream()
-                            .mapToDouble(t -> Math.abs(getConvertedAmount(t, user)))
+                            .mapToDouble(t -> Math.abs(getConvertedAmount(t, userId)))
                             .sum();
                     double percentage = totalSum == 0.0 ? 0.0 : (categorySum / totalSum);
                     return new CategoryDto(category, categorySum, transactionsCount, percentage);
@@ -352,8 +339,8 @@ public class TransactionService {
                 .toList();
     }
 
-    public List<MonthOverviewDto> getMonthlyOverview(User user, LocalDate startDate, LocalDate endDate) {
-        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(user.getId()))
+    public List<MonthOverviewDto> getMonthlyOverview(String userId, LocalDate startDate, LocalDate endDate) {
+        Specification<Transaction> spec = Specification.allOf(TransactionSpecifications.hasUserId(userId))
                 .and(TransactionSpecifications.dateBetween(startDate, endDate));
 
         List<Transaction> transactions = transactionRepository.findAll(spec);
@@ -373,12 +360,12 @@ public class TransactionService {
 
                     double totalIncome = txs.stream()
                             .filter(t -> t.getTransactionType() == TransactionType.INCOME)
-                            .mapToDouble(t -> getConvertedAmount(t, user))
+                            .mapToDouble(t -> getConvertedAmount(t, userId))
                             .sum();
 
                     double totalExpense = txs.stream()
                             .filter(t -> t.getTransactionType() == TransactionType.EXPENSE)
-                            .mapToDouble(t -> Math.abs(getConvertedAmount(t, user)))
+                            .mapToDouble(t -> Math.abs(getConvertedAmount(t, userId)))
                             .sum();
 
                     return new MonthOverviewDto(month, totalIncome, totalExpense);
@@ -398,15 +385,15 @@ public class TransactionService {
     }
 
     //TODO COS SIE STANIE JAK BEDZIE MNIEJ REKORDOW NIZ LIMIT
-    public List<TransactionResponse> getTopTransactionsByAmount(User user, LocalDate startDate, LocalDate endDate, int limit, TransactionType type) throws UserNotFoundException {
-        if (user == null) {
+    public List<TransactionResponse> getTopTransactionsByAmount(String userId, LocalDate startDate, LocalDate endDate, int limit, TransactionType type) {
+        if (userId == null) {
             throw new IllegalArgumentException("User must not be null");
         }
         if (limit <= 0) {
             return List.of();
         }
 
-        List<TransactionResponse> all = getTransactionsByUser(user, null, null, null, startDate, endDate, type, null);
+        List<TransactionResponse> all = getTransactionsByUser(userId, null, null, null, startDate, endDate, type, null);
 
         return all.stream()
                 .sorted((t1, t2) -> Double.compare(Math.abs(t2.getPrice()), Math.abs(t1.getPrice())))
@@ -414,12 +401,12 @@ public class TransactionService {
                 .toList();
     }
 
-    public double calculateQuarterlySavingsRate(User user) {
+    public double calculateQuarterlySavingsRate(String userId) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusMonths(3);
 
         Specification<Transaction> spec = Specification.allOf(
-                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.hasUserId(userId),
                 TransactionSpecifications.dateBetween(startDate, endDate)
         );
 
@@ -427,12 +414,12 @@ public class TransactionService {
 
         double totalIncome = transactions.stream()
                 .filter(t -> t.getTransactionType() == TransactionType.INCOME)
-                .mapToDouble(t -> getConvertedAmount(t, user))
+                .mapToDouble(t -> getConvertedAmount(t, userId))
                 .sum();
 
         double totalExpense = transactions.stream()
                 .filter(t -> t.getTransactionType() == TransactionType.EXPENSE)
-                .mapToDouble(t -> Math.abs(getConvertedAmount(t, user)))
+                .mapToDouble(t -> Math.abs(getConvertedAmount(t, userId)))
                 .sum();
 
         if (totalIncome == 0) {
@@ -442,22 +429,23 @@ public class TransactionService {
         return (totalIncome - totalExpense) / totalIncome;
     }
 
-    private double getConvertedAmount(Transaction t, User user) {
-        String fromCurrency = t.getAccount().getCurrencyCode().getCode();
-        String toCurrency = user.getMainCurrency().getCode();
-
-        if (fromCurrency.equals(toCurrency)) {
-            return t.getPrice();
-        }
-
-        return exchangeRateRepository.findByFromCurrencyAndToCurrency(fromCurrency, toCurrency)
-                .map(rate -> t.getPrice() * rate.getRate())
-                .orElseThrow(() -> new IllegalArgumentException("Exchange rate not found for " + fromCurrency + " -> " + toCurrency));
+    private double getConvertedAmount(Transaction t, String userId) {
+        return t.getPrice();
+//        String fromCurrency = t.getAccount().getCurrencyCode().getCode();
+//        String toCurrency = userId.getMainCurrency().getCode();
+//
+//        if (fromCurrency.equals(toCurrency)) {
+//            return t.getPrice();
+//        }
+//
+//        return exchangeRateRepository.findByFromCurrencyAndToCurrency(fromCurrency, toCurrency)
+//                .map(rate -> t.getPrice() * rate.getRate())
+//                .orElseThrow(() -> new IllegalArgumentException("Exchange rate not found for " + fromCurrency + " -> " + toCurrency));
     }
 
-    public List<DailyOverviewDto> getDailyOverview(User user, LocalDate startDate, LocalDate endDate, TransactionType type) {
+    public List<DailyOverviewDto> getDailyOverview(String userId, LocalDate startDate, LocalDate endDate, TransactionType type) {
         Specification<Transaction> spec = Specification.allOf(
-                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.hasUserId(userId),
                 TransactionSpecifications.dateBetween(startDate, endDate),
                 TransactionSpecifications.type(type)
         );
@@ -467,7 +455,7 @@ public class TransactionService {
         Map<LocalDate, Double> sums = transactions.stream()
                 .collect(Collectors.groupingBy(
                         Transaction::getCreatedAt,
-                        Collectors.summingDouble(t -> Math.abs(getConvertedAmount(t, user)))
+                        Collectors.summingDouble(t -> Math.abs(getConvertedAmount(t, userId)))
                 ));
 
         return startDate.datesUntil(endDate.plusDays(1))
@@ -478,27 +466,27 @@ public class TransactionService {
                 .toList();
     }
 
-    public double getIncome(User user, LocalDate startDate, LocalDate endDate) {
+    public double getIncome(String userId, LocalDate startDate, LocalDate endDate) {
         Specification<Transaction> spec = Specification.allOf(
-                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.hasUserId(userId),
                 TransactionSpecifications.dateBetween(startDate, endDate),
                 TransactionSpecifications.type(TransactionType.INCOME)
         );
 
         return transactionRepository.findAll(spec).stream()
-                .mapToDouble(t -> getConvertedAmount(t, user))
+                .mapToDouble(t -> getConvertedAmount(t, userId))
                 .sum();
     }
 
-    public Map<CategoryGroup, Map<String, Double>> getSpendingDetailsByGroup(User user, LocalDate startDate, LocalDate endDate) {
+    public Map<CategoryGroup, Map<String, Double>> getSpendingDetailsByGroup(String userId, LocalDate startDate, LocalDate endDate) {
         Specification<Transaction> spec = Specification.allOf(
-                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.hasUserId(userId),
                 TransactionSpecifications.dateBetween(startDate, endDate),
                 TransactionSpecifications.type(TransactionType.EXPENSE)
         );
         List<Transaction> transactions = transactionRepository.findAll(spec);
 
-        Map<String, CategoryGroup> categoryGroupsMap = categoryRepository.findAllByUser(user).stream()
+        Map<String, CategoryGroup> categoryGroupsMap = categoryService.findAllByUser(userId).stream()
                 .filter(c -> c.getCategoryGroup() != null)
                 .collect(Collectors.toMap(
                         Category::getName,
@@ -513,7 +501,7 @@ public class TransactionService {
             CategoryGroup group = categoryGroupsMap.get(t.getCategory());
 
             if (group != null) {
-                double amount = Math.abs(getConvertedAmount(t, user));
+                double amount = Math.abs(getConvertedAmount(t, userId));
 
                 result.computeIfAbsent(group, k -> new HashMap<>())
                         .merge(t.getCategory(), amount, Double::sum);
@@ -523,35 +511,35 @@ public class TransactionService {
         return result;
     }
 
-    public double getAverageMonthlyExpenses(User user, int months) {
+    public double getAverageMonthlyExpenses(String userId, int months) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusMonths(months);
 
         Specification<Transaction> spec = Specification.allOf(
-                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.hasUserId(userId),
                 TransactionSpecifications.dateBetween(startDate, endDate),
                 TransactionSpecifications.type(TransactionType.EXPENSE)
         );
 
         double totalExpenses = transactionRepository.findAll(spec).stream()
-                .mapToDouble(t -> Math.abs(getConvertedAmount(t, user)))
+                .mapToDouble(t -> Math.abs(getConvertedAmount(t, userId)))
                 .sum();
 
         return totalExpenses / months;
     }
 
-    public double getAverageMonthlyIncome(User user, int months) {
+    public double getAverageMonthlyIncome(String userId, int months) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusMonths(months);
 
         Specification<Transaction> spec = Specification.allOf(
-                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.hasUserId(userId),
                 TransactionSpecifications.dateBetween(startDate, endDate),
                 TransactionSpecifications.type(TransactionType.INCOME)
         );
 
         double totalIncome = transactionRepository.findAll(spec).stream()
-                .mapToDouble(t -> getConvertedAmount(t, user))
+                .mapToDouble(t -> getConvertedAmount(t, userId))
                 .sum();
 
         if (months == 0) return totalIncome;
@@ -559,12 +547,12 @@ public class TransactionService {
         return totalIncome / months;
     }
 
-    public boolean hasSufficientExpenseData(User user, int daysBack, int minDistinctDays) {
+    public boolean hasSufficientExpenseData(String userId, int daysBack, int minDistinctDays) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(daysBack);
 
         Specification<Transaction> spec = Specification.allOf(
-                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.hasUserId(userId),
                 TransactionSpecifications.dateBetween(startDate, endDate),
                 TransactionSpecifications.type(TransactionType.EXPENSE)
         );
@@ -579,25 +567,25 @@ public class TransactionService {
         return distinctDaysWithExpenses >= minDistinctDays;
     }
 
-    public double calculateSafetyNetRatio(User user) {
-        double avgExpenses = getAverageMonthlyExpenses(user, 3);
-        double totalBalance = accountService.getUserBalance(user).balance();
+    public double calculateSafetyNetRatio(String userId) {
+        double avgExpenses = getAverageMonthlyExpenses(userId, 3);
+        double totalBalance = accountService.getUserBalance(userId).balance();
         if (avgExpenses == 0) return 0.0;
         return totalBalance / avgExpenses;
     }
 
-    public double getAverageDailySpend(User user, int daysBack) {
+    public double getAverageDailySpend(String userId, int daysBack) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(daysBack);
 
         Specification<Transaction> spec = Specification.allOf(
-                TransactionSpecifications.hasUserId(user.getId()),
+                TransactionSpecifications.hasUserId(userId),
                 TransactionSpecifications.dateBetween(startDate, endDate),
                 TransactionSpecifications.type(TransactionType.EXPENSE)
         );
 
         double totalExpenses = transactionRepository.findAll(spec).stream()
-                .mapToDouble(t -> Math.abs(getConvertedAmount(t, user)))
+                .mapToDouble(t -> Math.abs(getConvertedAmount(t, userId)))
                 .sum();
 
         if (daysBack == 0) return totalExpenses;
@@ -605,19 +593,19 @@ public class TransactionService {
         return totalExpenses / daysBack;
     }
 
-    public Map<YearMonth, Map<CategoryGroup, Double>> getMonthlyGroupSpending(User user, int monthsBack) {
+    public Map<YearMonth, Map<CategoryGroup, Double>> getMonthlyGroupSpending(String userId, int monthsBack) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusMonths(monthsBack).withDayOfMonth(1);
 
         List<Transaction> transactions = transactionRepository.findAll(
                 Specification.allOf(
-                        TransactionSpecifications.hasUserId(user.getId()),
+                        TransactionSpecifications.hasUserId(userId),
                         TransactionSpecifications.dateBetween(startDate, endDate),
                         TransactionSpecifications.type(TransactionType.EXPENSE)
                 )
         );
 
-        Map<String, CategoryGroup> categoryGroupsMap = categoryRepository.findAllByUser(user).stream()
+        Map<String, CategoryGroup> categoryGroupsMap = categoryService.findAllByUser(userId).stream()
                 .filter(c -> c.getCategoryGroup() != null)
                 .collect(Collectors.toMap(Category::getName, Category::getCategoryGroup, (a, b) -> a));
 
@@ -628,7 +616,7 @@ public class TransactionService {
             CategoryGroup group = categoryGroupsMap.get(t.getCategory());
 
             if (group != null) {
-                double amount = Math.abs(getConvertedAmount(t, user));
+                double amount = Math.abs(getConvertedAmount(t, userId));
                 result.computeIfAbsent(month, k -> new HashMap<>())
                         .merge(group, amount, Double::sum);
             }
@@ -636,11 +624,11 @@ public class TransactionService {
         return result;
     }
 
-    public double calculateSpendingVolatility(User user, int monthsBack) {
+    public double calculateSpendingVolatility(String userId, int monthsBack) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusMonths(monthsBack).withDayOfMonth(1);
 
-        List<MonthOverviewDto> monthlyData = getMonthlyOverview(user, startDate, endDate);
+        List<MonthOverviewDto> monthlyData = getMonthlyOverview(userId, startDate, endDate);
 
         if (monthlyData.isEmpty()) return 0.0;
 
@@ -659,14 +647,14 @@ public class TransactionService {
         return standardDeviation / mean;
     }
 
-    public double calculateSmallTransactionRatio(User user, int monthsBack) {
+    public double calculateSmallTransactionRatio(String userId, int monthsBack) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusMonths(monthsBack);
         double threshold = 50.0;
 
         List<Transaction> transactions = transactionRepository.findAll(
                 Specification.allOf(
-                        TransactionSpecifications.hasUserId(user.getId()),
+                        TransactionSpecifications.hasUserId(userId),
                         TransactionSpecifications.dateBetween(startDate, endDate),
                         TransactionSpecifications.type(TransactionType.EXPENSE)
                 )
@@ -681,13 +669,13 @@ public class TransactionService {
         return (double) smallCount / transactions.size();
     }
 
-    public double calculateNeedsTrend(User user) {
+    public double calculateNeedsTrend(String userId) {
         LocalDate now = LocalDate.now();
-        double currentNeeds = getSpendingDetailsByGroup(user, now.minusDays(30), now)
+        double currentNeeds = getSpendingDetailsByGroup(userId, now.minusDays(30), now)
                 .getOrDefault(CategoryGroup.NEEDS, Map.of())
                 .values().stream().mapToDouble(d -> d).sum();
 
-        double prevNeeds = getSpendingDetailsByGroup(user, now.minusDays(60), now.minusDays(30))
+        double prevNeeds = getSpendingDetailsByGroup(userId, now.minusDays(60), now.minusDays(30))
                 .getOrDefault(CategoryGroup.NEEDS, Map.of())
                 .values().stream().mapToDouble(d -> d).sum();
 

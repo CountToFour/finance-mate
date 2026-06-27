@@ -16,10 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class StandardCategoryService implements  CategoryService {
+public class StandardCategoryService implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
@@ -190,6 +191,16 @@ public class StandardCategoryService implements  CategoryService {
         }
 
         categoryRepository.delete(category);
+    }
+
+    @Override
+    public Optional<Category> findById(String id) {
+        return categoryRepository.findById(id);
+    }
+
+    @Override
+    public List<Category> findAllByUser(String userId) {
+        return categoryRepository.findAllByUserId(userId);
     }
 
 }

@@ -1,10 +1,10 @@
 package finance_mate.core.transaction.mapper;
 
-import com.financemate.transaction.dto.RecurringTransactionResponse;
-import com.financemate.transaction.dto.TransactionRequest;
-import com.financemate.transaction.dto.TransactionResponse;
-import com.financemate.transaction.model.RecurringTransaction;
-import com.financemate.transaction.model.Transaction;
+import finance_mate.core.transaction.model.RecurringTransaction;
+import finance_mate.core.transaction.model.Transaction;
+import finance_mate.core.transaction.model.dto.RecurringTransactionResponse;
+import finance_mate.core.transaction.model.dto.TransactionRequest;
+import finance_mate.core.transaction.model.dto.TransactionResponse;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

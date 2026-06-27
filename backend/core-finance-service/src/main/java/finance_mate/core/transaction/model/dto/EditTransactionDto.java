@@ -1,6 +1,6 @@
-package finance_mate.core.transaction.transaction.dto;
+package finance_mate.core.transaction.model.dto;
 
-import com.financemate.transaction.model.PeriodType;
+import finance_mate.core.transaction.model.PeriodType;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Positive;
