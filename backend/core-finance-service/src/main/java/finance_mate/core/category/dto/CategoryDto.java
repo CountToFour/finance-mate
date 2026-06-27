@@ -1,8 +1,8 @@
 package finance_mate.core.category.dto;
 
-import com.financemate.account.dto.validation.CorrectColorHex;
-import com.financemate.category.model.CategoryGroup;
-import com.financemate.transaction.model.TransactionType;
+import finance_mate.core.category.dto.validation.CorrectColorHex;
+import finance_mate.core.category.model.CategoryGroup;
+import finance_mate.core.transaction.model.TransactionType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

@@ -1,9 +1,6 @@
 package finance_mate.core.category.model;
 
-import com.financemate.auth.model.user.User;
-import com.financemate.category.model.CategoryGroup;
-import com.financemate.category.model.CategoryLocale;
-import com.financemate.transaction.model.TransactionType;
+import finance_mate.core.transaction.model.TransactionType;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -45,9 +42,7 @@ public class Category {
     @JoinColumn(name = "parent_id")
     private Category parent;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    private String userId;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

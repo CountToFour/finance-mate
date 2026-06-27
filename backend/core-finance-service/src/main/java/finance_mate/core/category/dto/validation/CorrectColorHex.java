@@ -1,6 +1,5 @@
 package finance_mate.core.category.dto.validation;
 
-import com.financemate.category.dto.validation.ColorHexValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 

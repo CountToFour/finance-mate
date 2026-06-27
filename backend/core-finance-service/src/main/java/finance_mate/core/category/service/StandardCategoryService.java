@@ -1,15 +1,14 @@
 package finance_mate.core.category.service;
 
-import com.financemate.category.exceptions.CategoryTypeMismatchException;
-import com.financemate.auth.model.user.User;
-import com.financemate.category.dto.CategoryDto;
-import com.financemate.category.exceptions.CategoryNotFoundExcpetion;
-import com.financemate.category.mapper.CategoryMapper;
-import com.financemate.category.model.Category;
-import com.financemate.category.model.CategoryGroup;
-import com.financemate.category.model.CategoryLocale;
-import com.financemate.category.repository.CategoryRepository;
-import com.financemate.transaction.model.TransactionType;
+import finance_mate.core.category.dto.CategoryDto;
+import finance_mate.core.category.exceptions.CategoryNotFoundExcpetion;
+import finance_mate.core.category.exceptions.CategoryTypeMismatchException;
+import finance_mate.core.category.mapper.CategoryMapper;
+import finance_mate.core.category.model.Category;
+import finance_mate.core.category.model.CategoryGroup;
+import finance_mate.core.category.model.CategoryLocale;
+import finance_mate.core.category.repository.CategoryRepository;
+import finance_mate.core.transaction.model.TransactionType;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +20,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class StandardCategoryService implements  CategoryService {
+
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
@@ -112,13 +112,13 @@ public class StandardCategoryService implements  CategoryService {
 
     @Override
     @Transactional
-    public CategoryDto createCategory(CategoryDto dto, User user) {
+    public CategoryDto createCategory(CategoryDto dto, String userId) {
         if (dto.getCategoryGroup() == null && dto.getTransactionType() == TransactionType.EXPENSE) {
             throw new CategoryNotFoundExcpetion("Category group not found");
         }
 
         Category category = categoryMapper.mapToEntity(dto);
-        category.setUser(user);
+        category.setUserId(userId);
 
         if (dto.getParentId() != null) {
             Category parent = categoryRepository.findById(dto.getParentId())
@@ -136,11 +136,11 @@ public class StandardCategoryService implements  CategoryService {
 
     @Override
     @Transactional
-    public CategoryDto updateCategory(String id, CategoryDto dto, User user) {
+    public CategoryDto updateCategory(String id, CategoryDto dto, String userId) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
-        if (category.getUser() == null || !category.getUser().getId().equals(user.getId())) {
+        if (category.getUserId() == null || !category.getUserId().equals(userId)) {
             throw new RuntimeException("Access denied");
         }
 
@@ -162,8 +162,8 @@ public class StandardCategoryService implements  CategoryService {
     }
 
     @Override
-    public List<CategoryDto> getUserCategories(User user, TransactionType type) {
-        return categoryRepository.findByUserAndTransactionType(user, type)
+    public List<CategoryDto> getUserCategories(String userId, TransactionType type) {
+        return categoryRepository.findByUserIdAndTransactionType(userId, type)
                 .stream()
                 .map(category -> {
                     CategoryDto dto = categoryMapper.mapToDto(category);
@@ -177,7 +177,7 @@ public class StandardCategoryService implements  CategoryService {
 
     @Override
     @Transactional
-    public void deleteCategory(String id, User user) {
+    public void deleteCategory(String id, String userId) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
@@ -185,7 +185,7 @@ public class StandardCategoryService implements  CategoryService {
             throw new RuntimeException("Cannot delete default category");
         }
 
-        if (category.getUser() == null || !category.getUser().getId().equals(user.getId())) {
+        if (category.getUserId() == null || !category.getUserId().equals(userId)) {
             throw new RuntimeException("Access denied");
         }
 

@@ -1,26 +1,15 @@
 package finance_mate.core.category.controller;
 
-import com.financemate.auth.model.user.User;
-import com.financemate.auth.service.UserService;
-import com.financemate.category.dto.CategoryDto;
-import com.financemate.category.exceptions.CategoryNotFoundExcpetion;
-import com.financemate.category.exceptions.CategoryTypeMismatchException;
-import com.financemate.category.service.CategoryService;
-import com.financemate.transaction.model.TransactionType;
+import finance_mate.core.category.dto.CategoryDto;
+import finance_mate.core.category.exceptions.CategoryNotFoundExcpetion;
+import finance_mate.core.category.exceptions.CategoryTypeMismatchException;
+import finance_mate.core.category.service.CategoryService;
+import finance_mate.core.transaction.model.TransactionType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -28,15 +17,14 @@ import java.util.List;
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
 public class CategoryController {
+
     private final CategoryService categoryService;
-    private final UserService userService;
 
     @PostMapping()
     public ResponseEntity<?> createCategory(@Valid @RequestBody CategoryDto categoryDto,
-                                                      Authentication authentication) {
+                                            @RequestHeader("X-User-Id") String userId) {
         try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(categoryService.createCategory(categoryDto, user));
+            return ResponseEntity.ok(categoryService.createCategory(categoryDto, userId));
         } catch (CategoryNotFoundExcpetion e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (CategoryTypeMismatchException e) {
@@ -49,23 +37,20 @@ public class CategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<CategoryDto> updateCategory(@PathVariable String id,
                                                       @Valid @RequestBody CategoryDto categoryDto,
-                                                      Authentication authentication) {
-        User user = userService.getUserFromAuthentication(authentication);
-        return ResponseEntity.ok(categoryService.updateCategory(id, categoryDto, user));
+                                                      @RequestHeader("X-User-Id") String userId) {
+        return ResponseEntity.ok(categoryService.updateCategory(id, categoryDto, userId));
     }
 
     @GetMapping
     public ResponseEntity<List<CategoryDto>> getUserCategories(@RequestParam TransactionType type,
-                                                               Authentication authentication) {
-        User user = userService.getUserFromAuthentication(authentication);
-        return ResponseEntity.ok(categoryService.getUserCategories(user, type));
+                                                               @RequestHeader("X-User-Id") String userId) {
+        return ResponseEntity.ok(categoryService.getUserCategories(userId, type));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCategory(@PathVariable String id,
-                                               Authentication authentication) {
-        User user = userService.getUserFromAuthentication(authentication);
-        categoryService.deleteCategory(id, user);
+                                            @RequestHeader("X-User-Id") String userId) {
+        categoryService.deleteCategory(id, userId);
         return ResponseEntity.ok().build();
     }
 }

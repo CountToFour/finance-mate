@@ -1,7 +1,8 @@
 package finance_mate.core.category.mapper;
 
-import com.financemate.category.dto.CategoryDto;
-import com.financemate.category.model.Category;
+
+import finance_mate.core.category.dto.CategoryDto;
+import finance_mate.core.category.model.Category;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
