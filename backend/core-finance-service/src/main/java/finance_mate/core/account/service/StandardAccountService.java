@@ -1,9 +1,5 @@
 package finance_mate.core.account.service;
 
-import finance_mate.core.account.exception.AccessException;
-import finance_mate.core.account.exception.AccountNotFoundException;
-import finance_mate.core.account.exception.CurrencyNotFoundException;
-import finance_mate.core.account.exception.IllegalOperationException;
 import finance_mate.core.account.model.Account;
 import finance_mate.core.account.model.Currency;
 import finance_mate.core.account.model.dto.AccountDto;
@@ -12,8 +8,12 @@ import finance_mate.core.account.model.dto.BalanceResponse;
 import finance_mate.core.account.repository.AccountRepository;
 import finance_mate.core.account.repository.CurrencyRepository;
 import finance_mate.core.account.repository.ExchangeRateRepository;
+import finance_mate.core.exception.AccountException;
+import finance_mate.core.exception.CurrencyException;
+import finance_mate.core.exception.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class StandardAccountService implements AccountService {
 
@@ -38,7 +39,10 @@ public class StandardAccountService implements AccountService {
     @Transactional
     public AccountResponse createAccount(AccountDto dto, String userId) {
         Currency currency = currencyRepository.findById(dto.currencyCode())
-                .orElseThrow(() -> new CurrencyNotFoundException("Currency not found"));
+                .orElseThrow(() -> {
+                    log.error("Currency {} not found", dto.currencyCode());
+                    return new CurrencyException(ErrorCode.CURRENCY_NOT_FOUND);
+                });
 
         Account account = new Account();
         account.setName(dto.name());
@@ -56,13 +60,11 @@ public class StandardAccountService implements AccountService {
     @Override
     @Transactional
     public AccountResponse updateAccount(String accountId, AccountDto dto, String userId) {
-        Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(userId)) {
-            throw new AccessException("Account does not belong to user");
-        }
+        Account account = getAccount(accountId, userId);
 
         if (account.getBalance() != dto.balance()) {
-            throw new IllegalOperationException("Balance cannot be changed directly");
+            log.error("Account balance cannot be changed in update action, account id: {}", account);
+            throw new AccountException(ErrorCode.ACCOUNT_BALANCE_UPDATE);
         }
 
 //        if (!Objects.equals(account.getCurrencyCode().getCode(), dto.currencyCode())) {
@@ -70,7 +72,10 @@ public class StandardAccountService implements AccountService {
 //        }
 
         Currency currency = currencyRepository.findById(dto.currencyCode())
-                .orElseThrow(() -> new CurrencyNotFoundException("Currency not found"));
+                .orElseThrow(() -> {
+                    log.error("Currency {} not found", dto.currencyCode());
+                    return new CurrencyException(ErrorCode.CURRENCY_NOT_FOUND);
+                });
 
         account.setName(dto.name());
         account.setDescription(dto.description());
@@ -86,19 +91,13 @@ public class StandardAccountService implements AccountService {
     @Transactional
     public void deleteAccount(String accountId, String userId) {
         //TODO TRANSACTIONS ALSO NEED TO BE DELETED AFTER THAT
-        Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(userId)) {
-            throw new AccessException("Account does not belong to user");
-        }
+        Account account = getAccount(accountId, userId);
         accountRepository.delete(account);
     }
 
     @Override
     public AccountResponse getAccountById(String accountId, String userId) {
-        Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(userId)) {
-            throw new AccessException("Account does not belong to user");
-        }
+        Account account = getAccount(accountId, userId);
 
         return mapAccountToDto(account);
     }
@@ -106,10 +105,7 @@ public class StandardAccountService implements AccountService {
     @Override
     @Transactional
     public void archiveAccount(String accountId, String userId) {
-        Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(userId)) {
-            throw new AccessException("Account does not belong to user");
-        }
+        Account account = getAccount(accountId, userId);
         account.setArchived(!account.isArchived());
         accountRepository.save(account);
     }
@@ -117,20 +113,14 @@ public class StandardAccountService implements AccountService {
     @Override
     @Transactional
     public void includeInStats(String accountId, String userId) {
-        Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(userId)) {
-            throw new AccessException("Account does not belong to user");
-        }
+        Account account = getAccount(accountId, userId);
         account.setIncludeInStats(!account.isIncludeInStats());
         accountRepository.save(account);
     }
 
     @Override
     public void changeBalance(String accountId, double amount, String userId) {
-        Account account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found"));
-        if (!account.getUserId().equals(userId)) {
-            throw new AccessException("Account does not belong to user");
-        }
+        Account account = getAccount(accountId, userId);
         account.setBalance(account.getBalance() + amount);
         accountRepository.save(account);
     }
@@ -139,19 +129,26 @@ public class StandardAccountService implements AccountService {
     @Transactional
     public void transferBetweenAccounts(String fromAccountId, String toAccountId, double amount, String userId) {
         if (fromAccountId.equals(toAccountId)) {
-            throw new IllegalOperationException("Cannot transfer to the same account");
+            log.error("Money cannot be transfer to the same account, id: {}", fromAccountId);
+            throw new AccountException(ErrorCode.ACCOUNT_TRANSFER);
         }
-        Account fromAccount = accountRepository.findById(fromAccountId).orElseThrow(()
-                -> new AccountNotFoundException("Source account not found"));
-        Account toAccount = accountRepository.findById(toAccountId).orElseThrow(()
-                -> new AccountNotFoundException("Destination account not found"));
+        Account fromAccount = accountRepository.findById(fromAccountId).orElseThrow(() -> {
+            log.error("Source account not found");
+            return new AccountException(ErrorCode.ACCOUNT_NOT_FOUND);
+        });
+        Account toAccount = accountRepository.findById(toAccountId).orElseThrow(() -> {
+            log.error("Destination account not found");
+            return new AccountException(ErrorCode.ACCOUNT_NOT_FOUND);
+        });
 
         if (!fromAccount.getUserId().equals(userId) || !toAccount.getUserId().equals(userId)) {
-            throw new AccessException("One or both accounts do not belong to user");
+            log.error("Account with id: {} or with id: {} doesn't belong to user with id: {}", fromAccount, toAccountId, userId);
+            throw new AccountException(ErrorCode.ACCOUNT_ACCESS_DENIED);
         }
 
         if (fromAccount.getBalance() < amount) {
-            throw new IllegalOperationException("Insufficient funds in source account");
+            log.error("Insufficient funds in source account {}", fromAccountId);
+            throw new AccountException(ErrorCode.ACCOUNT_NOT_ENOUGH_MONEY);
         }
 
         double finalAmount = amount;
@@ -211,5 +208,18 @@ public class StandardAccountService implements AccountService {
                 .includeInStats(account.isIncludeInStats())
                 .archived(account.isArchived())
                 .build();
+    }
+
+    private Account getAccount(String accountId, String userId) {
+        Account account = accountRepository.findById(accountId).orElseThrow(() -> {
+            log.error("Account with id {} not found", accountId);
+            return new AccountException(ErrorCode.ACCOUNT_NOT_FOUND);
+        });
+        if (!account.getUserId().equals(userId)) {
+            log.error("Account with id: {} doesn't belong to user with id: {}", accountId, userId);
+            throw new AccountException(ErrorCode.ACCOUNT_ACCESS_DENIED);
+        }
+
+        return account;
     }
 }

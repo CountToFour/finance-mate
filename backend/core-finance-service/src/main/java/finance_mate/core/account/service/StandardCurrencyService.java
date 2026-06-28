@@ -8,6 +8,8 @@ import finance_mate.core.account.model.dto.CurrencyResponse;
 import finance_mate.core.account.model.dto.ExchangeRateDto;
 import finance_mate.core.account.repository.CurrencyRepository;
 import finance_mate.core.account.repository.ExchangeRateRepository;
+import finance_mate.core.exception.CurrencyException;
+import finance_mate.core.exception.ErrorCode;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +63,8 @@ public class StandardCurrencyService implements CurrencyService {
     @Override
     public void addCurrency(CurrencyDto currency) {
         if (currencyRepository.findById(currency.getCode().toUpperCase()).isPresent()) {
-            throw new IllegalArgumentException("Currency with code " + currency.getCode() + " already exists.");
+            log.error("Currency with code {} already exists.", currency.getCode());
+            throw new CurrencyException(ErrorCode.CURRENCY_ALREADY_EXISTS);
         }
 
         Currency newCurrency = Currency.builder()
@@ -76,16 +79,19 @@ public class StandardCurrencyService implements CurrencyService {
     @Override
     public void deleteCurrency(String code) {
         //TODO DELETE ALSO RATES
-        currencyRepository.findById(code.toUpperCase()).orElseThrow(()
-                -> new IllegalArgumentException("Currency with code " + code + " does not exist."));
+        currencyRepository.findById(code.toUpperCase()).orElseThrow(() -> {
+            log.error("Currency with code {} does not exist.", code);
+            return new CurrencyException(ErrorCode.CURRENCY_NOT_FOUND);
+        });
         currencyRepository.deleteById(code);
     }
 
     @Override
     public CurrencyResponse getCurrencyByCode(String code) {
-        Currency currency = currencyRepository.findById(code.toUpperCase()).orElseThrow(()
-                -> new IllegalArgumentException("Currency with code " + code + " does not exist."));
-
+        Currency currency = currencyRepository.findById(code.toUpperCase()).orElseThrow(()-> {
+            log.error("Currency with code {} does not exist.", code);
+            return new CurrencyException(ErrorCode.CURRENCY_NOT_FOUND);
+        });
         return mapCurrencyToDto(currency);
     }
 
@@ -93,7 +99,10 @@ public class StandardCurrencyService implements CurrencyService {
     public ExchangeRateDto getExchangeRateByPair(String fromCurrency, String toCurrency) {
         ExchangeRate exchangeRate = exchangeRateRepository
                 .findByFromCurrencyAndToCurrency(fromCurrency.toUpperCase(), toCurrency.toUpperCase())
-                .orElseThrow(() -> new IllegalArgumentException("Exchange rate for " + fromCurrency + " to " + toCurrency + " not found."));
+                .orElseThrow(() -> {
+                    log.error("Exchange rate for " + fromCurrency + " to " + toCurrency + " not found.");
+                    return new CurrencyException(ErrorCode.CURRENCY_RATE_NOT_FOUND);
+                });
 
         ExchangeRateDto dto = new ExchangeRateDto();
         dto.setBase_code(fromCurrency.toUpperCase());
@@ -113,7 +122,8 @@ public class StandardCurrencyService implements CurrencyService {
             return response.getConversion_rate();
         }
 
-        throw new RuntimeException("Failed to fetch exchange rate");
+        log.error("Failed to fetch exchange rate");
+        throw new CurrencyException(ErrorCode.CURRENCY_FETCH_ERROR);
     }
 
     private void saveExchangeRate(String fromCode, String toCode, double rate) {
