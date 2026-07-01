@@ -15,7 +15,9 @@ public enum ErrorCode {
     ACCOUNT_NOT_ENOUGH_MONEY(HttpStatus.BAD_REQUEST, "Insufficient funds in source account"),
     //CATEGORY EXCEPTIONS
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "Category not found"),
-
+    CATEGORY_TYPE_MISMATCH(HttpStatus.BAD_REQUEST, "Category group not found"),
+    CATEGORY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "Category does not belong to user"),
+    CATEGORY_DELETE(HttpStatus.BAD_REQUEST, "Cannot delete default category"),
     //TRANSACTION EXCEPTIONS
 
     //CURRENCY EXCEPTIONS

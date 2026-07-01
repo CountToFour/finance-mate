@@ -13,6 +13,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getErrorCode().getHttpStatus()).body(ex.getErrorCode().getMessage());
     }
 
+    @ExceptionHandler(CategoryException.class)
+    public ResponseEntity<String> handleCategoryError(CategoryException ex) {
+        return ResponseEntity.status(ex.getErrorCode().getHttpStatus()).body(ex.getErrorCode().getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleError(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");

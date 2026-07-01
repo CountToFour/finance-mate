@@ -1,16 +1,17 @@
 package finance_mate.core.category.service;
 
 import finance_mate.core.category.dto.CategoryDto;
-import finance_mate.core.category.exceptions.CategoryNotFoundExcpetion;
-import finance_mate.core.category.exceptions.CategoryTypeMismatchException;
 import finance_mate.core.category.mapper.CategoryMapper;
 import finance_mate.core.category.model.Category;
 import finance_mate.core.category.model.CategoryGroup;
 import finance_mate.core.category.model.CategoryLocale;
 import finance_mate.core.category.repository.CategoryRepository;
+import finance_mate.core.exception.CategoryException;
+import finance_mate.core.exception.ErrorCode;
 import finance_mate.core.transaction.model.TransactionType;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StandardCategoryService implements CategoryService {
@@ -115,7 +117,7 @@ public class StandardCategoryService implements CategoryService {
     @Transactional
     public CategoryDto createCategory(CategoryDto dto, String userId) {
         if (dto.getCategoryGroup() == null && dto.getTransactionType() == TransactionType.EXPENSE) {
-            throw new CategoryNotFoundExcpetion("Category group not found");
+            throw new CategoryException(ErrorCode.CATEGORY_TYPE_MISMATCH);
         }
 
         Category category = categoryMapper.mapToEntity(dto);
@@ -123,9 +125,12 @@ public class StandardCategoryService implements CategoryService {
 
         if (dto.getParentId() != null) {
             Category parent = categoryRepository.findById(dto.getParentId())
-                    .orElseThrow(() -> new CategoryNotFoundExcpetion("Parent category not found"));
+                    .orElseThrow(() -> {
+                        log.error("Parent category not found for id: {}", dto.getParentId());
+                        return new CategoryException(ErrorCode.CATEGORY_NOT_FOUND);
+                    });
             if (parent.getTransactionType() != dto.getTransactionType()) {
-                throw new CategoryTypeMismatchException("Parent category transaction type mismatch");
+                throw new CategoryException(ErrorCode.CATEGORY_TYPE_MISMATCH);
             }
             category.setParent(parent);
             category.setColor(parent.getColor());
@@ -139,10 +144,10 @@ public class StandardCategoryService implements CategoryService {
     @Transactional
     public CategoryDto updateCategory(String id, CategoryDto dto, String userId) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
 
         if (category.getUserId() == null || !category.getUserId().equals(userId)) {
-            throw new RuntimeException("Access denied");
+            throw new CategoryException(ErrorCode.CATEGORY_ACCESS_DENIED);
         }
 
         category.setName(dto.getName());
@@ -151,7 +156,10 @@ public class StandardCategoryService implements CategoryService {
 
         if (dto.getParentId() != null) {
             Category parent = categoryRepository.findById(dto.getParentId())
-                    .orElseThrow(() -> new RuntimeException("Parent category not found"));
+                    .orElseThrow(() -> {
+                        log.error("Parent category not found for id: {}", dto.getParentId());
+                        return new CategoryException(ErrorCode.CATEGORY_NOT_FOUND);
+                    });
             category.setParent(parent);
             category.setColor(parent.getColor());
         } else {
@@ -180,14 +188,14 @@ public class StandardCategoryService implements CategoryService {
     @Transactional
     public void deleteCategory(String id, String userId) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
 
         if (category.isDefault()) {
-            throw new RuntimeException("Cannot delete default category");
+            throw new CategoryException(ErrorCode.CATEGORY_DELETE);
         }
 
         if (category.getUserId() == null || !category.getUserId().equals(userId)) {
-            throw new RuntimeException("Access denied");
+            throw new CategoryException(ErrorCode.CATEGORY_ACCESS_DENIED);
         }
 
         categoryRepository.delete(category);

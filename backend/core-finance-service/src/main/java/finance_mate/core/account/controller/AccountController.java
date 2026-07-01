@@ -5,7 +5,6 @@ import finance_mate.core.account.model.dto.AccountDto;
 import finance_mate.core.account.model.dto.AccountResponse;
 import finance_mate.core.account.model.dto.BalanceResponse;
 import finance_mate.core.account.model.dto.TransferDto;
-import finance_mate.core.account.exception.*;
 import finance_mate.core.account.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
