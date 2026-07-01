@@ -19,6 +19,9 @@ public enum ErrorCode {
     CATEGORY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "Category does not belong to user"),
     CATEGORY_DELETE(HttpStatus.BAD_REQUEST, "Cannot delete default category"),
     //TRANSACTION EXCEPTIONS
+    TRANSACTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Transaction not found"),
+    TRANSACTION_PERIOD_EXCEPTION(HttpStatus.BAD_REQUEST, "Period type must be specified for recurring expenses."),
+    TRANSACTION_RECURRING_NOT_FOUND(HttpStatus.NOT_FOUND, "Recurring transaction not found"),
 
     //CURRENCY EXCEPTIONS
     CURRENCY_NOT_FOUND(HttpStatus.NOT_FOUND, "Currency not found"),
