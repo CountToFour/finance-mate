@@ -54,7 +54,7 @@ public class KeycloakUserService {
                 .build();
     }
 
-    public void createUserInKeycloak(String email, String password, String firstName, String lastName) {
+    public String createUserInKeycloak(String email, String password, String firstName, String lastName) {
         Keycloak keycloakClient = getKeycloakClient();
         List<UserRepresentation> existingUsers = keycloakClient.realm(realm)
                 .users().searchByEmail(email, true);
@@ -75,7 +75,7 @@ public class KeycloakUserService {
         credential.setType(CredentialRepresentation.PASSWORD);
         credential.setValue(password);
         user.setCredentials(Collections.singletonList(credential));
-        register(user);
+        return register(user);
     }
 
     public TokenResponseDto login(String email, String password) {
@@ -132,7 +132,7 @@ public class KeycloakUserService {
         }
     }
 
-    private void register(UserRepresentation user) {
+    private String register(UserRepresentation user) {
         Keycloak keycloakClient = getKeycloakClient();
         Response response = keycloakClient.realm(realm).users().create(user);
         if (response.getStatus() == 201) {
@@ -142,6 +142,7 @@ public class KeycloakUserService {
             try {
                 UserDto userEntity = userService.createUser(keycloakUserId, user.getFirstName(), user.getLastName(), user.getEmail());
                 log.info("Successfully created user in Keycloak and local DB with ID: {}", keycloakUserId);
+                return userEntity.getId();
             } catch (Exception e) {
                 try {
                     keycloakClient.realm(realm).users().get(keycloakUserId).remove();

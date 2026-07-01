@@ -38,11 +38,11 @@ public class StandardAccountService implements AccountService {
     @Override
     @Transactional
     public AccountResponse createAccount(AccountDto dto, String userId) {
-        Currency currency = currencyRepository.findById(dto.currencyCode())
-                .orElseThrow(() -> {
-                    log.error("Currency {} not found", dto.currencyCode());
-                    return new CurrencyException(ErrorCode.CURRENCY_NOT_FOUND);
-                });
+//        Currency currency = currencyRepository.findById(dto.currencyCode())
+//                .orElseThrow(() -> {
+//                    log.error("Currency {} not found", dto.currencyCode());
+//                    return new CurrencyException(ErrorCode.CURRENCY_NOT_FOUND);
+//                });
 
         Account account = new Account();
         account.setName(dto.name());
@@ -71,11 +71,11 @@ public class StandardAccountService implements AccountService {
 //            throw new IllegalOperationException("Currency cannot be changed");
 //        }
 
-        Currency currency = currencyRepository.findById(dto.currencyCode())
-                .orElseThrow(() -> {
-                    log.error("Currency {} not found", dto.currencyCode());
-                    return new CurrencyException(ErrorCode.CURRENCY_NOT_FOUND);
-                });
+//        Currency currency = currencyRepository.findById(dto.currencyCode())
+//                .orElseThrow(() -> {
+//                    log.error("Currency {} not found", dto.currencyCode());
+//                    return new CurrencyException(ErrorCode.CURRENCY_NOT_FOUND);
+//                });
 
         account.setName(dto.name());
         account.setDescription(dto.description());

@@ -5,6 +5,7 @@ import finance_mate.auth.model.dto.LogoutRequestDto;
 import finance_mate.auth.model.dto.RefreshTokenRequestDto;
 import finance_mate.auth.model.dto.TokenResponseDto;
 import finance_mate.auth.model.dto.UserRegistrationDto;
+import finance_mate.auth.publisher.RabbitMQPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,10 +14,12 @@ import org.springframework.stereotype.Service;
 public class StandardAuthService implements AuthService {
 
     private final KeycloakUserService keycloakUserService;
+    private final RabbitMQPublisher rabbitMQPublisher;
 
     @Override
     public void register(UserRegistrationDto patientDto) {
-        keycloakUserService.createUserInKeycloak(patientDto.getEmail(), patientDto.getPassword(), patientDto.getFirstName(), patientDto.getLastName());
+        String userId = keycloakUserService.createUserInKeycloak(patientDto.getEmail(), patientDto.getPassword(), patientDto.getFirstName(), patientDto.getLastName());
+        rabbitMQPublisher.assignDefaultCategories(userId);
     }
 
     @Override

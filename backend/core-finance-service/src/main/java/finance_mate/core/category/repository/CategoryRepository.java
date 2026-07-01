@@ -14,8 +14,6 @@ public interface CategoryRepository extends JpaRepository<Category, String> {
     List<Category> findByUserIdAndTransactionType(String userId, TransactionType type);
     List<Category> findByUserIdAndParentIsNull(String userId);
     List<Category> findByUserIdAndParent(String userId, Category parent);
-    List<Category> findByIsDefaultTrue();
-    List<Category> findByIsDefaultTrueAndLocale(CategoryLocale locale);
     Optional<Category> findByUserIdAndName(String userId, String name);
     List<Category> findAllByUserId(String userId);
 }

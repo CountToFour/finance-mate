@@ -50,6 +50,16 @@ services:
     volumes:
       - ./keycloak-config/realm-export.json:/opt/keycloak/data/import/realm-export.json
 
+  message_broker:
+    image: rabbitmq:3.12-management
+    container_name: finance-mate-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: adminpassword
+    ports:
+      - "5672:5672"   # Port główny do komunikacji mikroserwisów (AMQP)
+      - "15672:15672" # Port do panelu zarządzania w przeglądarce
+
 volumes:
   postgres:
   pgadmin:

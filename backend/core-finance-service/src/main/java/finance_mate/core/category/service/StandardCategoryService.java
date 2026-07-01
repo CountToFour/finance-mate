@@ -3,20 +3,21 @@ package finance_mate.core.category.service;
 import finance_mate.core.category.dto.CategoryDto;
 import finance_mate.core.category.mapper.CategoryMapper;
 import finance_mate.core.category.model.Category;
-import finance_mate.core.category.model.CategoryGroup;
-import finance_mate.core.category.model.CategoryLocale;
+import finance_mate.core.category.model.DefaultCategories;
+import finance_mate.core.category.model.DefaultCategory;
 import finance_mate.core.category.repository.CategoryRepository;
+import finance_mate.core.category.repository.DefaultCategoryRepository;
 import finance_mate.core.exception.CategoryException;
 import finance_mate.core.exception.ErrorCode;
 import finance_mate.core.transaction.model.TransactionType;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -24,93 +25,39 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class StandardCategoryService implements CategoryService {
 
-    private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final CategoryRepository categoryRepository;
+    private final DefaultCategoryRepository defaultCategoryRepository;
 
-    private static final Map<String, Map<CategoryLocale, String>> DEFAULT_CATEGORIES = Map.of(
-        "FOOD", Map.of(
-            CategoryLocale.PL, "Jedzenie",
-            CategoryLocale.EN, "Food"
-        ),
-        "TRANSPORT", Map.of(
-            CategoryLocale.PL, "Transport",
-            CategoryLocale.EN, "Transport"
-        ),
-        "HOUSING", Map.of(
-            CategoryLocale.PL, "Mieszkanie",
-            CategoryLocale.EN, "Housing"
-        ),
-        "ENTERTAINMENT", Map.of(
-            CategoryLocale.PL, "Rozrywka",
-            CategoryLocale.EN, "Entertainment"
-        ),
-        "SALARY", Map.of(
-            CategoryLocale.PL, "Wynagrodzenie",
-            CategoryLocale.EN, "Salary"
-        ),
-        "INVESTMENTS", Map.of(
-            CategoryLocale.PL, "Inwestycje",
-            CategoryLocale.EN, "Investments"
-        ),
-        "GIFTS", Map.of(
-            CategoryLocale.PL, "Prezenty",
-            CategoryLocale.EN, "Gifts"
-        )
-    );
-
-    private static final Map<String, String> CATEGORY_COLORS = Map.of(
-        "FOOD", "#FF5733",
-        "TRANSPORT", "#33FF57",
-        "HOUSING", "#3357FF",
-        "ENTERTAINMENT", "#FF33F5",
-        "SALARY", "#33FFF5",
-        "INVESTMENTS", "#F5FF33",
-        "GIFTS", "#FF3333"
-    );
-
-    private static final Map<String, TransactionType> CATEGORY_TYPES = Map.of(
-        "FOOD", TransactionType.EXPENSE,
-        "TRANSPORT", TransactionType.EXPENSE,
-        "HOUSING", TransactionType.EXPENSE,
-        "ENTERTAINMENT", TransactionType.EXPENSE,
-        "SALARY", TransactionType.INCOME,
-        "INVESTMENTS", TransactionType.INCOME,
-        "GIFTS", TransactionType.INCOME
-    );
-
-    private static final Map<String, CategoryGroup> CATEGORY_GROUPS = Map.of(
-            "FOOD", CategoryGroup.NEEDS,
-            "TRANSPORT", CategoryGroup.NEEDS,
-            "HOUSING", CategoryGroup.NEEDS,
-            "ENTERTAINMENT", CategoryGroup.WANTS
-    );
-
-    @PostConstruct
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional
     public void initializeDefaultCategories() {
-        if (categoryRepository.findByIsDefaultTrue().isEmpty()) {
-            createDefaultCategories();
+        log.info("Started default categories verification...");
+
+        int addedCount = 0;
+        for (DefaultCategories categoryEnum : DefaultCategories.values()) {
+            String code = categoryEnum.name();
+            if (!defaultCategoryRepository.existsByCode(code)) {
+
+                DefaultCategory newCategory = DefaultCategory.builder()
+                        .code(code)
+                        .name(categoryEnum.getDefaultName())
+                        .color(categoryEnum.getColor())
+                        .transactionType(categoryEnum.getTransactionType())
+                        .categoryGroup(categoryEnum.getCategoryGroup())
+                        .build();
+
+                defaultCategoryRepository.save(newCategory);
+                addedCount++;
+                log.info("Default category saved to database: {}", code);
+            }
         }
-    }
 
-    private void createDefaultCategories() {
-        DEFAULT_CATEGORIES.forEach((key, translations) -> {
-            translations.forEach((locale, name) -> {
-                CategoryGroup group = CATEGORY_GROUPS.getOrDefault(key, null);
-                createDefaultCategory(name, CATEGORY_COLORS.get(key), CATEGORY_TYPES.get(key), locale, group);
-            });
-        });
-    }
-
-    private void createDefaultCategory(String name, String color, TransactionType type, CategoryLocale locale, CategoryGroup group) {
-        Category category = Category.builder()
-                .name(name)
-                .color(color)
-                .transactionType(type)
-                .locale(locale)
-                .isDefault(true)
-                .categoryGroup(group)
-                .build();
-        categoryRepository.save(category);
+        if (addedCount > 0) {
+            log.info("Finished initialization. Added new categories: {}", addedCount);
+        } else {
+            log.info("Initialization completed. All default categories already exist.");
+        }
     }
 
     @Override
@@ -190,10 +137,6 @@ public class StandardCategoryService implements CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        if (category.isDefault()) {
-            throw new CategoryException(ErrorCode.CATEGORY_DELETE);
-        }
-
         if (category.getUserId() == null || !category.getUserId().equals(userId)) {
             throw new CategoryException(ErrorCode.CATEGORY_ACCESS_DENIED);
         }
@@ -209,6 +152,21 @@ public class StandardCategoryService implements CategoryService {
     @Override
     public List<Category> findAllByUser(String userId) {
         return categoryRepository.findAllByUserId(userId);
+    }
+
+    @Override
+    public void assignCategoriesToUser(String userId) {
+        List<DefaultCategory> defaultCategories = defaultCategoryRepository.findAll();
+        for (DefaultCategory defaultCategory : defaultCategories) {
+            Category category = Category.builder()
+                    .name(defaultCategory.getName())
+                    .color(defaultCategory.getColor())
+                    .transactionType(defaultCategory.getTransactionType())
+                    .categoryGroup(defaultCategory.getCategoryGroup())
+                    .userId(userId)
+                    .build();
+            categoryRepository.save(category);
+        }
     }
 
 }
