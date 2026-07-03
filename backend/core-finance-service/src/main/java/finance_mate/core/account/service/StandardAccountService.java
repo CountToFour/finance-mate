@@ -63,7 +63,7 @@ public class StandardAccountService implements AccountService {
         Account account = getAccount(accountId, userId);
 
         if (account.getBalance() != dto.balance()) {
-            log.error("Account balance cannot be changed in update action, account id: {}", account);
+            log.error("Account balance cannot be changed in update action, account id: {}", accountId);
             throw new AccountException(ErrorCode.ACCOUNT_BALANCE_UPDATE);
         }
 
@@ -91,6 +91,7 @@ public class StandardAccountService implements AccountService {
     @Transactional
     public void deleteAccount(String accountId, String userId) {
         //TODO TRANSACTIONS ALSO NEED TO BE DELETED AFTER THAT
+        //TODO ADD INFORMATION FOR USER THAT THIS OPERATION WILL DELETE ALL TRANSACTIONS
         Account account = getAccount(accountId, userId);
         accountRepository.delete(account);
     }
@@ -133,11 +134,11 @@ public class StandardAccountService implements AccountService {
             throw new AccountException(ErrorCode.ACCOUNT_TRANSFER);
         }
         Account fromAccount = accountRepository.findById(fromAccountId).orElseThrow(() -> {
-            log.error("Source account not found");
+            log.error("Source account not found, id: {}", fromAccountId);
             return new AccountException(ErrorCode.ACCOUNT_NOT_FOUND);
         });
         Account toAccount = accountRepository.findById(toAccountId).orElseThrow(() -> {
-            log.error("Destination account not found");
+            log.error("Destination account not found, id: {}", toAccountId);
             return new AccountException(ErrorCode.ACCOUNT_NOT_FOUND);
         });
 

@@ -41,7 +41,7 @@ public class AccountController {
 
     @PutMapping("/update/{accountId}")
     public ResponseEntity<AccountResponse> updateAccount(@PathVariable String accountId,
-                                           @RequestBody AccountDto dto,
+                                           @Valid @RequestBody AccountDto dto,
                                            @RequestHeader("X-User-Id") String userId) {
         return ResponseEntity.ok(accountService.updateAccount(accountId, dto, userId));
     }
@@ -63,18 +63,18 @@ public class AccountController {
     public ResponseEntity<String> archiveAccount(@PathVariable String accountId,
                                             @RequestHeader("X-User-Id") String userId) {
         accountService.archiveAccount(accountId, userId);
-        return ResponseEntity.ok("Account archived successfully");
+        return ResponseEntity.ok("Account archive status changed successfully");
     }
 
     @PutMapping("/include-in-stats/{accountId}")
     public ResponseEntity<String> includeInStats(@PathVariable String accountId,
                                             @RequestHeader("X-User-Id") String userId) {
         accountService.includeInStats(accountId, userId);
-        return ResponseEntity.ok("Account includeInStats toggled successfully");
+        return ResponseEntity.ok("Account include in statistics toggled successfully");
     }
 
     @PutMapping("/transfer")
-    public ResponseEntity<String> transferBetweenAccounts(@RequestBody TransferDto request,
+    public ResponseEntity<String> transferBetweenAccounts(@Valid @RequestBody TransferDto request,
                                                      @RequestHeader("X-User-Id") String userId) {
         accountService.transferBetweenAccounts(request.fromAccountId(), request.toAccountId(), request.amount(), userId);
         return ResponseEntity.ok("Transfer completed successfully");
