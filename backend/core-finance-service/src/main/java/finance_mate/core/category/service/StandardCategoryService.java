@@ -1,10 +1,12 @@
 package finance_mate.core.category.service;
 
-import finance_mate.core.category.dto.CategoryDto;
+import finance_mate.core.category.model.dto.CategoryDto;
 import finance_mate.core.category.mapper.CategoryMapper;
 import finance_mate.core.category.model.Category;
 import finance_mate.core.category.model.DefaultCategories;
 import finance_mate.core.category.model.DefaultCategory;
+import finance_mate.core.category.model.dto.CategoryResponse;
+import finance_mate.core.category.model.dto.SubCategoryDto;
 import finance_mate.core.category.repository.CategoryRepository;
 import finance_mate.core.category.repository.DefaultCategoryRepository;
 import finance_mate.core.exception.CategoryException;
@@ -62,7 +64,7 @@ public class StandardCategoryService implements CategoryService {
 
     @Override
     @Transactional
-    public CategoryDto createCategory(CategoryDto dto, String userId) {
+    public CategoryResponse createCategory(CategoryDto dto, String userId) {
         if (dto.getCategoryGroup() == null && dto.getTransactionType() == TransactionType.EXPENSE) {
             throw new CategoryException(ErrorCode.CATEGORY_TYPE_MISMATCH);
         }
@@ -70,18 +72,28 @@ public class StandardCategoryService implements CategoryService {
         Category category = categoryMapper.mapToEntity(dto);
         category.setUserId(userId);
 
-        if (dto.getParentId() != null) {
-            Category parent = categoryRepository.findById(dto.getParentId())
-                    .orElseThrow(() -> {
-                        log.error("Parent category not found for id: {}", dto.getParentId());
-                        return new CategoryException(ErrorCode.CATEGORY_NOT_FOUND);
-                    });
-            if (parent.getTransactionType() != dto.getTransactionType()) {
-                throw new CategoryException(ErrorCode.CATEGORY_TYPE_MISMATCH);
-            }
-            category.setParent(parent);
-            category.setColor(parent.getColor());
-        }
+        Category saved = categoryRepository.save(category);
+        return categoryMapper.mapToDto(saved);
+    }
+
+    @Transactional
+    @Override
+    public CategoryResponse createSubCategory(SubCategoryDto dto, String userId) {
+        Category parentCategory = categoryRepository.findById(dto.getParentId())
+                .orElseThrow(() -> {
+                    log.error("Parent category not found for id: {}", dto.getParentId());
+                    return new CategoryException(ErrorCode.CATEGORY_NOT_FOUND);
+                });
+
+        Category category = Category.builder()
+                .name(dto.getName())
+                .color(parentCategory.getColor())
+                .parent(parentCategory)
+                .userId(userId)
+                .transactionType(parentCategory.getTransactionType())
+                .categoryGroup(parentCategory.getCategoryGroup())
+                .build();
+
 
         Category saved = categoryRepository.save(category);
         return categoryMapper.mapToDto(saved);
@@ -89,7 +101,7 @@ public class StandardCategoryService implements CategoryService {
 
     @Override
     @Transactional
-    public CategoryDto updateCategory(String id, CategoryDto dto, String userId) {
+    public CategoryResponse updateCategory(String id, CategoryDto dto, String userId) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
 
@@ -98,31 +110,22 @@ public class StandardCategoryService implements CategoryService {
         }
 
         category.setName(dto.getName());
-        category.setColor(dto.getColor());
         category.setCategoryGroup(dto.getCategoryGroup());
-
-        if (dto.getParentId() != null) {
-            Category parent = categoryRepository.findById(dto.getParentId())
-                    .orElseThrow(() -> {
-                        log.error("Parent category not found for id: {}", dto.getParentId());
-                        return new CategoryException(ErrorCode.CATEGORY_NOT_FOUND);
-                    });
-            category.setParent(parent);
-            category.setColor(parent.getColor());
+        if (category.getParent() != null) {
+            category.setColor(category.getParent().getColor());
         } else {
-            category.setParent(null);
+            category.setColor(dto.getColor());
         }
-
         Category saved = categoryRepository.save(category);
         return categoryMapper.mapToDto(saved);
     }
 
     @Override
-    public List<CategoryDto> getUserCategories(String userId, TransactionType type) {
+    public List<CategoryResponse> getUserCategories(String userId, TransactionType type) {
         return categoryRepository.findByUserIdAndTransactionType(userId, type)
                 .stream()
                 .map(category -> {
-                    CategoryDto dto = categoryMapper.mapToDto(category);
+                    CategoryResponse dto = categoryMapper.mapToDto(category);
                     if (category.getParent() != null) {
                         dto.setParentId(category.getParent().getId());
                     }

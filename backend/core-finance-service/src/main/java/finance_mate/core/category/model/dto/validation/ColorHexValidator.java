@@ -1,4 +1,4 @@
-package finance_mate.core.category.dto.validation;
+package finance_mate.core.category.model.dto.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

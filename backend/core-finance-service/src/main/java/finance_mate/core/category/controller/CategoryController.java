@@ -1,6 +1,8 @@
 package finance_mate.core.category.controller;
 
-import finance_mate.core.category.dto.CategoryDto;
+import finance_mate.core.category.model.dto.CategoryDto;
+import finance_mate.core.category.model.dto.CategoryResponse;
+import finance_mate.core.category.model.dto.SubCategoryDto;
 import finance_mate.core.category.service.CategoryService;
 import finance_mate.core.transaction.model.TransactionType;
 import jakarta.validation.Valid;
@@ -27,21 +29,27 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @PostMapping()
-    public ResponseEntity<?> createCategory(@Valid @RequestBody CategoryDto categoryDto,
-                                            @RequestHeader("X-User-Id") String userId) {
+    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryDto categoryDto,
+                                                           @RequestHeader("X-User-Id") String userId) {
         return ResponseEntity.ok(categoryService.createCategory(categoryDto, userId));
     }
 
+    @PostMapping("/sub-category")
+    public ResponseEntity<CategoryResponse> createSubCategory(@Valid @RequestBody SubCategoryDto categoryDto,
+                                                              @RequestHeader("X-User-Id") String userId) {
+        return ResponseEntity.ok(categoryService.createSubCategory(categoryDto, userId));
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<CategoryDto> updateCategory(@PathVariable String id,
+    public ResponseEntity<CategoryResponse> updateCategory(@PathVariable String id,
                                                       @Valid @RequestBody CategoryDto categoryDto,
                                                       @RequestHeader("X-User-Id") String userId) {
         return ResponseEntity.ok(categoryService.updateCategory(id, categoryDto, userId));
     }
 
     @GetMapping
-    public ResponseEntity<List<CategoryDto>> getUserCategories(@RequestParam TransactionType type,
-                                                               @RequestHeader("X-User-Id") String userId) {
+    public ResponseEntity<List<CategoryResponse>> getUserCategories(@RequestParam TransactionType type,
+                                                                    @RequestHeader("X-User-Id") String userId) {
         return ResponseEntity.ok(categoryService.getUserCategories(userId, type));
     }
 
