@@ -28,8 +28,8 @@ public class StandardAuthService implements AuthService {
     }
 
     @Override
-    public void logout(LogoutRequestDto logoutRequestDto) {
-        keycloakUserService.logout(logoutRequestDto.getRefreshToken());
+    public void logout(String refreshToken) {
+        keycloakUserService.logout(refreshToken);
     }
     
     @Override
