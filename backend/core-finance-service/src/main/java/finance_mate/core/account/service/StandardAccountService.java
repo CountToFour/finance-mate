@@ -120,6 +120,7 @@ public class StandardAccountService implements AccountService {
     }
 
     @Override
+    @Transactional
     public void changeBalance(String accountId, double amount, String userId) {
         Account account = getAccount(accountId, userId);
         account.setBalance(account.getBalance() + amount);

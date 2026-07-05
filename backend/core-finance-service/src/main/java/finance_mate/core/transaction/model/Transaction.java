@@ -1,6 +1,7 @@
 package finance_mate.core.transaction.model;
 
 import finance_mate.core.account.model.Account;
+import finance_mate.core.category.model.Category;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -34,6 +35,8 @@ public class Transaction {
     @Nullable
     private String description;
     private double price;
-    private String category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
     private LocalDate createdAt;
 }

@@ -14,7 +14,7 @@ spring:
             - id: core-finance-service-route
               uri: lb://core-finance-service
               predicates:
-                - Path=/api/account/**, /api/transaction/**, /api/currency/**, /api/categories/**,
+                - Path=/api/account/**, /api/transactions/**, /api/currency/**, /api/categories/**,
 
   security:
     oauth2:

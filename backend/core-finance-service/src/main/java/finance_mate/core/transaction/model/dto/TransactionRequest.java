@@ -18,7 +18,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransactionRequest {
-    private String id;
 
     @NotBlank(message = "Account ID cannot be empty")
     private String accountId;
@@ -41,6 +40,4 @@ public class TransactionRequest {
 
     @NotNull(message = "Transaction type cannot be null")
     private TransactionType transactionType;
-
-    private boolean active;
 }

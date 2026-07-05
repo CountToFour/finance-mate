@@ -1,12 +1,10 @@
 package finance_mate.core.transaction.controller;
 
-import finance_mate.core.transaction.model.PeriodType;
 import finance_mate.core.transaction.model.TransactionType;
 import finance_mate.core.transaction.model.dto.CategoryDto;
 import finance_mate.core.transaction.model.dto.DailyOverviewDto;
 import finance_mate.core.transaction.model.dto.EditTransactionDto;
 import finance_mate.core.transaction.model.dto.MonthOverviewDto;
-import finance_mate.core.transaction.model.dto.RecurringTransactionResponse;
 import finance_mate.core.transaction.model.dto.TransactionOverviewDto;
 import finance_mate.core.transaction.model.dto.TransactionRequest;
 import finance_mate.core.transaction.model.dto.TransactionResponse;
@@ -45,12 +43,6 @@ public class TransactionController {
         return ResponseEntity.ok(saved);
     }
 
-    @PostMapping("/recurring")
-    public ResponseEntity<RecurringTransactionResponse> addRecurringTransaction(@Valid @RequestBody TransactionRequest transaction,
-                                                                                @RequestHeader("X-User-Id") String userId) {
-        return ResponseEntity.ok(transactionService.addRecurringTransaction(transaction, userId));
-    }
-
     @GetMapping
     public ResponseEntity<List<TransactionResponse>> getTransactionsByUser(
             @RequestParam TransactionType type,
@@ -65,39 +57,16 @@ public class TransactionController {
                 startDate, endDate, type, accountName));
     }
 
-    @GetMapping("/recurring")
-    public ResponseEntity<List<RecurringTransactionResponse>> getAllRecurringTransactions(@RequestHeader("X-User-Id") String userId,
-                                                         @RequestParam TransactionType type) {
-        return ResponseEntity.ok(transactionService.getAllRecurringTransactions(userId, type));
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteTransaction(@PathVariable String id) {
         transactionService.deleteTransaction(id);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/recurring/{id}")
-    public ResponseEntity<?> deleteRecurringTransaction(@PathVariable String id) {
-        transactionService.deleteRecurringTransaction(id);
-        return ResponseEntity.ok().build();
-    }
-
-    @PutMapping("/deactivate/{id}")
-    public ResponseEntity<?> deactivateRecurringTransaction(@PathVariable String id) {
-        transactionService.deactivateRecurringTransaction(id);
-        return ResponseEntity.ok().build();
-    }
-
     @PutMapping("/edit/{id}")
     public ResponseEntity<?> editTransaction(@PathVariable String id, @Valid @RequestBody EditTransactionDto transactionRequest) {
-        if (transactionRequest.periodType() != PeriodType.NONE) {
-            RecurringTransactionResponse updatedRecurring = transactionService.editRecurringTransaction(id, transactionRequest);
-            return ResponseEntity.ok(updatedRecurring);
-        } else {
-            TransactionResponse updatedTransaction = transactionService.editTransaction(id, transactionRequest);
-            return ResponseEntity.ok(updatedTransaction);
-        }
+        TransactionResponse updatedTransaction = transactionService.editTransaction(id, transactionRequest);
+        return ResponseEntity.ok(updatedTransaction);
     }
 
     @GetMapping("/categories/type/{type}")

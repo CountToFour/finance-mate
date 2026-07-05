@@ -1,6 +1,7 @@
 package finance_mate.core.transaction.model;
 
 import finance_mate.core.account.model.Account;
+import finance_mate.core.category.model.Category;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,7 +32,9 @@ public class RecurringTransaction {
     private Account account;
     @Enumerated(EnumType.STRING)
     private TransactionType transactionType;
-    private String category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
     private double price;
     @Nullable
     private String description;

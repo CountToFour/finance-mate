@@ -8,12 +8,12 @@ import java.time.LocalDate;
 
 public class TransactionSpecifications {
     public static Specification<Transaction> hasUserId(String userId) {
-        return (root, query, cb) -> cb.equal(root.get("user").get("id"), userId);
+        return (root, query, cb) -> cb.equal(root.get("userId"), userId);
     }
 
     public static Specification<Transaction> hasCategory(String category) {
         return (root, query, cb) ->
-                category == null ? null : cb.equal(root.get("category"), category);
+                category == null ? null : cb.equal(root.get("category").get("name"), category);
     }
 
     public static Specification<Transaction> amountBetween(Double min, Double max) {

@@ -13,7 +13,7 @@ import java.time.LocalDate;
 public class TransactionResponse {
     private String id;
     private String accountName;
-    private String category;
+    private String categoryName;
     private double price;
     private String description;
     private LocalDate createdAt;
