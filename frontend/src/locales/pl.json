@@ -1,7 +1,7 @@
 {
-  "layout" : {
+  "layout": {
     "account": "Konta",
-    "dashboard" : "Pulpit",
+    "dashboard": "Pulpit",
     "expenses": "Wydatki",
     "incomes": "Przychody",
     "budget": "Budżet",
@@ -47,13 +47,13 @@
         "maxLength": "Nazwisko nie może mieć więcej niż 50 znaków",
         "pattern": "Nazwisko może zawierać tylko litery i spacje"
       },
-      "email" : {
+      "email": {
         "required": "Podaj email",
         "pattern": "Podaj poprawny email",
         "emailTaken": "Konto z tym e-mailem już istnieje",
         "incorrectEmail": "Podaj poprawny email"
       },
-      "password" : {
+      "password": {
         "required": "Podaj hasło",
         "minLength": "Hasło musi mieć co najmniej 8 znaków",
         "maxLength": "Hasło nie może mieć więcej niż 64 znaków",
@@ -74,19 +74,19 @@
         "category": "Kategoria",
         "price": "Kwota",
         "actions": "Akcje",
-        "tooltip" : {
-          "edit" : "Edytuj",
-          "delete" : "Usuń"
+        "tooltip": {
+          "edit": "Edytuj",
+          "delete": "Usuń"
         }
       },
       "recurringTable": {
         "label": "Wydatki stałe",
         "secondLabel": "Przegląd wydatków okresowych"
       },
-      "categories" : {
-        "label" : "Wydatki według kategorii",
-        "secondLabel" : "Podział wydatków na kategorie w danym miesiącu",
-        "transaction" : "transakcji"
+      "categories": {
+        "label": "Wydatki według kategorii",
+        "secondLabel": "Podział wydatków na kategorie w danym miesiącu",
+        "transaction": "transakcji"
       }
     },
     "notifications": {
@@ -176,6 +176,67 @@
       "label": "Edytuj przychód okresowy",
       "active": "Aktywny",
       "inactive": "Nieaktywny"
+    }
+  },
+  "account": {
+    "page": {
+      "label": "Konta",
+      "secondLabel": "Zarządzaj swoimi kontami",
+      "add": "Dodaj konto",
+      "transfer": "Transfer środków",
+      "card" : {
+        "edit" : "Edytuj",
+        "archive" : "Archiwizuj"
+      },
+      "stats" : {
+        "success" : "Pomyślnie zmianiono uwzględnianie konta w statystykach",
+        "error" : "Nie udało się wykonać operacji. Spróbuj ponownie."
+      },
+      "delete" : {
+        "success" : "Konto zostało pomyślnie usunięte",
+        "error" : "Nie udało się usunąć konta. Spróbuj ponownie."
+      }
+    },
+    "dialog" : {
+      "add": {
+        "label" : "Dodaj nowe konto",
+        "balance": "Saldo początkowe",
+        "name": "Nazwa konta",
+        "description": "Opis konta",
+        "color" : "Kolor konta",
+        "save" : "Zapisz",
+        "cancel" : "Anuluj",
+        "error" : {
+          "balance" : "Saldo początkowe jest wymagane",
+          "negativeBalance" : "Saldo początkowe nie może być ujemne",
+          "color" : "Kolor konta jest wymagany",
+          "name" : "Nazwa konta jest wymagana",
+          "failed" : "Nie udało się dodać konta. Spróbuj ponownie."
+        },
+        "success" : "Konto zostało pomyślnie dodane"
+      },
+      "edit" : {
+        "label" : "Edytuj konto",
+        "success": "Konto zostało pomyślnie zaktualizowane",
+        "error": {
+          "failed" : "Nie udało się zaktualizować konta. Spróbuj ponownie."
+        }
+      },
+      "transfer" : {
+        "label" : "Transfer pomiędzy kontami",
+        "from" : "Z konta",
+        "to" : "Na konto",
+        "amount" : "Kwota",
+        "currency" : "Waluta",
+        "save" : "Zapisz",
+        "cancel" : "Anuluj",
+        "error" : {
+          "account" : "Podano takie same konta",
+          "amount" : "Nieprawidłowa kwota",
+          "failed" : "Nie udało się wykonać transferu. Spróbuj ponownie."
+        },
+        "success" : "Transfer został pomyślnie wykonany"
+      }
     }
   }
 }

@@ -1,24 +1,26 @@
-import type {Account, Currency, TransferDto} from "../../lib/types.ts";
 import React, {useState} from "react";
 import {Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, TextField} from "@mui/material";
 import {useTranslation} from "react-i18next";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import {transferBetweenAccounts} from "../../lib/api.ts";
+import type {Account, TransferDto} from "../../types/account.ts";
+import {useAccountStore} from "../../store/account-store.ts";
 
 interface TransferDialogProps {
     open: boolean;
     onClose: () => void;
-    accounts: Account[];
 }
 
-const TransferDialog: React.FC<TransferDialogProps> = ({open, onClose, accounts}) => {
+const TransferDialog: React.FC<TransferDialogProps> = ({open, onClose}) => {
     const {t} = useTranslation();
     const {success, error} = useNotification();
     const [amount, setAmount] = useState<string>("");
     const [fromAccount, setFromAccount] = useState<Account | null>(null);
     const [toAccount, setToAccount] = useState<Account | null>(null);
-    const [fromCurrency, setFromCurrency] = useState<Currency | null>(null);
-    const [toCurrency, setToCurrency] = useState<Currency | null>(null);
+    // const [fromCurrency, setFromCurrency] = useState<Currency | null>(null);
+    // const [toCurrency, setToCurrency] = useState<Currency | null>(null);
+
+    const accounts = useAccountStore(state => state.accounts);
 
     const [errors, setFormErrors] = useState({
         amount: "",
@@ -29,8 +31,8 @@ const TransferDialog: React.FC<TransferDialogProps> = ({open, onClose, accounts}
         setAmount("");
         setFromAccount(null);
         setToAccount(null);
-        setFromCurrency(null);
-        setToCurrency(null);
+        // setFromCurrency(null);
+        // setToCurrency(null);
         setFormErrors({amount: "", accounts: ""});
         onClose();
     };
@@ -40,11 +42,11 @@ const TransferDialog: React.FC<TransferDialogProps> = ({open, onClose, accounts}
         const newErrors = {accounts: "", amount: ""};
 
         if (fromAccount?.id === toAccount?.id) {
-            newErrors.accounts = "Podano takie same konta";
+            newErrors.accounts = t('account.dialog.transfer.error.account')
             valid = false;
         }
         if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-            newErrors.amount = "Nieprawidłowa kwota";
+            newErrors.amount = t('account.dialog.transfer.error.amount')
             valid = false;
         }
         setFormErrors(newErrors);
@@ -54,17 +56,17 @@ const TransferDialog: React.FC<TransferDialogProps> = ({open, onClose, accounts}
     const handleSave = async () => {
         if (!validate()) return;
 
-        const transferDto = ({
+        const transferDto: TransferDto = {
             fromAccountId: fromAccount?.id,
             toAccountId: toAccount?.id,
             amount: parseFloat(amount)
-        } as unknown) as TransferDto;
+        }
 
         transferBetweenAccounts(transferDto).then(() => {
-            success("Operacja zakończona powodzeniem")
+            success(t('account.dialog.transfer.success'))
             handleClose();
         }).catch(() => {
-            error("Błąd podczas wykonywania transferu")
+            error(t('account.dialog.transfer.error.failed'))
             handleClose()
         })
     };
@@ -72,7 +74,7 @@ const TransferDialog: React.FC<TransferDialogProps> = ({open, onClose, accounts}
     return (
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
             <DialogTitle>
-                Transfer pomiędzy kontami
+                {t('account.dialog.transfer.label')}
             </DialogTitle>
 
             <DialogContent dividers sx={{position: 'relative'}}>
@@ -87,13 +89,13 @@ const TransferDialog: React.FC<TransferDialogProps> = ({open, onClose, accounts}
                         select
                         fullWidth
                         //TODO WIELOJEZYCZNOSC
-                        label={"Transfer z"}
+                        label={t('account.dialog.transfer.from')}
                         value={fromAccount ? fromAccount.id : ""}
                         onChange={(e) => {
                             const id = e.target.value as string;
                             const acct = accounts.find(a => a.id === id) ?? null;
                             setFromAccount(acct);
-                            setFromCurrency(acct?.currency);
+                            // setFromCurrency(acct?.currency);
                             setFormErrors({...errors, accounts: ""});
                         }
                         }
@@ -109,8 +111,8 @@ const TransferDialog: React.FC<TransferDialogProps> = ({open, onClose, accounts}
                     </TextField>
                     <TextField
                         fullWidth
-                        label={"Waluta"}
-                        value={fromCurrency?.symbol ?? ""}
+                        label={t('account.dialog.transfer.currency')}
+                        // value={fromCurrency?.symbol ?? ""}
                         disabled
                         sx={{flex: 0.4}}
                     />
@@ -127,13 +129,13 @@ const TransferDialog: React.FC<TransferDialogProps> = ({open, onClose, accounts}
                         fullWidth
                         margin="normal"
                         //TODO WIELOJEZYCZNOSC
-                        label={"Transfer do"}
+                        label={t('account.dialog.transfer.to')}
                         value={toAccount ? toAccount.id : ""}
                         onChange={(e) => {
                             const id = e.target.value as string;
                             const acct = accounts.find(a => a.id === id) ?? null;
                             setToAccount(acct);
-                            setToCurrency(acct?.currency);
+                            // setToCurrency(acct?.currency);
                             setFormErrors({...errors, accounts: ""});
                         }
                         }
@@ -150,15 +152,15 @@ const TransferDialog: React.FC<TransferDialogProps> = ({open, onClose, accounts}
                     <TextField
                         margin="normal"
                         fullWidth
-                        label={"Waluta"}
-                        value={toCurrency?.symbol ?? ""}
+                        label={t('account.dialog.transfer.currency')}
+                        // value={toCurrency?.symbol ?? ""}
                         disabled
                         sx={{flex: 0.4}}
                     />
                 </Box>
                 <TextField
                     fullWidth
-                    label={t('expenses.addExpense.price.label')}
+                    label={t('account.dialog.transfer.amount')}
                     type="number"
                     value={amount}
                     margin="normal"
@@ -176,10 +178,10 @@ const TransferDialog: React.FC<TransferDialogProps> = ({open, onClose, accounts}
 
             <DialogActions sx={{mr: 2, mb: 1, mt: 1}}>
                 <Button onClick={handleClose} color="secondary">
-                    {t('expenses.addExpense.cancel', 'Anuluj')}
+                    {t('account.dialog.transfer.cancel')}
                 </Button>
                 <Button onClick={handleSave} variant="contained" color="primary">
-                    {t('expenses.addExpense.save', 'Zapisz')}
+                    {t('account.dialog.transfer.save')}
                 </Button>
             </DialogActions>
         </Dialog>

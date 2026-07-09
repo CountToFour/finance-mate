@@ -109,31 +109,6 @@ export type DailyOverview = {
 
 //ACCOUNTS
 
-export type Account = {
-    id: string
-    name: string
-    description?: string
-    currency: Currency
-    balance: number
-    color: string
-    includeInStats: boolean
-    archived?: boolean
-}
-
-export type CreateAccountDto = {
-    name: string
-    description?: string | null
-    currencyCode: string
-    balance: number
-    color?: string
-}
-
-export type TransferDto = {
-    fromAccountId: string
-    toAccountId: string
-    amount: number
-}
-
 export type BalanceResponse = {
     balance: number;
     currency: string;

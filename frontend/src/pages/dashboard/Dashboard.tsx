@@ -14,12 +14,11 @@ import {
 } from '@mui/material';
 import {useAuthStore} from "../../store/auth-store.ts";
 import {
-    getAccounts,
     getAllCategoriesAmount,
     getCategories, getDailyOverview,
     getExpenses, getSpendingAuditor, getUserBalance
 } from "../../lib/api.ts";
-import type {Account, Category, CategoryAmount, DailyOverview, Expense, SpendingStructure} from "../../lib/types.ts";
+import type {Category, CategoryAmount, DailyOverview, Expense, SpendingStructure} from "../../lib/types.ts";
 import dayjs from "dayjs";
 import 'dayjs/locale/pl';
 import {
@@ -31,6 +30,8 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import AuditorWidget from "./AuditorWidget.tsx";
 import CashFlowWidget from "./CashFlowWidget.tsx";
 import HealthScoreWidget from "./HealthScoreWidget.tsx";
+import {useAccountStore} from "../../store/account-store.ts";
+import {accountService} from "../../api/account-client.ts";
 
 dayjs.locale('pl');
 
@@ -38,7 +39,9 @@ function Dashboard() {
     const {user} = useAuthStore();
     const theme = useTheme();
 
-    const [accounts, setAccounts] = useState<Account[]>([]);
+    const accounts = useAccountStore(state => state.accounts)
+    const setAccounts = useAccountStore(state => state.setAccounts)
+    // const [accounts, setAccounts] = useState<Account[]>([]);
     const [recentExpenses, setRecentExpenses] = useState<Expense[]>([]);
     const [categoryAmounts, setCategoryAmounts] = useState<CategoryAmount[]>([]);
     const [allCategories, setAllCategories] = useState<Category[]>([]);
@@ -55,8 +58,8 @@ function Dashboard() {
             const formattedToday = today.format('YYYY-MM-DD');
 
             try {
-                const accountsRes = await getAccounts();
-                setAccounts(accountsRes.data);
+                const accountsResponse = await accountService.getAccounts();
+                setAccounts(accountsResponse);
 
                 const balanceRes = await getUserBalance();
                 setTotalBalance({
@@ -135,7 +138,8 @@ function Dashboard() {
 
     const findTransactionCurrency = (transaction: Expense) => {
         const account = accounts.find(a => a.name === transaction.accountName);
-        const symbol = account?.currency?.symbol ?? '';
+        // const symbol = account?.currency?.symbol ?? '';
+        const symbol = 'zł';
         return symbol
     }
 
@@ -170,7 +174,8 @@ function Dashboard() {
                                             {account.name}
                                         </Typography>
                                         <Typography variant="h5" fontWeight="bold" sx={{mt: 1}}>
-                                            {account.balance.toLocaleString('pl-PL', {minimumFractionDigits: 2})} {account.currency.symbol}
+                                            {/*{account.balance.toLocaleString('pl-PL', {minimumFractionDigits: 2})} {account.currency.symbol}*/}
+                                            {account.balance.toLocaleString('pl-PL', {minimumFractionDigits: 2})} zł
                                         </Typography>
                                     </Box>
                                     <AccountBalanceWalletIcon
