@@ -10,7 +10,7 @@ import {
     ListItemButton, Avatar, Button
 } from '@mui/material';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/auth';
+import { useAuthStore } from '../store/auth-store.ts';
 import HomeIcon from '@mui/icons-material/Home';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
@@ -19,6 +19,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CrisisAlertIcon from '@mui/icons-material/CrisisAlert';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import {useTranslation} from "react-i18next";
+import {authService} from "../api/auth-client.ts";
 
 const drawerWidth = 240;
 
@@ -26,7 +27,7 @@ export function Layout() {
     const { t } = useTranslation();
     const logout = useAuthStore(s => s.logout);
     const user = useAuthStore(s => s.user);
-    const name = user?.username || 'User';
+    const name = user?.firstName && user.lastName ? `${user?.firstName} ${user?.lastName}` : '';
     const navigate = useNavigate();
 
     const menuItems = [
@@ -52,6 +53,12 @@ export function Layout() {
             children: initials,
         };
     };
+
+    const handleLogout = async () => {
+        await authService.logout();
+        logout();
+        navigate('/login');
+    }
 
     return (
         <Box sx={{ display: "flex", bgcolor: "background.default", minHeight: "100vh" }}>
@@ -89,7 +96,7 @@ export function Layout() {
                         fullWidth
                         variant="outlined"
                         color="secondary"
-                        onClick={() => { logout(); navigate('/login'); }}
+                        onClick={() => handleLogout()}
                     >
                         {t('layout.logOut')}
                     </Button>

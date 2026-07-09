@@ -6,7 +6,7 @@ import finance_mate.auth.model.dto.UserUpdateDto;
 public interface UserService {
     UserDto createUser(String id, String name, String surname, String email);
 
-    UserDto getUser(String id);
+    UserDto getUserByEmail(String email);
 
     UserDto updateUser(UserUpdateDto dto, String id);
 }

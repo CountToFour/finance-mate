@@ -13,6 +13,8 @@ const BudgetPage = lazy(() => import('./pages/budgets/BudgetPage.tsx'));
 const Income = lazy(() => import('./pages/income/Income.tsx'));
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage.tsx'));
 const ReportsPage = lazy(() => import('./pages/reports/ReportsPage.tsx'));
+const PlainPage = lazy(() => import('./pages/PlainPage.tsx'));
+
 
 const PageLoader = () => (
     <div className="flex justify-center items-center h-full p-20">
@@ -29,6 +31,7 @@ const withSuspense = (Component: React.ComponentType) => (
 export const router = createBrowserRouter([
     { path: '/login', element: <Login /> },
     { path: '/register', element: <Register /> },
+
     {
         path: '/',
         element: (
@@ -44,6 +47,7 @@ export const router = createBrowserRouter([
             { path: '/incomes', element: withSuspense(Income) },
             { path: '/settings', element: withSuspense(SettingsPage) },
             { path: '/reports', element: withSuspense(ReportsPage) },
+            { path: '/plain', element: <PlainPage /> },
         ],
     },
 ]);

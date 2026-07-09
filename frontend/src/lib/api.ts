@@ -1,5 +1,5 @@
 import axios from 'axios'
-import {useAuthStore} from "../store/auth.ts";
+import {useAuthStore} from "../store/auth-store.ts";
 import type {
     EditTransactionDto,
     TransactionDto,
@@ -25,23 +25,6 @@ api.interceptors.request.use((config) => {
 })
 
 //USER
-
-export const login = (email: string, password: string) => axios.post(
-    'http://localhost:8080/api/auth/login',
-    {
-        email: email,
-        password: password,
-    }
-)
-
-export const register = (email: string, password: string, username: string) => axios.post(
-    'http://localhost:8080/api/auth/register',
-    {
-        email: email,
-        password: password,
-        username: username
-    }
-)
 
 export const changeUserCurrency = (code: string) => axios.put(
     `http://localhost:8080/api/user/${code}`,

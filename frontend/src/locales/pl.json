@@ -27,16 +27,38 @@
   "register": {
     "form": {
       "label": "Rejestracja",
-      "username": "Nazwa użytkownika",
+      "firstName": "Imię",
+      "lastName": "Nazwisko",
       "logIn": "Mam już konto - zaloguj się",
       "createAccount": "Załóż konto",
       "creatingAccount": "Zakładanie konta..."
     },
     "error": {
-      "emailTaken": "Konto z tym e-mailem już istnieje",
       "error": "Wystąpił błąd. Spróbuj ponownie.",
-      "username": "Podaj nazwę użytkownika",
-      "incorrectEmail": "Podaj poprawny email"
+      "firstName": {
+        "required": "Podaj imię",
+        "minLength": "Imię musi mieć co najmniej 2 znaki",
+        "maxLength": "Imię nie może mieć więcej niż 50 znaków",
+        "pattern": "Imię może zawierać tylko litery i spacje"
+      },
+      "lastName": {
+        "required": "Podaj nazwisko",
+        "minLength": "Nazwisko musi mieć co najmniej 2 znaki",
+        "maxLength": "Nazwisko nie może mieć więcej niż 50 znaków",
+        "pattern": "Nazwisko może zawierać tylko litery i spacje"
+      },
+      "email" : {
+        "required": "Podaj email",
+        "pattern": "Podaj poprawny email",
+        "emailTaken": "Konto z tym e-mailem już istnieje",
+        "incorrectEmail": "Podaj poprawny email"
+      },
+      "password" : {
+        "required": "Podaj hasło",
+        "minLength": "Hasło musi mieć co najmniej 8 znaków",
+        "maxLength": "Hasło nie może mieć więcej niż 64 znaków",
+        "pattern": "Hasło musi zawierać co najmniej jedną wielką literę, jedną małą literę, jedną cyfrę i jeden znak specjalny"
+      }
     }
   },
   "expenses": {

@@ -19,8 +19,8 @@ public class StandardUserService implements UserService {
     public UserDto createUser(String id, String name, String surname, String email) {
         User user = User.builder()
                 .id(id)
-                .name(name)
-                .surname(surname)
+                .firstName(name)
+                .lastName(surname)
                 .email(email)
                 .locale("PL")
                 .build();
@@ -29,8 +29,8 @@ public class StandardUserService implements UserService {
     }
 
     @Override
-    public UserDto getUser(String id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
+    public UserDto getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
         return userToDto(user);
     }
 
@@ -38,12 +38,12 @@ public class StandardUserService implements UserService {
     public UserDto updateUser(UserUpdateDto dto, String id) {
         User user = userRepository.findById(id).orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
 
-        if (!user.getName().equals(dto.getFirstName())) {
-            user.setName(dto.getFirstName());
+        if (!user.getFirstName().equals(dto.getFirstName())) {
+            user.setFirstName(dto.getFirstName());
         }
 
-        if (!user.getSurname().equals(dto.getLastName())) {
-            user.setSurname(dto.getLastName());
+        if (!user.getLastName().equals(dto.getLastName())) {
+            user.setLastName(dto.getLastName());
         }
 
         if (!user.getEmail().equals(dto.getEmail())) {
@@ -56,8 +56,8 @@ public class StandardUserService implements UserService {
     private UserDto userToDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
-                .name(user.getName())
-                .surname(user.getSurname())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .email(user.getEmail())
                 .locale(user.getLocale())
                 .build();

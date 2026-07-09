@@ -1,28 +1,36 @@
 import {Button, Container, TextField, Typography, Paper} from '@mui/material';
 import {useForm} from 'react-hook-form';
-import {useAuthStore} from '../../store/auth.ts';
+import {useAuthStore} from '../../store/auth-store.ts';
 import {useNavigate} from "react-router-dom";
 import axios from "axios";
 import {useTranslation} from "react-i18next";
+import {authService} from "../../api/auth-client.ts";
+import type {LoginRequest} from "../../types/auth.ts";
 
 function Login() {
-    const login = useAuthStore((s) => s.login);
     const {register, handleSubmit, formState: {errors}, setError, clearErrors} = useForm<{
         email: string;
         password: string;
     }>();
     const navigate = useNavigate();
+    const setUser = useAuthStore(state => state.setUser);
     const { t } = useTranslation();
 
     const onSubmit = async (data: { email: string; password: string }) => {
         try {
-            await login(data.email, data.password);
+            const loginData: LoginRequest = {
+                email: data.email,
+                password: data.password
+            }
+            await authService.login(loginData);
+            const response = await authService.getUser(data.email)
+            setUser(response);
             navigate("/dashboard");
         } catch (err) {
             console.log(err);
             const isAxios = axios.isAxiosError(err);
             const status = isAxios ? err.response?.status : undefined;
-            if (status === 400 || status === 403) {
+            if (status === 400 || status === 401) {
                 setError('root', { type: 'server', message: t('logging.error.badCredentials') });
                 setError('email', { type: 'server', message: '' });
                 setError('password', { type: 'server', message: '' });

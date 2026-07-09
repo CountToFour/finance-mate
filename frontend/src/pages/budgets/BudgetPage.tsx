@@ -21,7 +21,7 @@ import BudgetDialog from "./BudgetDialog.tsx";
 import BudgetCard from "./BudgetCard.tsx";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import SmartInvestmentWidget from "./InvestmentWidget.tsx";
-import {useAuthStore} from "../../store/auth.ts";
+import {useAuthStore} from "../../store/auth-store.ts";
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GoalCard from "./GoalCard.tsx";
 import AddGoalDialog from "./AddGoalDialog.tsx";

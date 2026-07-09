@@ -45,7 +45,7 @@ import RecurringIncomeDialog from "./RecurringIncomeDialog.tsx";
 import {ReceiptIcon, TrendingUpIcon } from "lucide-react";
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { useAuthStore } from "../../store/auth.ts";
+import { useAuthStore } from "../../store/auth-store.ts";
 
 const currentYear = dayjs();
 

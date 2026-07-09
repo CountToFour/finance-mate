@@ -12,7 +12,7 @@ import {
     ListItemText,
     useTheme
 } from '@mui/material';
-import {useAuthStore} from "../../store/auth.ts";
+import {useAuthStore} from "../../store/auth-store.ts";
 import {
     getAccounts,
     getAllCategoriesAmount,
@@ -115,7 +115,8 @@ function Dashboard() {
         amount.toLocaleString('pl-PL', {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
-        }) + ` ${user?.currency.symbol}`;
+        // }) + ` ${user?.currency.symbol}`;
+        }) + ` zł`;
 
     const weeklyStats = useMemo(() => {
         const total = weeklyExpenses.reduce((sum, item) => sum + item.amount, 0);
@@ -145,7 +146,7 @@ function Dashboard() {
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
                 <Box>
                     <Typography variant="h5" fontWeight="bold" color="secondary">Dashboard Finansowy</Typography>
-                    <Typography variant="body2" sx={{mt: 1}}>Witaj {user?.username}, oto przegląd Twoich
+                    <Typography variant="body2" sx={{mt: 1}}>Witaj {user?.firstName}, oto przegląd Twoich
                         finansów</Typography>
                 </Box>
             </Stack>
@@ -300,7 +301,8 @@ function Dashboard() {
                                             dy={10}
                                         />
                                         <YAxis
-                                            tickFormatter={(val) => `${val} ${user?.currency.symbol}`}
+                                            // tickFormatter={(val) => `${val} ${user?.currency.symbol}`}
+                                            tickFormatter={(val) => `${val} zł`}
                                             tick={{fontSize: 11, fill: '#aaa'}}
                                             axisLine={false}
                                             tickLine={false}
@@ -312,7 +314,8 @@ function Dashboard() {
                                                 border: 'none',
                                                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                                             }}
-                                            formatter={(value: number) => [`${value} ${user?.currency.symbol}`, 'Suma']}
+                                            // formatter={(value: number) => [`${value} ${user?.currency.symbol}`, 'Suma']}
+                                            formatter={(value: number) => [`${value} zł`, 'Suma']}
                                         />
                                         <Bar
                                             dataKey="amount"
@@ -330,12 +333,14 @@ function Dashboard() {
                                 <Box>
                                     <Typography variant="caption" color="text.secondary">Średnia dzienna</Typography>
                                     <Typography variant="body2"
-                                                fontWeight="bold">{weeklyStats.avg} {user?.currency.symbol}</Typography>
+                                                // fontWeight="bold">{weeklyStats.avg} {user?.currency.symbol}</Typography>
+                                                fontWeight="bold">{weeklyStats.avg} zł</Typography>
                                 </Box>
                                 <Box textAlign="right">
                                     <Typography variant="caption" color="text.secondary">Najwyższy dzień</Typography>
                                     <Typography variant="body2" fontWeight="bold">
-                                        {weeklyStats.maxDay} ({weeklyStats.maxAmount} {user?.currency.symbol})
+                                        {/*{weeklyStats.maxDay} ({weeklyStats.maxAmount} {user?.currency.symbol})*/}
+                                        {weeklyStats.maxDay} ({weeklyStats.maxAmount} zł)
                                     </Typography>
                                 </Box>
                             </Stack>

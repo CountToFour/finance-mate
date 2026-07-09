@@ -12,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 public class UserDto {
 
     private String id;
-    private String name;
-    private String surname;
+    private String firstName;
+    private String lastName;
     private String email;
     private String locale;
 }
