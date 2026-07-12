@@ -1,19 +1,20 @@
-import React, {useState, Fragment} from 'react'
-import type {Category} from '../../lib/types'
+import React, {useState, Fragment, useEffect} from 'react'
 import {Box, IconButton, List, ListItem, ListItemIcon, ListItemText, Collapse, Typography, Tooltip} from '@mui/material'
 import ExpandLess from '@mui/icons-material/ExpandLess'
 import ExpandMore from '@mui/icons-material/ExpandMore'
-import { deleteCategory } from '../../lib/api'
 import {useNotification} from "../../components/NotificationContext.tsx";
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import type {Category} from "../../types/category.ts";
+import {useCategoryStore} from "../../store/category-store.ts";
+import {categoryService} from "../../api/category-client.ts";
+import {useTranslation} from "react-i18next";
 
 type Props = {
     categories: Category[]
     onAdd?: (parentId: string | null) => void
     onEdit?: (cat: Category) => void
-    onDelete?: (id: string) => void
 }
 
 type Node = Category & { children?: Node[] }
@@ -32,17 +33,18 @@ const buildTree = (cats: Category[]): Node[] => {
     return roots
 }
 
-
-const TreeNode: React.FC<{node: Node, level?: number, onAdd?: (parentId: string | null) => void, onEdit?: (cat: Category) => void, onDelete?: (id: string) => void}> = ({node, level=0, onAdd, onEdit, onDelete}) => {
+const TreeNode: React.FC<{node: Node, level?: number, onAdd?: (parentId: string | null) => void, onEdit?: (cat: Category) => void}> = ({node, level=0, onAdd, onEdit}) => {
     const [open, setOpen] = useState(true)
     const {success, error} = useNotification();
+    const {t} = useTranslation();
 
-    const handleDelete = (id: string) => {
-        if (onDelete) return onDelete(id)
-        deleteCategory(id).then(() => {
-            success("Udało usunąć kategorię")
+    const deleteCategory = useCategoryStore(state => state.deleteCategory)
+    const handleDelete = (category: Category) => {
+        categoryService.deleteCategory(category.id).then(() => {
+            deleteCategory(category)
+            success(t('settings.page.categories.delete.success'))
         }).catch(() => {
-            error("Nie udało się usunać kategorii")
+            error(t('settings.page.categories.delete.error'))
         })
     }
 
@@ -64,18 +66,18 @@ const TreeNode: React.FC<{node: Node, level?: number, onAdd?: (parentId: string 
                 <ListItemText primary={node.name} />
 
                 <Box className="actionIcons" sx={{visibility: 'hidden', display: 'flex', gap: 1, alignItems: 'center'}}>
-                    <Tooltip title="Dodaj podkategorię" arrow>
+                    <Tooltip title={t('settings.page.categories.add.secondLabel')} arrow>
                         <IconButton size="small" onClick={() => onAdd ? onAdd(node.id) : null}>
                             <AddIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="Edytuj kategorię" arrow>
+                    <Tooltip title={t('settings.page.categories.edit.label')} arrow>
                         <IconButton size="small" onClick={() => onEdit ? onEdit(node) : null}>
                             <EditIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="Usuń kategorię" arrow>
-                        <IconButton color="error" size="small" onClick={() => handleDelete(node.id)}>
+                    <Tooltip title={t('settings.page.categories.delete.label')} arrow>
+                        <IconButton color="error" size="small" onClick={() => handleDelete(node)}>
                             <DeleteIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
@@ -87,7 +89,7 @@ const TreeNode: React.FC<{node: Node, level?: number, onAdd?: (parentId: string 
                 <Collapse in={open} timeout="auto" unmountOnExit>
                     <List disablePadding>
                         {node.children.map(child => (
-                            <TreeNode key={child.id} node={child} level={level+1} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} />
+                            <TreeNode key={child.id} node={child} level={level+1} onAdd={onAdd} onEdit={onEdit} />
                         ))}
                     </List>
                 </Collapse>
@@ -96,14 +98,20 @@ const TreeNode: React.FC<{node: Node, level?: number, onAdd?: (parentId: string 
     )
 }
 
-const CategoryTree: React.FC<Props> = ({categories, onAdd, onEdit, onDelete}) => {
-    if (!categories || categories.length === 0) return <Typography color="text.secondary">Brak kategorii</Typography>
-    const tree = buildTree(categories)
+const CategoryTree: React.FC<Props> = ({categories, onAdd, onEdit}) => {
+    const {t} = useTranslation()
+    const [tree, setTree] = useState<Node[]>(buildTree(categories));
+
+    useEffect(() => {
+        setTree(buildTree(categories))
+    }, [categories]);
+    
+    if (!categories || categories.length === 0) return <Typography color="text.secondary">{t('settings.page.categories.lack')}</Typography>
     return (
         <List>
             {tree.map(node => (
                 <Fragment key={node.id}>
-                    <TreeNode node={node} onAdd={onAdd} onEdit={onEdit} onDelete={onDelete} />
+                    <TreeNode node={node} onAdd={onAdd} onEdit={onEdit} />
                 </Fragment>
             ))}
         </List>

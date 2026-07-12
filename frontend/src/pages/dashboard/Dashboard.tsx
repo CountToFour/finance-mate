@@ -15,10 +15,10 @@ import {
 import {useAuthStore} from "../../store/auth-store.ts";
 import {
     getAllCategoriesAmount,
-    getCategories, getDailyOverview,
+    getDailyOverview,
     getExpenses, getSpendingAuditor, getUserBalance
 } from "../../lib/api.ts";
-import type {Category, CategoryAmount, DailyOverview, Expense, SpendingStructure} from "../../lib/types.ts";
+import type {CategoryAmount, DailyOverview, Expense, SpendingStructure} from "../../lib/types.ts";
 import dayjs from "dayjs";
 import 'dayjs/locale/pl';
 import {
@@ -32,6 +32,8 @@ import CashFlowWidget from "./CashFlowWidget.tsx";
 import HealthScoreWidget from "./HealthScoreWidget.tsx";
 import {useAccountStore} from "../../store/account-store.ts";
 import {accountService} from "../../api/account-client.ts";
+import {useCategoryStore} from "../../store/category-store.ts";
+import {categoryService} from "../../api/category-client.ts";
 
 dayjs.locale('pl');
 
@@ -44,7 +46,10 @@ function Dashboard() {
     // const [accounts, setAccounts] = useState<Account[]>([]);
     const [recentExpenses, setRecentExpenses] = useState<Expense[]>([]);
     const [categoryAmounts, setCategoryAmounts] = useState<CategoryAmount[]>([]);
-    const [allCategories, setAllCategories] = useState<Category[]>([]);
+    // const [allCategories, setAllCategories] = useState<Category[]>([]);
+    const allCategories = useCategoryStore(state => state.categories)
+    const setAllCategories = useCategoryStore(state => state.setCategories)
+
     const [weeklyExpenses, setWeeklyExpenses] = useState<{ day: string; amount: number; fullDate: string }[]>([]);
     const [totalBalance, setTotalBalance] = useState<{ amount: number, currency: string }>({amount: 0, currency: ''});
     const [auditorData, setAuditorData] = useState<SpendingStructure | null>(null);
@@ -79,8 +84,10 @@ function Dashboard() {
                 const catAmountRes = await getAllCategoriesAmount('EXPENSE', startOfMonth, endOfMonth);
                 const sortedCats = catAmountRes.data.sort((a: CategoryAmount, b: CategoryAmount) => b.amount - a.amount);
                 setCategoryAmounts(sortedCats);
-                const catsRes = await getCategories('EXPENSE');
-                setAllCategories(catsRes.data);
+
+                const categoriesResponse = await categoryService.getCategories();
+                setAllCategories(categoriesResponse);
+
                 const auditorRes = await getSpendingAuditor();
                 setAuditorData(auditorRes.data);
                 console.log('Auditor ' + auditorRes);

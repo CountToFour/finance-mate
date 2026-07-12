@@ -1,52 +1,32 @@
 import React, {useEffect, useState} from 'react'
 import {Box, Button, Card, CardContent, Stack, Typography, Divider, ToggleButton, ToggleButtonGroup} from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
-import {getCategories, deleteCategory} from '../../lib/api'
-import type {Category} from '../../lib/types'
 import CategoryTree from './CategoryTree'
 import AddCategoryDialog from './AddCategoryDialog'
-import {useNotification} from '../../components/NotificationContext'
 import GeneralSettings from './GeneralSettings'
+import type {Category, TransactionType} from "../../types/category.ts";
+import {useCategoryStore} from "../../store/category-store.ts";
+import {useTranslation} from "react-i18next";
 
 const SettingsPage: React.FC = () => {
     const [view, setView] = useState<'CATEGORIES' | 'GENERAL'>('CATEGORIES')
-    const [transactionType, setTransactionType] = useState<string>('EXPENSE')
-    const [categories, setCategories] = useState<Category[]>([])
+    const [transactionType, setTransactionType] = useState<TransactionType>('EXPENSE')
+
+    const categories = useCategoryStore(state => state.categories)
+
     const [openAdd, setOpenAdd] = useState(false)
+    const [displayCategories, setDisplayCategories] = useState<Category[]>(categories.filter(c => c.transactionType === transactionType))
     const [editing, setEditing] = useState<Category | null>(null)
     const [parentForNew, setParentForNew] = useState<string | null>(null)
-    const {success, error: notifyError} = useNotification()
+
+    const {t} = useTranslation()
 
     useEffect(() => {
-        const load = async () => {
-            try {
-                const res = await getCategories(transactionType)
-                setCategories(res.data)
-            } catch (err) {
-                console.error(err)
-            }
-        }
-        load()
-    }, [transactionType])
+        setDisplayCategories(categories.filter(c => c.transactionType === transactionType))
+    }, [categories, transactionType]);
 
-    const handleSaved = () => {
-        getCategories(transactionType).then(res => setCategories(res.data)).catch(console.error)
-        success('Kategoria dodana')
-    }
-
-    const handleDelete = async (id: string) => {
-        try {
-            await deleteCategory(id)
-            success('Usunięto kategorię')
-            getCategories(transactionType).then(res => setCategories(res.data)).catch(console.error)
-        } catch (err) {
-            console.error(err)
-            notifyError('Błąd podczas usuwania')
-        }
-    }
-
-    const handleEdit = (cat: Category) => {
-        setEditing(cat)
+    const handleEdit = (category: Category) => {
+        setEditing(category)
         setParentForNew(null)
         setOpenAdd(true)
     }
@@ -61,14 +41,22 @@ const SettingsPage: React.FC = () => {
         <Box p={3}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
                 <Box>
-                    <Typography variant="h5" fontWeight={700}>Ustawienia</Typography>
-                    <Typography variant="body2" sx={{mt:1}}>Zarządzaj kategoriami i preferencjami aplikacji</Typography>
+                    <Typography variant="h5" fontWeight={700}>
+                        {t('settings.page.label')}
+                    </Typography>
+                    <Typography variant="body2" sx={{mt:1}}>
+                        {t('settings.page.secondLabel')}
+                    </Typography>
                 </Box>
 
                 <Box display="flex" gap={2} alignItems="center">
                     <Box sx={{display: 'flex', bgcolor: '#f3f4f6', borderRadius: '999px', p: '4px'}}>
-                        <Button onClick={() => setView('CATEGORIES')} variant={view==='CATEGORIES' ? 'contained' : 'text'} color={view==='CATEGORIES' ? 'secondary' : 'primary'} sx={{borderRadius: '999px', px:3}}>Kategorie</Button>
-                        <Button onClick={() => setView('GENERAL')} variant={view==='GENERAL' ? 'contained' : 'text'} color={view==='GENERAL' ? 'secondary' : 'primary'} sx={{borderRadius: '999px', px:3}}>Ogólne</Button>
+                        <Button onClick={() => setView('CATEGORIES')} variant={view==='CATEGORIES' ? 'contained' : 'text'} color={view==='CATEGORIES' ? 'secondary' : 'primary'} sx={{borderRadius: '999px', px:3}}>
+                            {t('settings.page.categories.buttonLabel')}
+                        </Button>
+                        <Button onClick={() => setView('GENERAL')} variant={view==='GENERAL' ? 'contained' : 'text'} color={view==='GENERAL' ? 'secondary' : 'primary'} sx={{borderRadius: '999px', px:3}}>
+                            {t('settings.page.general.buttonLabel')}
+                        </Button>
                     </Box>
                 </Box>
             </Stack>
@@ -78,8 +66,12 @@ const SettingsPage: React.FC = () => {
                     <CardContent>
                         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                             <Box>
-                                <Typography variant="h6" fontWeight={700} mb={1}>Kategorie ({transactionType === 'EXPENSE' ? 'Wydatki' : 'Przychody'})</Typography>
-                                <Typography variant="body2" color="text.secondary" mb={2}>Kategorie — Przeglądaj i dodawaj nowe podkategorie</Typography>
+                                <Typography variant="h6" fontWeight={700} mb={1}>
+                                    {t('settings.page.categories.label')} - {transactionType === 'EXPENSE' ? t('settings.page.categories.expenses') : t('settings.page.categories.incomes')}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" mb={2}>
+                                    {t('settings.page.categories.secondLabel')}
+                                </Typography>
 
                             </Box>
                             <Box display="flex" gap={2} alignItems="center">
@@ -89,14 +81,20 @@ const SettingsPage: React.FC = () => {
                                     onChange={(_, val) => { if (val) setTransactionType(val) }}
                                     size="small"
                                 >
-                                    <ToggleButton value={'EXPENSE'}>Wydatki</ToggleButton>
-                                    <ToggleButton value={'INCOME'}>Przychody</ToggleButton>
+                                    <ToggleButton value={'EXPENSE'}>
+                                        {t('settings.page.categories.expenses')}
+                                    </ToggleButton>
+                                    <ToggleButton value={'INCOME'}>
+                                        {t('settings.page.categories.incomes')}
+                                    </ToggleButton>
                                 </ToggleButtonGroup>
-                                <Button variant="contained" color="secondary" startIcon={<AddIcon />} onClick={() => handleAdd(null)}>Nowa kategoria</Button>
+                                <Button variant="contained" color="secondary" startIcon={<AddIcon />} onClick={() => handleAdd(null)}>
+                                    {t('settings.page.categories.add.label')}
+                                </Button>
                             </Box>
                         </Box>
                         <Divider sx={{mb:2}} />
-                        <CategoryTree categories={categories} onAdd={handleAdd} onEdit={handleEdit} onDelete={handleDelete} />
+                        <CategoryTree categories={displayCategories} onAdd={handleAdd} onEdit={handleEdit} />
                     </CardContent>
                 </Card>
             )}
@@ -108,9 +106,8 @@ const SettingsPage: React.FC = () => {
             <AddCategoryDialog
                 open={openAdd}
                 onClose={() => { setOpenAdd(false); setEditing(null); setParentForNew(null) }}
-                categories={categories}
+                categories={displayCategories}
                 transactionType={transactionType}
-                onSaved={() => { setOpenAdd(false); handleSaved() }}
                 editing={editing}
                 parentForNew={parentForNew}
             />

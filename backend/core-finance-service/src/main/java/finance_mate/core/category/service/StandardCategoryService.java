@@ -94,9 +94,10 @@ public class StandardCategoryService implements CategoryService {
                 .categoryGroup(parentCategory.getCategoryGroup())
                 .build();
 
-
         Category saved = categoryRepository.save(category);
-        return categoryMapper.mapToDto(saved);
+        CategoryResponse response = categoryMapper.mapToDto(saved);
+        response.setParentId(parentCategory.getId());
+        return response;
     }
 
     @Override
@@ -121,8 +122,8 @@ public class StandardCategoryService implements CategoryService {
     }
 
     @Override
-    public List<CategoryResponse> getUserCategories(String userId, TransactionType type) {
-        return categoryRepository.findByUserIdAndTransactionType(userId, type)
+    public List<CategoryResponse> getUserCategories(String userId) {
+        return categoryRepository.findAllByUserId(userId)
                 .stream()
                 .map(category -> {
                     CategoryResponse dto = categoryMapper.mapToDto(category);

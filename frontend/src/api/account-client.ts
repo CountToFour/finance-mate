@@ -10,7 +10,7 @@ export const accountService = {
     },
 
     createAccount: async (data: AccountDto): Promise<Account> => {
-        const response = await api.post(
+        const response = await api.post<Account>(
             `/account/create`,
             data,
         )
@@ -18,7 +18,7 @@ export const accountService = {
     },
 
     updateAccount: async (data: AccountDto, id: string): Promise<Account> => {
-        const response = await api.put(
+        const response = await api.put<Account>(
             `/account/update/${id}`,
             data
         );
@@ -33,7 +33,7 @@ export const accountService = {
     },
 
     getAccount: async (id: string): Promise<Account> => {
-        const response = await api.get(
+        const response = await api.get<Account>(
             `/account/${id}`,
         )
         return response.data;

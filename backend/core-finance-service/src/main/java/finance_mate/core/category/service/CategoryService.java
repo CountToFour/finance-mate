@@ -19,7 +19,7 @@ public interface CategoryService {
 
     CategoryResponse updateCategory(String id, CategoryDto dto, String userId);
     void deleteCategory(String id, String userId);
-    List<CategoryResponse> getUserCategories(String userId, TransactionType type);
+    List<CategoryResponse> getUserCategories(String userId);
     Optional<Category> findById(String id);
     List<Category> findAllByUser(String userId);
     void assignCategoriesToUser(String userId);

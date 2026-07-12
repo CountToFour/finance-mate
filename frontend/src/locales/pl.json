@@ -238,5 +238,56 @@
         "success" : "Transfer został pomyślnie wykonany"
       }
     }
+  },
+  "settings" : {
+    "page" : {
+      "label" : "Ustawienia",
+      "secondLabel" : "Zarządzaj kategoriami i preferencjami aplikacji",
+      "categories" : {
+        "buttonLabel" : "Kategorie",
+        "label" : "Kategorie",
+        "expenses" : "Wydatki",
+        "incomes" : "Przychody",
+        "lack" : "Brak kategorii",
+        "secondLabel" : "Kategorie — Przeglądaj i dodawaj nowe podkategorie",
+        "add" : {
+          "label" : "Dodaj kategorię",
+          "secondLabel" : "Dodaj podkategorię",
+          "name" : "Nazwa kategorii",
+          "parent" : "Rodzic",
+          "main" : "Brak (kategoria główna)",
+          "group" : {
+            "label" : "Grupa kategorii",
+            "needs" : "Niezbędne",
+            "wants" : "Zachcianki",
+            "savings" : "Oszczędności"
+          },
+          "color" : {
+            "label" : "Kolor",
+            "inherited" : "Kolor dziedziczony od rodzica"
+          },
+          "error" : {
+            "name" : "Podaj nazwę kategorii",
+            "group" : "Podaj grupę kategorii",
+            "message" : "Błąd podczas zapisu kategorii"
+          },
+          "success" : "Kategoria dodana",
+          "save" : "Zapisz",
+          "cancel" : "Anuluj"
+        },
+        "delete" : {
+          "label" : "Usuń kategorię",
+          "success" : "Udało się usunąć kategorię",
+          "error" : "Nie udało się usunąć kategorii"
+        },
+        "edit" : {
+          "label" : "Edytuj kategorię",
+          "success" : "Kategoria zaktualizowana"
+        }
+      },
+      "general" : {
+        "buttonLabel" : "Ogólne"
+      }
+    }
   }
 }

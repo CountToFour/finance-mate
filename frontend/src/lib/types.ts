@@ -114,27 +114,6 @@ export type BalanceResponse = {
     currency: string;
 }
 
-//CATEGORY
-
-export type CategoryGroup = 'NEEDS' | 'WANTS' | 'SAVINGS';
-
-export type Category = {
-    id: string
-    name: string
-    color: string
-    parentId?: string | null
-    transactionType: string
-    categoryGroup?: CategoryGroup | null
-}
-
-export type CategoryDto = {
-    name: string
-    color: string
-    parentId?: string | null
-    transactionType: string
-    categoryGroup?: CategoryGroup | null
-}
-
 // BUDGETS
 
 export type BudgetDto = {

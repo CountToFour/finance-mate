@@ -48,9 +48,8 @@ public class CategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CategoryResponse>> getUserCategories(@RequestParam TransactionType type,
-                                                                    @RequestHeader("X-User-Id") String userId) {
-        return ResponseEntity.ok(categoryService.getUserCategories(userId, type));
+    public ResponseEntity<List<CategoryResponse>> getUserCategories(@RequestHeader("X-User-Id") String userId) {
+        return ResponseEntity.ok(categoryService.getUserCategories(userId));
     }
 
     @DeleteMapping("/{id}")
