@@ -1,5 +1,6 @@
+import type {TransactionType} from "./transaction.ts";
+
 export type CategoryGroup = 'NEEDS' | 'WANTS' | 'SAVINGS';
-export type TransactionType = 'EXPENSE' | 'INCOME' | 'TRANSFER'
 
 export interface CategoryDto {
     name: string

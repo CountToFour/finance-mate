@@ -39,26 +39,6 @@ export type Income = {
     createdAt: string
 }
 
-export type TransactionDto = {
-    accountId: string
-    categoryId: string
-    price: number
-    description: string | null
-    createdAt: string
-    periodType: string
-    transactionType: string
-    active: boolean
-}
-
-export type EditTransactionDto = {
-    accountId: string
-    categoryId: string
-    price: number
-    description: string | null
-    createdAt: string
-    periodType: string
-}
-
 export type RecurringExpense = {
     id: string
     accountName: string

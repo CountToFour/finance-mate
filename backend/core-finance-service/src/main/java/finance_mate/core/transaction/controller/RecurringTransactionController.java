@@ -53,7 +53,7 @@ public class RecurringTransactionController {
     }
 
     @PutMapping("/edit/{id}")
-    public ResponseEntity<?> editTransaction(@PathVariable String id, @Valid @RequestBody EditTransactionDto transactionRequest) {
+    public ResponseEntity<RecurringTransactionResponse> editTransaction(@PathVariable String id, @Valid @RequestBody EditTransactionDto transactionRequest) {
         RecurringTransactionResponse updatedRecurring = standardRecurringTransactionService.editRecurringTransaction(id, transactionRequest);
         return ResponseEntity.ok(updatedRecurring);
     }
