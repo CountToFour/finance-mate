@@ -11,17 +11,20 @@ import {
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import dayjs, {Dayjs} from "dayjs";
 import {useNotification} from "../../components/NotificationContext.tsx";
-import type {Account, Category, Currency, Expense, TransactionDto} from "../../lib/types.ts";
+import type {Currency} from "../../lib/types.ts";
 import {addTransaction, addRecurringTransaction, editExpense} from "../../lib/api.ts";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {useTranslation} from "react-i18next";
+import type { Transaction } from "../../types/transaction.ts";
+import type { Account } from "../../types/account.ts";
+import type { Category } from "../../types/category.ts";
 
 
 interface AddExpenseDialogProps {
     open: boolean;
     onClose: () => void;
-    initialExpense?: Expense | null;
+    initialExpense?: Transaction | null;
     accounts: Account[];
     categories: Category[];
 }

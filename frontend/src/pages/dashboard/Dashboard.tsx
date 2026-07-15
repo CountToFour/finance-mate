@@ -16,7 +16,7 @@ import {useAuthStore} from "../../store/auth-store.ts";
 import {
     getAllCategoriesAmount,
     getDailyOverview,
-    getExpenses, getSpendingAuditor, getUserBalance
+    getSpendingAuditor, getUserBalance
 } from "../../lib/api.ts";
 import type {CategoryAmount, DailyOverview, Expense, SpendingStructure} from "../../lib/types.ts";
 import dayjs from "dayjs";
@@ -34,6 +34,8 @@ import {useAccountStore} from "../../store/account-store.ts";
 import {accountService} from "../../api/account-client.ts";
 import {useCategoryStore} from "../../store/category-store.ts";
 import {categoryService} from "../../api/category-client.ts";
+import {transactionService} from "../../api/transaction-client.ts";
+import type {Transaction, TransactionFilters} from "../../types/transaction.ts";
 
 dayjs.locale('pl');
 
@@ -44,7 +46,7 @@ function Dashboard() {
     const accounts = useAccountStore(state => state.accounts)
     const setAccounts = useAccountStore(state => state.setAccounts)
     // const [accounts, setAccounts] = useState<Account[]>([]);
-    const [recentExpenses, setRecentExpenses] = useState<Expense[]>([]);
+    const [recentExpenses, setRecentExpenses] = useState<Transaction[]>([]);
     const [categoryAmounts, setCategoryAmounts] = useState<CategoryAmount[]>([]);
     // const [allCategories, setAllCategories] = useState<Category[]>([]);
     const allCategories = useCategoryStore(state => state.categories)
@@ -74,9 +76,15 @@ function Dashboard() {
 
                 const weeklyRes = await getDailyOverview(startOfLast7Days, formattedToday, 'EXPENSE');
                 processWeeklyData(weeklyRes.data);
-
-                const recentRes = await getExpenses(null, startOfMonth, formattedToday);
-                const sorted = recentRes.data.sort((a: Expense, b: Expense) =>
+                
+                const filters: TransactionFilters = {
+                    type: "EXPENSE",
+                    startDate: startOfMonth,
+                    endDate: endOfMonth,
+                }
+                
+                const recentExpenses = await transactionService.getTransactions(filters)
+                const sorted = recentExpenses.sort((a: Transaction, b: Transaction) =>
                     dayjs(b.createdAt).diff(dayjs(a.createdAt))
                 );
                 setRecentExpenses(sorted.slice(0, 5));
@@ -97,7 +105,7 @@ function Dashboard() {
         };
 
         fetchData();
-    }, []);
+    }, [setAccounts, setAllCategories]);
 
 
     const processWeeklyData = (data: DailyOverview[]) => {

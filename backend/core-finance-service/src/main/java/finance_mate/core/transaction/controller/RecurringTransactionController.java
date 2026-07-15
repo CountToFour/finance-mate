@@ -36,7 +36,7 @@ public class RecurringTransactionController {
 
     @GetMapping
     public ResponseEntity<List<RecurringTransactionResponse>> getAllRecurringTransactions(@RequestHeader("X-User-Id") String userId,
-                                                                                          @RequestParam TransactionType type) {
+                                                                                          @RequestParam(required = false) TransactionType type) {
         return ResponseEntity.ok(standardRecurringTransactionService.getAllRecurringTransactions(userId, type));
     }
 

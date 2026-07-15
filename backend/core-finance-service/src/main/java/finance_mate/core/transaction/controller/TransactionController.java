@@ -45,7 +45,7 @@ public class TransactionController {
 
     @GetMapping
     public ResponseEntity<List<TransactionResponse>> getTransactionsByUser(
-            @RequestParam TransactionType type,
+            @RequestParam(required = false) TransactionType type,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,

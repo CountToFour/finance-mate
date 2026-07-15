@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import {
     Box,
     Card,
@@ -14,14 +14,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
 import {
-    deleteTransaction,
-    deleteRecurringTransaction,
     getAllCategoriesAmount,
-    getAllRecurringExpenses, getTransactionOverview,
-    getExpenses, getAccounts, getCategories, deactivateRecurringTransaction
 } from "../../lib/api.ts";
 import {useAuthStore} from "../../store/auth-store.ts";
-import type {Account, Category, CategoryAmount, Expense, TransactionOverview, RecurringExpense} from "../../lib/types.ts";
+import type {CategoryAmount, TransactionOverview, RecurringExpense} from "../../lib/types.ts";
 import {DataGrid, type GridColDef} from '@mui/x-data-grid';
 import {useNotification} from "../../components/NotificationContext.tsx";
 import AddExpenseDialog from "./AddExpenseDialog.tsx";
@@ -38,6 +34,12 @@ import Tooltip from '@mui/material/Tooltip';
 import ExpenseSummaryCard from "./ExpenseSummaryCard.tsx";
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import {useAccountStore} from "../../store/account-store.ts";
+import {useCategoryStore} from "../../store/category-store.ts";
+import {transactionService} from "../../api/transaction-client.ts";
+import {useTransactionService} from "../../store/transaction-store.ts";
+import type {RecurringTransaction, Transaction, TransactionFilters} from "../../types/transaction.ts";
+import {useRecurringTransactionStore} from "../../store/recurring-transaction-store.ts";
 
 const currentYear = dayjs();
 
@@ -45,11 +47,26 @@ function ExpensesPage() {
     const {t} = useTranslation();
     const user = useAuthStore(s => s.user);
 
-    const [accounts, setAccounts] = useState<Account[]>([]);
-    const [expenses, setExpenses] = useState<Expense[]>([]);
-    const [categories, setCategories] = useState<Category[]>([])
-    const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
-    const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+    // const [accounts, setAccounts] = useState<Account[]>([]);
+    // const [categories, setCategories] = useState<Category[]>([])
+    // const [expenses, setExpenses] = useState<Expense[]>([]);
+    // const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
+
+
+    const accounts = useAccountStore(state => state.accounts)
+    const categories = useCategoryStore(state => state.categories)
+    const expenses = useTransactionService(state => state.expenses)
+    const recurringExpenses = useRecurringTransactionStore(state => state.recurringExpenses)
+
+    const setExpenses = useTransactionService(state => state.setExpenses)
+    const setRecurringExpenses = useRecurringTransactionStore(state => state.setRecurringExpenses)
+
+    const deleteTransaction = useTransactionService(state => state.deleteTransaction)
+    const deleteRecurringTransaction = useRecurringTransactionStore(state => state.deleteTransaction)
+
+    const updateRecurringTransaction = useRecurringTransactionStore(state => state.update)
+
+    const [selectedExpense, setSelectedExpense] = useState<Transaction | null>(null);
     const [selectedRecurringExpense, setSelectedRecurringExpense] = useState<RecurringExpense>();
     const [filteredCategory, setFilteredCategory] = useState<string>("Wszystkie");
     const [categoriesExpenses, setCategoriesExpenses] = useState<CategoryAmount[]>([])
@@ -70,49 +87,62 @@ function ExpensesPage() {
     const totalSpending = expenses.reduce((acc, e) => acc + e.price, 0);
 
     useEffect(() => {
-        if (filteredCategory === "Wszystkie") {
-            getExpenses(null, dateFrom, dateTo).then((res) => setExpenses(res.data));
-        } else {
-            getExpenses(filteredCategory, dateFrom, dateTo).then((res) => setExpenses(res.data));
-        }
+        const fetchExpenses = async () => {
+            const filter: TransactionFilters = {
+                type: "EXPENSE",
+                startDate: dateFrom,
+                endDate: dateTo,
+                ...(filteredCategory !== "Wszystkie" && {
+                    category: filteredCategory,
+                }),
+            };
 
-        getTransactionOverview('EXPENSE', null, null).then((res) => setOverview(res.data));
+            try {
+                const expensesResponse = await transactionService.getTransactions(filter);
+                setExpenses(expensesResponse);
+            } catch (error) {
+                //TODO DELETE CONSOLE LOG
+                console.error("Błąd podczas pobierania transakcji:", error);
+            }
+        };
 
-        getAccounts().then((res) => {
-            setAccounts(res.data);
-        });
-
-        getCategories('EXPENSE').then((res) => setCategories(res.data))
-    }, [user?.id, openDialog, filteredCategory, dateFrom, dateTo]);
+        fetchExpenses();
+    }, [openDialog, filteredCategory, dateFrom, dateTo, setExpenses]);
 
     useEffect(() => {
-        getAllRecurringExpenses().then((res) => setRecurringExpenses(res.data));
-    }, [editRecurringExpense, user?.id, openDialog])
+        const fetchRecurringTransaction = async () => {
+            try {
+                const response = await transactionService.getRecurringTransactions("EXPENSE");
+                setRecurringExpenses(response)
+            } catch (error) {
+                //TODO DELETE CONSOLE LOG
+                console.error("Błąd podczas pobierania transakcji rekurencyjnych:", error);
+            }
+        };
+        fetchRecurringTransaction();
+    }, [openDialog, setRecurringExpenses])
 
     useEffect(() => {
+        //TODO CHECK IT
         getAllCategoriesAmount('EXPENSE', categoryDateFrom, categoryDateTo).then((res) => setCategoriesExpenses(res.data));
     }, [user?.id, openDialog, categoryDateFrom, categoryDateTo])
 
-    const handleDeletion = (id: string) => {
-        deleteTransaction(id)
+    const handleDeletion = (transaction: Transaction) => {
+        transactionService.deleteTransaction(transaction.id)
             .then(() => {
+                deleteTransaction(transaction)
                 success(t('expenses.notifications.delete.success'))
-                if (filteredCategory === "Wszystkie") {
-                    getExpenses(null, dateFrom, dateTo).then((res) => setExpenses(res.data));
-                } else {
-                    getExpenses(filteredCategory, dateFrom, dateTo).then((res) => setExpenses(res.data));
-                }
             })
             .catch(() => {
                 error(t('expenses.notifications.delete.error'))
             });
     };
 
-    const handleRecurringDeletion = (id: string) => {
-        deleteRecurringTransaction(id)
+    const handleRecurringDeletion = (transaction: RecurringTransaction) => {
+        transactionService.deleteRecurringTransaction(transaction.id)
             .then(() => {
+                deleteRecurringTransaction(transaction)
                 success(t('expenses.notifications.delete.success'))
-                getAllRecurringExpenses().then((res) => setRecurringExpenses(res.data));
             })
             .catch(() => {
                 error(t('expenses.notifications.delete.error'))
@@ -184,8 +214,9 @@ function ExpensesPage() {
             headerName: t('expenses.page.expensesTable.price'),
             flex: 0.8,
             renderCell: (params) => {
-                const account = accounts.find(a => a.name === params.row.accountName);
-                const symbol = account?.currency?.symbol ?? 'zł';
+                // const account = accounts.find(a => a.name === params.row.accountName);
+                // const symbol = account?.currency?.symbol ?? 'zł';
+                const symbol = 'zł';
                 return `${params.value} ${symbol}`;
             },
             cellClassName: 'priceNegative',
@@ -206,7 +237,7 @@ function ExpensesPage() {
                     <Tooltip title={t("expenses.page.expensesTable.tooltip.edit")} arrow>
                         <IconButton
                             onClick={() => {
-                                setSelectedExpense(params.row as Expense)
+                                setSelectedExpense(params.row as Transaction)
                                 setOpenDialog(true);
                             }}
                         >
@@ -216,7 +247,7 @@ function ExpensesPage() {
                     <Tooltip title={t("expenses.page.expensesTable.tooltip.delete")} arrow>
                         <IconButton
                             color="error"
-                            onClick={() => handleDeletion(params.row.id)}
+                            onClick={() => handleDeletion(params.row)}
                         >
                             <DeleteIcon/>
                         </IconButton>
@@ -293,16 +324,14 @@ function ExpensesPage() {
                                 checked={isActive}
                                 onChange={async () => {
                                     try {
-                                        await deactivateRecurringTransaction(params.row.id);
-
-                                        setRecurringExpenses(prev =>
-                                            prev.map(exp =>
-                                                exp.id === params.row.id
-                                                    ? { ...exp, active: !exp.active }
-                                                    : exp
-                                            )
-                                        );
+                                        const response = await transactionService.deactivateTransaction(params.row.id);
+                                        const transaction: RecurringTransaction = {
+                                            ...params.row,
+                                            active: !params.row.active,
+                                        };
+                                        updateRecurringTransaction(transaction)
                                     } catch (e) {
+                                        //TODO DELETE CONSOLE LOG AND ADD NOTIFICATION
                                         console.error(e);
                                     }
                                 }}
@@ -310,7 +339,7 @@ function ExpensesPage() {
                             />
                         }
                         label={false}
-                        sx={{ minWidth: "140px" }}
+                        sx={{minWidth: "140px"}}
                     />
                 );
             }
@@ -320,8 +349,9 @@ function ExpensesPage() {
             headerName: t('expenses.page.expensesTable.price'),
             flex: 0.8,
             renderCell: (params) => {
-                const account = accounts.find(a => a.name === params.row.accountName);
-                const symbol = account?.currency?.symbol ?? 'zł';
+                // const account = accounts.find(a => a.name === params.row.accountName);
+                // const symbol = account?.currency?.symbol ?? 'zł';
+                const symbol = 'zł';
                 return `${params.value} ${symbol}`;
             },
             cellClassName: 'priceNegative',
@@ -352,7 +382,7 @@ function ExpensesPage() {
                     <Tooltip title={t("expenses.page.expensesTable.tooltip.delete")} arrow>
                         <IconButton
                             color="error"
-                            onClick={() => handleRecurringDeletion(params.row.id)}
+                            onClick={() => handleRecurringDeletion(params.row)}
                         >
                             <DeleteIcon/>
                         </IconButton>
@@ -392,7 +422,8 @@ function ExpensesPage() {
                     description=" względem poprzedniego miesiąca"
                     amount={overview?.totalAmount}
                     change={overview?.totalAmountChangePercentage}
-                    currency={user?.currency.symbol || 'zł'}
+                    // currency={user?.currency.symbol || 'zł'}
+                    currency={'zł'}
                     accentColor="#E53935"
                     icon={<AttachMoneyOutlined fontSize="medium"/>}
                 />
@@ -410,7 +441,8 @@ function ExpensesPage() {
                     title="Średnia dzienna"
                     description="na podstawie 30 dni"
                     amount={overview?.averageAmount}
-                    currency={user?.currency.symbol || 'zł'}
+                    // currency={user?.currency.symbol || 'zł'}
+                    currency={'zł'}
                     accentColor="#5C86D3"
                     icon={<TrendingUpIcon fontSize="medium"/>}
                 />
@@ -596,7 +628,8 @@ function ExpensesPage() {
                                         key={i}
                                         categoryAmount={cat}
                                         color={matchedCategory?.color}
-                                        currency={user?.currency.symbol || ""}
+                                        // currency={user?.currency.symbol || ""}
+                                        currency={"zł"}
                                     />
                                 );
                             })}

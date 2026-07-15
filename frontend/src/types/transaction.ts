@@ -38,7 +38,7 @@ export interface RecurringTransaction extends TransactionBase {
 }
 
 export interface TransactionFilters {
-    type: TransactionType
+    type?: TransactionType
     category?: string;
     minPrice?: number;
     maxPrice?: number;
