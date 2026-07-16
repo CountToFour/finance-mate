@@ -3,10 +3,9 @@ import type {RecurringTransaction} from "../types/transaction.ts";
 import {persist} from "zustand/middleware";
 
 interface RecurringTransactionStore {
-    recurringExpenses: RecurringTransaction[],
-    recurringIncomes: RecurringTransaction[],
-    setRecurringExpenses: (expenses: RecurringTransaction[]) => void,
-    setRecurringIncomes: (incomes: RecurringTransaction[]) => void,
+    recurringTransactions: RecurringTransaction[],
+    setRecurringTransactions: (transactions: RecurringTransaction[]) => void,
+    addTransaction: (transaction: RecurringTransaction) => void,
     deleteTransaction: (transaction: RecurringTransaction) => void,
     update: (transaction: RecurringTransaction) => void,
 }
@@ -14,42 +13,23 @@ interface RecurringTransactionStore {
 export const useRecurringTransactionStore = create<RecurringTransactionStore>()(
     persist(
         (set) => ({
-            recurringExpenses: [],
-            recurringIncomes: [],
+            recurringTransactions: [],
 
-            setRecurringExpenses: (expenses: RecurringTransaction[]) => set({recurringExpenses: expenses}),
+            setRecurringTransactions: (transactions: RecurringTransaction[]) => set({recurringTransactions: transactions}),
 
-            setRecurringIncomes: (incomes: RecurringTransaction[]) => set({recurringIncomes: incomes}),
+            addTransaction: (transaction: RecurringTransaction) => set((prev) => ({
+                recurringTransactions: [...prev.recurringTransactions, transaction],
+            })),
 
-            deleteTransaction: (transaction: RecurringTransaction) => set((prev) => {
-                if (transaction.transactionType === "EXPENSE") {
-                    return {
-                        recurringExpenses: prev.recurringExpenses.filter(
-                            (t) => t.id !== transaction.id
-                        ),
-                    };
-                }
-                return {
-                    recurringIncomes: prev.recurringIncomes.filter(
-                        (t) => t.id !== transaction.id
-                    ),
-                };
-            }),
+            deleteTransaction: (transaction: RecurringTransaction) => set((prev) => ({
+                    recurringTransactions: prev.recurringTransactions.filter((t) => t.id !== transaction.id),
+            })),
 
-            update: (transaction: RecurringTransaction) => set((prev) => {
-                if (transaction.transactionType === "EXPENSE") {
-                    return {
-                        recurringExpenses: prev.recurringExpenses.map(
-                            (t) => t.id === transaction.id ? transaction : t
-                        )
-                    };
-                }
-                return {
-                    recurringIncomes: prev.recurringExpenses.map(
-                        (t) => t.id === transaction.id ? transaction : t
-                    )
-                };
-            })
+            update: (transaction: RecurringTransaction) => set((prev) => ({
+                recurringTransactions: prev.recurringTransactions.map(
+                    (t) => t.id === transaction.id ? transaction : t
+                )
+            })),
         }),
         {name: 'financemate-recurring-transactions'}
     )

@@ -17,27 +17,27 @@ import {
     getAllCategoriesAmount,
 } from "../../lib/api.ts";
 import {useAuthStore} from "../../store/auth-store.ts";
-import type {CategoryAmount, TransactionOverview, RecurringExpense} from "../../lib/types.ts";
+import type {CategoryAmount, TransactionOverview} from "../../lib/types.ts";
 import {DataGrid, type GridColDef} from '@mui/x-data-grid';
 import {useNotification} from "../../components/NotificationContext.tsx";
-import AddExpenseDialog from "./AddExpenseDialog.tsx";
+import AddTransactionDialog from "./AddTransactionDialog.tsx";
 import dayjs, {type Dayjs} from "dayjs";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import RecurringExpenseDialog from "./RecurringExpenseDialog.tsx";
+// import RecurringExpenseDialog from "./RecurringExpenseDialog.tsx";
 import {useTranslation} from "react-i18next";
-import CategoryExpense from "./CategoryExpense.tsx";
+// import CategoryExpense from "./CategoryExpense.tsx";
 import Tooltip from '@mui/material/Tooltip';
-import ExpenseSummaryCard from "./ExpenseSummaryCard.tsx";
+// import ExpenseSummaryCard from "./ExpenseSummaryCard.tsx";
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import {useAccountStore} from "../../store/account-store.ts";
 import {useCategoryStore} from "../../store/category-store.ts";
 import {transactionService} from "../../api/transaction-client.ts";
-import {useTransactionService} from "../../store/transaction-store.ts";
+import {useTransactionStore} from "../../store/transaction-store.ts";
 import type {RecurringTransaction, Transaction, TransactionFilters} from "../../types/transaction.ts";
 import {useRecurringTransactionStore} from "../../store/recurring-transaction-store.ts";
 
@@ -52,25 +52,25 @@ function ExpensesPage() {
     // const [expenses, setExpenses] = useState<Expense[]>([]);
     // const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
 
-
     const accounts = useAccountStore(state => state.accounts)
     const categories = useCategoryStore(state => state.categories)
-    const expenses = useTransactionService(state => state.transactions)
+    const transactions = useTransactionStore(state => state.transactions)
     const recurringExpenses = useRecurringTransactionStore(state => state.recurringTransactions)
 
-    const setExpenses = useTransactionService(state => state.setTransactions)
-    const setRecurringExpenses = useRecurringTransactionStore(state => state.setRecurringTransactions)
+    const setTransactions = useTransactionStore(state => state.setTransactions)
+    const setRecurringTransactions = useRecurringTransactionStore(state => state.setRecurringTransactions)
 
-    const deleteTransaction = useTransactionService(state => state.deleteTransaction)
+    const deleteTransaction = useTransactionStore(state => state.deleteTransaction)
     const deleteRecurringTransaction = useRecurringTransactionStore(state => state.deleteTransaction)
 
     const updateRecurringTransaction = useRecurringTransactionStore(state => state.update)
 
-    const [selectedExpense, setSelectedExpense] = useState<Transaction | null>(null);
-    const [selectedRecurringExpense, setSelectedRecurringExpense] = useState<RecurringExpense>();
+    const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+    const [selectedRecurringTransaction, setSelectedRecurringTransaction] = useState<Transaction>();
     const [filteredCategory, setFilteredCategory] = useState<string>("Wszystkie");
-    const [categoriesExpenses, setCategoriesExpenses] = useState<CategoryAmount[]>([])
-    const [overview, setOverview] = useState<TransactionOverview>();
+
+    // const [categoriesExpenses, setCategoriesExpenses] = useState<CategoryAmount[]>([])
+    // const [overview, setOverview] = useState<TransactionOverview>();
 
     const {success, error} = useNotification();
     const [openDialog, setOpenDialog] = useState(false);
@@ -80,16 +80,15 @@ function ExpensesPage() {
     const dateFrom = selectedDate.startOf("month").format("YYYY-MM-DD");
     const dateTo = selectedDate.endOf("month").format("YYYY-MM-DD");
     const [categorySelectedDate, setCategorySelectedDate] = useState<Dayjs>(dayjs());
-    const categoryDateFrom = categorySelectedDate.startOf("month").format("YYYY-MM-DD");
-    const categoryDateTo = categorySelectedDate.endOf("month").format("YYYY-MM-DD");
+    // const categoryDateFrom = categorySelectedDate.startOf("month").format("YYYY-MM-DD");
+    // const categoryDateTo = categorySelectedDate.endOf("month").format("YYYY-MM-DD");
 
     const paginationModel = {page: 0, pageSize: 5};
-    const totalSpending = expenses.reduce((acc, e) => acc + e.price, 0);
+    const totalSpending = transactions.reduce((acc, e) => acc + e.price, 0);
 
     useEffect(() => {
         const fetchExpenses = async () => {
             const filter: TransactionFilters = {
-                type: "EXPENSE",
                 startDate: dateFrom,
                 endDate: dateTo,
                 ...(filteredCategory !== "Wszystkie" && {
@@ -99,7 +98,7 @@ function ExpensesPage() {
 
             try {
                 const expensesResponse = await transactionService.getTransactions(filter);
-                setExpenses(expensesResponse);
+                setTransactions(expensesResponse);
             } catch (error) {
                 //TODO DELETE CONSOLE LOG
                 console.error("Błąd podczas pobierania transakcji:", error);
@@ -107,25 +106,25 @@ function ExpensesPage() {
         };
 
         fetchExpenses();
-    }, [openDialog, filteredCategory, dateFrom, dateTo, setExpenses]);
+    }, [openDialog, filteredCategory, dateFrom, dateTo, setTransactions]);
 
     useEffect(() => {
         const fetchRecurringTransaction = async () => {
             try {
-                const response = await transactionService.getRecurringTransactions("EXPENSE");
-                setRecurringExpenses(response)
+                const response = await transactionService.getRecurringTransactions();
+                setRecurringTransactions(response)
             } catch (error) {
                 //TODO DELETE CONSOLE LOG
                 console.error("Błąd podczas pobierania transakcji rekurencyjnych:", error);
             }
         };
         fetchRecurringTransaction();
-    }, [openDialog, setRecurringExpenses])
+    }, [openDialog, setRecurringTransactions])
 
-    useEffect(() => {
-        //TODO CHECK IT
-        getAllCategoriesAmount('EXPENSE', categoryDateFrom, categoryDateTo).then((res) => setCategoriesExpenses(res.data));
-    }, [user?.id, openDialog, categoryDateFrom, categoryDateTo])
+    // useEffect(() => {
+    //     //TODO CHECK IT
+    //     getAllCategoriesAmount('EXPENSE', categoryDateFrom, categoryDateTo).then((res) => setCategoriesExpenses(res.data));
+    // }, [user?.id, openDialog, categoryDateFrom, categoryDateTo])
 
     const handleDeletion = (transaction: Transaction) => {
         transactionService.deleteTransaction(transaction.id)
@@ -237,7 +236,7 @@ function ExpensesPage() {
                     <Tooltip title={t("expenses.page.expensesTable.tooltip.edit")} arrow>
                         <IconButton
                             onClick={() => {
-                                setSelectedExpense(params.row as Transaction)
+                                setSelectedTransaction(params.row as Transaction)
                                 setOpenDialog(true);
                             }}
                         >
@@ -372,7 +371,7 @@ function ExpensesPage() {
                     <Tooltip title={t("expenses.page.expensesTable.tooltip.edit")} arrow>
                         <IconButton
                             onClick={() => {
-                                setSelectedRecurringExpense(params.row as RecurringExpense)
+                                setSelectedRecurringTransaction(params.row as RecurringTransaction)
                                 setEditRecurringExpense(true);
                             }}
                         >
@@ -405,7 +404,7 @@ function ExpensesPage() {
                     color={"secondary"}
                     data-testid="add-expense-button"
                     onClick={() => {
-                        setSelectedExpense(null);
+                        setSelectedTransaction(null);
                         setOpenDialog(true)
                     }}
                 >
@@ -414,40 +413,40 @@ function ExpensesPage() {
                 </Button>
             </Box>
             {/*// SHORT SUMMARY*/}
-            <Box p={2} display="grid" gap={2}
-                 sx={{gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'}}}>
-                <ExpenseSummaryCard
-                    type="totalExpenses"
-                    title="Całkowite wydatki"
-                    description=" względem poprzedniego miesiąca"
-                    amount={overview?.totalAmount}
-                    change={overview?.totalAmountChangePercentage}
-                    // currency={user?.currency.symbol || 'zł'}
-                    currency={'zł'}
-                    accentColor="#E53935"
-                    icon={<AttachMoneyOutlined fontSize="medium"/>}
-                />
-                <ExpenseSummaryCard
-                    type="totalTransactions"
-                    title="Transakcje"
-                    description=" transakcji w tym miesiącu"
-                    amount={overview?.expenseCount}
-                    change={overview?.expenseCountChangePercentage}
-                    accentColor="#70B2B1"
-                    icon={<ReceiptIcon fontSize="medium"/>}
-                />
-                <ExpenseSummaryCard
-                    type="Average"
-                    title="Średnia dzienna"
-                    description="na podstawie 30 dni"
-                    amount={overview?.averageAmount}
-                    // currency={user?.currency.symbol || 'zł'}
-                    currency={'zł'}
-                    accentColor="#5C86D3"
-                    icon={<TrendingUpIcon fontSize="medium"/>}
-                />
+            {/*<Box p={2} display="grid" gap={2}*/}
+            {/*     sx={{gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'}}}>*/}
+            {/*    <ExpenseSummaryCard*/}
+            {/*        type="totalExpenses"*/}
+            {/*        title="Całkowite wydatki"*/}
+            {/*        description=" względem poprzedniego miesiąca"*/}
+            {/*        amount={overview?.totalAmount}*/}
+            {/*        change={overview?.totalAmountChangePercentage}*/}
+            {/*        // currency={user?.currency.symbol || 'zł'}*/}
+            {/*        currency={'zł'}*/}
+            {/*        accentColor="#E53935"*/}
+            {/*        icon={<AttachMoneyOutlined fontSize="medium"/>}*/}
+            {/*    />*/}
+            {/*    <ExpenseSummaryCard*/}
+            {/*        type="totalTransactions"*/}
+            {/*        title="Transakcje"*/}
+            {/*        description=" transakcji w tym miesiącu"*/}
+            {/*        amount={overview?.expenseCount}*/}
+            {/*        change={overview?.expenseCountChangePercentage}*/}
+            {/*        accentColor="#70B2B1"*/}
+            {/*        icon={<ReceiptIcon fontSize="medium"/>}*/}
+            {/*    />*/}
+            {/*    <ExpenseSummaryCard*/}
+            {/*        type="Average"*/}
+            {/*        title="Średnia dzienna"*/}
+            {/*        description="na podstawie 30 dni"*/}
+            {/*        amount={overview?.averageAmount}*/}
+            {/*        // currency={user?.currency.symbol || 'zł'}*/}
+            {/*        currency={'zł'}*/}
+            {/*        accentColor="#5C86D3"*/}
+            {/*        icon={<TrendingUpIcon fontSize="medium"/>}*/}
+            {/*    />*/}
 
-            </Box>
+            {/*</Box>*/}
             {/*// EXPENSES TABLE*/}
             <Box ml={2} mr={2}>
                 <Card
@@ -536,7 +535,7 @@ function ExpensesPage() {
 
                         <Divider sx={{my: 1}}/>
                         <DataGrid
-                            rows={expenses}
+                            rows={transactions}
                             columns={columns}
                             initialState={{pagination: {paginationModel}}}
                             pageSizeOptions={[5, 10]}
@@ -613,28 +612,28 @@ function ExpensesPage() {
                                 </LocalizationProvider>
                             </Box>
                         </Box>
-                        <Box
-                            sx={{
-                                display: 'grid',
-                                gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'},
-                                gap: 2,
-                            }}
-                        >
-                            {Object.values(categoriesExpenses).map((cat, i) => {
-                                const matchedCategory = categories.find(c => c.name === cat.category);
+                        {/*<Box*/}
+                        {/*    sx={{*/}
+                        {/*        display: 'grid',*/}
+                        {/*        gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'},*/}
+                        {/*        gap: 2,*/}
+                        {/*    }}*/}
+                        {/*>*/}
+                        {/*    {Object.values(categoriesExpenses).map((cat, i) => {*/}
+                        {/*        const matchedCategory = categories.find(c => c.name === cat.category);*/}
 
-                                return (
-                                    <CategoryExpense
-                                        key={i}
-                                        categoryAmount={cat}
-                                        color={matchedCategory?.color}
-                                        // currency={user?.currency.symbol || ""}
-                                        currency={"zł"}
-                                    />
-                                );
-                            })}
+                        {/*        return (*/}
+                        {/*            <CategoryExpense*/}
+                        {/*                key={i}*/}
+                        {/*                categoryAmount={cat}*/}
+                        {/*                color={matchedCategory?.color}*/}
+                        {/*                // currency={user?.currency.symbol || ""}*/}
+                        {/*                currency={"zł"}*/}
+                        {/*            />*/}
+                        {/*        );*/}
+                        {/*    })}*/}
 
-                        </Box>
+                        {/*</Box>*/}
                     </CardContent>
                 </Card>
             </Box>
@@ -675,23 +674,23 @@ function ExpensesPage() {
                     </Card>
                 </Box>
             </Box>
-            <AddExpenseDialog
+            <AddTransactionDialog
                 open={openDialog}
                 onClose={() => {
                     setOpenDialog(false)
-                    setSelectedExpense(null)
+                    setSelectedTransaction(null)
                 }}
-                initialExpense={selectedExpense}
+                initialTransaction={selectedTransaction}
                 accounts={accounts}
                 categories={categories}
             />
-            <RecurringExpenseDialog
-                open={editRecurringExpense}
-                onClose={() => setEditRecurringExpense(false)}
-                recurringExpense={selectedRecurringExpense}
-                accounts={accounts}
-                categories={categories}
-            />
+            {/*<RecurringExpenseDialog*/}
+            {/*    open={editRecurringExpense}*/}
+            {/*    onClose={() => setEditRecurringExpense(false)}*/}
+            {/*    recurringExpense={selectedRecurringTransaction}*/}
+            {/*    accounts={accounts}*/}
+            {/*    categories={categories}*/}
+            {/*/>*/}
         </>
     );
 }

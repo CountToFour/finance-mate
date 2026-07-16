@@ -7,7 +7,7 @@ import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard.tsx'));
-const Expenses = lazy(() => import('./pages/expenses/Expenses.tsx'));
+const Expenses = lazy(() => import('./pages/transactions/Transactions.tsx'));
 const Accounts = lazy(() => import('./pages/accounts/Accounts.tsx'));
 const BudgetPage = lazy(() => import('./pages/budgets/BudgetPage.tsx'));
 const Income = lazy(() => import('./pages/income/Income.tsx'));

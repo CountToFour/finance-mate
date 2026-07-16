@@ -3,36 +3,32 @@ import type {Transaction} from "../types/transaction.ts";
 import {persist} from "zustand/middleware";
 
 interface TransactionStore {
-    expenses: Transaction[];
-    incomes: Transaction[];
-    setExpenses: (expenses: Transaction[]) => void;
-    setIncomes: (incomes: Transaction[]) => void;
+    transactions: Transaction[];
+    setTransactions: (transactions: Transaction[]) => void;
+    addTransaction: (transaction: Transaction) => void;
+    editTransaction: (transaction: Transaction) => void;
     deleteTransaction: (transaction: Transaction) => void;
 }
 
-export const useTransactionService = create<TransactionStore>()(
+export const useTransactionStore = create<TransactionStore>()(
     persist((set) => ({
-            expenses: [],
-            incomes: [],
+            transactions: [],
 
-            setExpenses: (expenses: Transaction[]) => set({expenses: expenses}),
+            setTransactions: (transactions: Transaction[]) => set({transactions: transactions}),
 
-            setIncomes: (incomes: Transaction[]) => set({incomes: incomes}),
+            addTransaction: (transaction: Transaction) => set((prev) => ({
+                transactions: [...prev.transactions, transaction],
+            })),
 
-            deleteTransaction: (transaction: Transaction) => set((prev) => {
-                if (transaction.transactionType === "EXPENSE") {
-                    return {
-                        expenses: prev.expenses.filter(
-                            (t) => t.id !== transaction.id
-                        ),
-                    };
-                }
-                return {
-                    incomes: prev.incomes.filter(
-                        (t) => t.id !== transaction.id
-                    ),
-                };
-            }),
+            editTransaction: (transaction: Transaction) => set((prev) => ({
+                transactions: prev.transactions.map(
+                    (t) => t.id === transaction.id ? transaction : t,
+                )
+            })),
+
+            deleteTransaction: (transaction: Transaction) => set((prev) => ({
+                transactions: prev.transactions.filter(t => t.id !== transaction.id)
+            })),
         }),
         {name: 'financemate-transactions'}
     )

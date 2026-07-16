@@ -1,26 +1,27 @@
 import type {LoginRequest, User, UserRegistration, UserUpdate} from "../types/auth.ts";
 import api from "./api.ts";
+import axios from "axios";
 
 export const authService = {
     register: async (data: UserRegistration): Promise<void> => {
-        const response = await api.post(
-            '/auth/register',
+        const response = await axios.post(
+            'http://localhost:8080/api/auth/register',
             data,
         );
         return response.data;
     },
 
     login: async (data: LoginRequest): Promise<void> => {
-        const response = await api.post(
-            '/auth/login',
+        const response = await axios.post(
+            'http://localhost:8080/api/auth/login',
             data,
         );
         return response.data;
     },
 
     logout: async (): Promise<void> => {
-        const response = await api.post(
-            '/auth/logout',
+        const response = await axios.post(
+            'http://localhost:8080/api/auth/logout',
         );
         return response.data;
     },

@@ -3,7 +3,6 @@ import type {
     Transaction,
     TransactionDto,
     TransactionFilters,
-    TransactionType
 } from "../types/transaction.ts";
 import api from "./api.ts";
 
@@ -49,9 +48,9 @@ export const transactionService = {
         return response.data
     },
 
-    getRecurringTransactions: async(type: TransactionType): Promise<RecurringTransaction[]> => {
+    getRecurringTransactions: async(): Promise<RecurringTransaction[]> => {
         const response = await api.get<RecurringTransaction[]>(
-            `/transactions/recurring/${type}`,
+            `/transactions/recurring`,
         )
         return response.data
     },

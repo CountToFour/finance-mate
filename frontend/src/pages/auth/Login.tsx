@@ -23,8 +23,10 @@ function Login() {
                 password: data.password
             }
             await authService.login(loginData);
+            console.log("ZALOGOWANO")
             const response = await authService.getUser(data.email)
             setUser(response);
+            console.log("Uzytkownik ustawiony")
             navigate("/dashboard");
         } catch (err) {
             console.log(err);
