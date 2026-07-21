@@ -2,8 +2,7 @@
   "layout": {
     "account": "Accounts",
     "dashboard": "Dashboard",
-    "expenses": "Expenses",
-    "incomes": "Income",
+    "transactions": "Transactions",
     "budget": "Budget",
     "report": "Reports",
     "settings": "Settings",

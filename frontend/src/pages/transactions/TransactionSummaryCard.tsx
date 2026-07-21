@@ -3,7 +3,7 @@ import { Box, Card, CardContent, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 
 type Props = {
-    type: "totalExpenses" | "totalTransactions" | "Average";
+    type: "totalValue" | "totalAmount" | "Average";
     title: string;
     description?: string;
     amount: number;
@@ -26,13 +26,15 @@ const ExpenseSummaryCard: React.FC<Props> = ({
                                                  sx,
                                              }) => {
 
-    const changeIsPositive = typeof change === 'number' && change >= 0;
+    const changeIsPositive = change >= 0;
 
     const changeText = () => {
-        if (type === 'totalExpenses') {
-            return changeIsPositive ? `+${change}%` : `-${change}%`;
-        } else if (type === 'totalTransactions') {
-            return changeIsPositive ? `+${change}` : `-${change}`;
+        if (type === 'totalValue') {
+            console.log(change)
+            console.log(changeIsPositive)
+            return changeIsPositive ? `+${change}%` : `${change}%`;
+        } else if (type === 'totalAmount') {
+            return changeIsPositive ? `+${change}` : `${change}`;
         } else if (type === 'Average') {
             return '';
         }

@@ -369,66 +369,66 @@ function Dashboard() {
                 </Grid>
             </Box>
 
-            {/* Last transactions */}
-            <Card variant="outlined" sx={{borderRadius: 2}}>
-                <CardContent>
-                    <Stack direction="row" alignItems="center" gap={1} mb={2}>
-                        <AttachMoneyIcon color="primary"/>
-                        <Typography variant="h6" fontWeight="bold">Ostatnie transakcje</Typography>
-                    </Stack>
-                    <List disablePadding>
-                        {recentExpenses.length === 0 && (
-                            <Typography color="text.secondary" sx={{py: 2, textAlign: 'center'}}>
-                                Brak ostatnich transakcji w tym miesiącu.
-                            </Typography>
-                        )}
-                        {recentExpenses.map((expense, index) => {
-                            const category = allCategories.find(c => c.name === expense.category);
-                            const color = category?.color || '#ccc';
-                            const bg = hexToRgba(color, 0.1);
+            {/*/!* Last transactions *!/*/}
+            {/*<Card variant="outlined" sx={{borderRadius: 2}}>*/}
+            {/*    <CardContent>*/}
+            {/*        <Stack direction="row" alignItems="center" gap={1} mb={2}>*/}
+            {/*            <AttachMoneyIcon color="primary"/>*/}
+            {/*            <Typography variant="h6" fontWeight="bold">Ostatnie transakcje</Typography>*/}
+            {/*        </Stack>*/}
+            {/*        <List disablePadding>*/}
+            {/*            {recentExpenses.length === 0 && (*/}
+            {/*                <Typography color="text.secondary" sx={{py: 2, textAlign: 'center'}}>*/}
+            {/*                    Brak ostatnich transakcji w tym miesiącu.*/}
+            {/*                </Typography>*/}
+            {/*            )}*/}
+            {/*            {recentExpenses.map((expense, index) => {*/}
+            {/*                const category = allCategories.find(c => c.name === expense.category);*/}
+            {/*                const color = category?.color || '#ccc';*/}
+            {/*                const bg = hexToRgba(color, 0.1);*/}
 
-                            return (
-                                <React.Fragment key={expense.id}>
-                                    <ListItem sx={{px: 1}}>
-                                        <Box
-                                            sx={{
-                                                width: 40,
-                                                height: 40,
-                                                borderRadius: '50%',
-                                                bgcolor: bg,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                mr: 2,
-                                                color: color,
-                                                fontWeight: 'bold',
-                                                fontSize: 18
-                                            }}
-                                        >
-                                            {expense.category.charAt(0).toUpperCase()}
-                                        </Box>
-                                        <ListItemText
-                                            primary={
-                                                <Typography
-                                                    fontWeight="medium">{expense.description || 'Bez opisu'}</Typography>
-                                            }
-                                            secondary={
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {dayjs(expense.createdAt).format('DD MMMM YYYY')} • {expense.category}
-                                                </Typography>
-                                            }
-                                        />
-                                        <Typography variant="body1" fontWeight="bold" color="error.main">
-                                            {expense.price.toLocaleString('pl-PL', {minimumFractionDigits: 2})} {findTransactionCurrency(expense)}
-                                        </Typography>
-                                    </ListItem>
-                                    {index < recentExpenses.length - 1 && <Divider component="li" variant="inset"/>}
-                                </React.Fragment>
-                            );
-                        })}
-                    </List>
-                </CardContent>
-            </Card>
+            {/*                return (*/}
+            {/*                    <React.Fragment key={expense.id}>*/}
+            {/*                        <ListItem sx={{px: 1}}>*/}
+            {/*                            <Box*/}
+            {/*                                sx={{*/}
+            {/*                                    width: 40,*/}
+            {/*                                    height: 40,*/}
+            {/*                                    borderRadius: '50%',*/}
+            {/*                                    bgcolor: bg,*/}
+            {/*                                    display: 'flex',*/}
+            {/*                                    alignItems: 'center',*/}
+            {/*                                    justifyContent: 'center',*/}
+            {/*                                    mr: 2,*/}
+            {/*                                    color: color,*/}
+            {/*                                    fontWeight: 'bold',*/}
+            {/*                                    fontSize: 18*/}
+            {/*                                }}*/}
+            {/*                            >*/}
+            {/*                                {expense.category.charAt(0).toUpperCase()}*/}
+            {/*                            </Box>*/}
+            {/*                            <ListItemText*/}
+            {/*                                primary={*/}
+            {/*                                    <Typography*/}
+            {/*                                        fontWeight="medium">{expense.description || 'Bez opisu'}</Typography>*/}
+            {/*                                }*/}
+            {/*                                secondary={*/}
+            {/*                                    <Typography variant="caption" color="text.secondary">*/}
+            {/*                                        {dayjs(expense.createdAt).format('DD MMMM YYYY')} • {expense.category}*/}
+            {/*                                    </Typography>*/}
+            {/*                                }*/}
+            {/*                            />*/}
+            {/*                            <Typography variant="body1" fontWeight="bold" color="error.main">*/}
+            {/*                                {expense.price.toLocaleString('pl-PL', {minimumFractionDigits: 2})} {findTransactionCurrency(expense)}*/}
+            {/*                            </Typography>*/}
+            {/*                        </ListItem>*/}
+            {/*                        {index < recentExpenses.length - 1 && <Divider component="li" variant="inset"/>}*/}
+            {/*                    </React.Fragment>*/}
+            {/*                );*/}
+            {/*            })}*/}
+            {/*        </List>*/}
+            {/*    </CardContent>*/}
+            {/*</Card>*/}
 
 
             <Box display={'flex'} gap={2} mb={3} mt={3}>

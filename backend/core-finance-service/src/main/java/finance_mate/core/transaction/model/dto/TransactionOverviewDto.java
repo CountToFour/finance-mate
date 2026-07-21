@@ -8,9 +8,9 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class TransactionOverviewDto {
-    private double totalAmount;
-    private double averageAmount;
-    private int expenseCount;
-    private double totalAmountChangePercentage;
-    private int expenseCountChangePercentage;
+    private Double totalValue;
+    private int totalAmount;
+    private double totalValuePercentageChange;
+    private double totalAmountPercentageChange;
+    private double dailyAverage;
 }

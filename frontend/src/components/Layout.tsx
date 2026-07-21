@@ -17,7 +17,6 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CrisisAlertIcon from '@mui/icons-material/CrisisAlert';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import {useTranslation} from "react-i18next";
 import {authService} from "../api/auth-client.ts";
 
@@ -33,8 +32,7 @@ export function Layout() {
     const menuItems = [
         { text: t('layout.dashboard'), icon: <HomeIcon />, path: "/dashboard" },
         { text: t('layout.account'), icon: <AccountBalanceWalletIcon />, path: "/accounts" },
-        { text: t('layout.expenses'), icon: <ReceiptIcon />, path: "/expenses" },
-        { text: t('layout.incomes'), icon: <AttachMoneyIcon />, path: "/incomes" },
+        { text: t('layout.transactions'), icon: <ReceiptIcon />, path: "/transactions" },
         { text: t('layout.budget'), icon: <CrisisAlertIcon />, path: "/budgets" },
         { text: t('layout.report'), icon: <BarChartIcon />, path: "/reports" },
         { text: t('layout.settings'), icon: <SettingsIcon />, path: "/settings" },

@@ -7,13 +7,11 @@ import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard.tsx'));
-const Expenses = lazy(() => import('./pages/transactions/Transactions.tsx'));
+const Transactions = lazy(() => import('./pages/transactions/Transactions.tsx'));
 const Accounts = lazy(() => import('./pages/accounts/Accounts.tsx'));
 const BudgetPage = lazy(() => import('./pages/budgets/BudgetPage.tsx'));
-const Income = lazy(() => import('./pages/income/Income.tsx'));
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage.tsx'));
 const ReportsPage = lazy(() => import('./pages/reports/ReportsPage.tsx'));
-const PlainPage = lazy(() => import('./pages/PlainPage.tsx'));
 
 
 const PageLoader = () => (
@@ -41,13 +39,11 @@ export const router = createBrowserRouter([
         ),
         children: [
             { path: '/dashboard', element: withSuspense(Dashboard) },
-            { path: '/expenses', element: withSuspense(Expenses) },
+            { path: '/transactions', element: withSuspense(Transactions) },
             { path: '/accounts', element: withSuspense(Accounts) },
             { path: '/budgets', element: withSuspense(BudgetPage) },
-            { path: '/incomes', element: withSuspense(Income) },
             { path: '/settings', element: withSuspense(SettingsPage) },
             { path: '/reports', element: withSuspense(ReportsPage) },
-            { path: '/plain', element: <PlainPage /> },
         ],
     },
 ]);

@@ -1,8 +1,8 @@
 import type {
-    EditTransactionDto, RecurringTransaction,
+    EditTransactionDto, OverviewFilter, RecurringTransaction,
     Transaction,
     TransactionDto,
-    TransactionFilters,
+    TransactionFilters, TransactionsOverview,
 } from "../types/transaction.ts";
 import api from "./api.ts";
 
@@ -73,6 +73,16 @@ export const transactionService = {
         const response = await api.put<RecurringTransaction>(
             `/transactions/recurring/edit/${id}`,
             data
+        )
+        return response.data
+    },
+
+    getTransactionOverview: async(filters?: OverviewFilter): Promise<TransactionsOverview> => {
+        const response = await api.get<TransactionsOverview>(
+            `/transactions/overview`,
+            {
+                params: filters
+            }
         )
         return response.data
     }

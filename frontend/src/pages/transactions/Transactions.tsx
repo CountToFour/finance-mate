@@ -1,23 +1,23 @@
 import {useEffect, useState} from "react";
 import {
     Box,
+    Button,
     Card,
     CardContent,
-    Typography,
-    IconButton,
+    Chip,
     Divider,
-    Button, MenuItem, TextField, Chip, Switch, FormControlLabel,
+    FormControlLabel,
+    IconButton,
+    MenuItem,
+    Switch,
+    TextField,
+    Typography,
 } from "@mui/material";
 import {Add, AttachMoneyOutlined} from "@mui/icons-material";
 import InputAdornment from '@mui/material/InputAdornment';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
-import {
-    getAllCategoriesAmount,
-} from "../../lib/api.ts";
-import {useAuthStore} from "../../store/auth-store.ts";
-import type {CategoryAmount, TransactionOverview} from "../../lib/types.ts";
 import {DataGrid, type GridColDef} from '@mui/x-data-grid';
 import {useNotification} from "../../components/NotificationContext.tsx";
 import AddTransactionDialog from "./AddTransactionDialog.tsx";
@@ -27,35 +27,34 @@ import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-// import RecurringExpenseDialog from "./RecurringExpenseDialog.tsx";
 import {useTranslation} from "react-i18next";
-// import CategoryExpense from "./CategoryExpense.tsx";
 import Tooltip from '@mui/material/Tooltip';
-// import ExpenseSummaryCard from "./ExpenseSummaryCard.tsx";
-import ReceiptIcon from '@mui/icons-material/Receipt';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import {useAccountStore} from "../../store/account-store.ts";
 import {useCategoryStore} from "../../store/category-store.ts";
 import {transactionService} from "../../api/transaction-client.ts";
 import {useTransactionStore} from "../../store/transaction-store.ts";
-import type {RecurringTransaction, Transaction, TransactionFilters} from "../../types/transaction.ts";
+import type {
+    RecurringTransaction,
+    Transaction,
+    TransactionFilters,
+    TransactionsOverview
+} from "../../types/transaction.ts";
 import {useRecurringTransactionStore} from "../../store/recurring-transaction-store.ts";
+import RecurringTransactionDialog from "./RecurringTransactionDialog.tsx";
+import TransactionSummaryCard from "./TransactionSummaryCard.tsx";
+import ReceiptIcon from "@mui/icons-material/Receipt";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import CategoryTransactionOverview from "./CategoryTransactionOverview.tsx";
 
 const currentYear = dayjs();
 
-function ExpensesPage() {
+function TransactionPage() {
     const {t} = useTranslation();
-    const user = useAuthStore(s => s.user);
-
-    // const [accounts, setAccounts] = useState<Account[]>([]);
-    // const [categories, setCategories] = useState<Category[]>([])
-    // const [expenses, setExpenses] = useState<Expense[]>([]);
-    // const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
 
     const accounts = useAccountStore(state => state.accounts)
     const categories = useCategoryStore(state => state.categories)
     const transactions = useTransactionStore(state => state.transactions)
-    const recurringExpenses = useRecurringTransactionStore(state => state.recurringTransactions)
+    const recurringTransactions = useRecurringTransactionStore(state => state.recurringTransactions)
 
     const setTransactions = useTransactionStore(state => state.setTransactions)
     const setRecurringTransactions = useRecurringTransactionStore(state => state.setRecurringTransactions)
@@ -66,25 +65,24 @@ function ExpensesPage() {
     const updateRecurringTransaction = useRecurringTransactionStore(state => state.update)
 
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-    const [selectedRecurringTransaction, setSelectedRecurringTransaction] = useState<Transaction>();
+    const [selectedRecurringTransaction, setSelectedRecurringTransaction] = useState<RecurringTransaction | null>(null);
     const [filteredCategory, setFilteredCategory] = useState<string>("Wszystkie");
 
     // const [categoriesExpenses, setCategoriesExpenses] = useState<CategoryAmount[]>([])
-    // const [overview, setOverview] = useState<TransactionOverview>();
+    const [overview, setOverview] = useState<TransactionsOverview | null>(null);
 
     const {success, error} = useNotification();
     const [openDialog, setOpenDialog] = useState(false);
-    const [editRecurringExpense, setEditRecurringExpense] = useState(false);
+    const [editRecurringTransaction, setEditRecurringTransaction] = useState(false);
 
     const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
     const dateFrom = selectedDate.startOf("month").format("YYYY-MM-DD");
     const dateTo = selectedDate.endOf("month").format("YYYY-MM-DD");
-    const [categorySelectedDate, setCategorySelectedDate] = useState<Dayjs>(dayjs());
+    // const [categorySelectedDate, setCategorySelectedDate] = useState<Dayjs>(dayjs());
     // const categoryDateFrom = categorySelectedDate.startOf("month").format("YYYY-MM-DD");
     // const categoryDateTo = categorySelectedDate.endOf("month").format("YYYY-MM-DD");
 
     const paginationModel = {page: 0, pageSize: 5};
-    const totalSpending = transactions.reduce((acc, e) => acc + e.price, 0);
 
     useEffect(() => {
         const fetchExpenses = async () => {
@@ -96,30 +94,29 @@ function ExpensesPage() {
                 }),
             };
 
-            try {
-                const expensesResponse = await transactionService.getTransactions(filter);
-                setTransactions(expensesResponse);
-            } catch (error) {
-                //TODO DELETE CONSOLE LOG
-                console.error("Błąd podczas pobierania transakcji:", error);
-            }
+            const transactionsResponse = await transactionService.getTransactions(filter);
+            setTransactions(transactionsResponse);
         };
 
         fetchExpenses();
-    }, [openDialog, filteredCategory, dateFrom, dateTo, setTransactions]);
+    }, [filteredCategory, dateFrom, dateTo, setTransactions]);
 
     useEffect(() => {
         const fetchRecurringTransaction = async () => {
-            try {
-                const response = await transactionService.getRecurringTransactions();
-                setRecurringTransactions(response)
-            } catch (error) {
-                //TODO DELETE CONSOLE LOG
-                console.error("Błąd podczas pobierania transakcji rekurencyjnych:", error);
-            }
+            const response = await transactionService.getRecurringTransactions();
+            setRecurringTransactions(response)
         };
         fetchRecurringTransaction();
-    }, [openDialog, setRecurringTransactions])
+    }, [setRecurringTransactions])
+
+    useEffect(() => {
+        const fetchOverview = async () => {
+            const overview = await transactionService.getTransactionOverview();
+            setOverview(overview)
+        }
+
+        fetchOverview();
+    }, [transactions]);
 
     // useEffect(() => {
     //     //TODO CHECK IT
@@ -130,10 +127,10 @@ function ExpensesPage() {
         transactionService.deleteTransaction(transaction.id)
             .then(() => {
                 deleteTransaction(transaction)
-                success(t('expenses.notifications.delete.success'))
+                success(t('transactions.notifications.delete.success'))
             })
             .catch(() => {
-                error(t('expenses.notifications.delete.error'))
+                error(t('transactions.notifications.delete.error'))
             });
     };
 
@@ -141,10 +138,10 @@ function ExpensesPage() {
         transactionService.deleteRecurringTransaction(transaction.id)
             .then(() => {
                 deleteRecurringTransaction(transaction)
-                success(t('expenses.notifications.delete.success'))
+                success(t('transactions.notifications.delete.success'))
             })
             .catch(() => {
-                error(t('expenses.notifications.delete.error'))
+                error(t('transactions.notifications.delete.error'))
             });
     }
 
@@ -155,13 +152,11 @@ function ExpensesPage() {
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
 
-
     //COLUMNS WITH EXPENSES
     const columns: GridColDef[] = [
         {
             field: 'accountName',
-            //TODO ZMIENIC NA WIELOJEZYCZNOSC
-            headerName: t('Nazwa konta'),
+            headerName: t('transactions.page.table.account'),
             flex: 1,
             renderCell: (params) => {
                 const account = accounts.find(a => a.name === params.value);
@@ -180,18 +175,18 @@ function ExpensesPage() {
         },
         {
             field: 'createdAt',
-            headerName: t('expenses.page.expensesTable.date'),
+            headerName: t('transactions.page.table.date'),
             flex: 1,
         },
         {
             field: 'description',
-            headerName: t('expenses.page.expensesTable.description'),
+            headerName: t('transactions.page.table.description'),
             flex: 2,
             valueFormatter: value => value ?? '-'
         },
         {
-            field: 'category',
-            headerName: t('expenses.page.expensesTable.category'),
+            field: 'categoryName',
+            headerName: t('transactions.page.table.category'),
             flex: 1,
             renderCell: (params) => {
                 const category = categories.find(a => a.name === params.value);
@@ -210,7 +205,7 @@ function ExpensesPage() {
         },
         {
             field: 'price',
-            headerName: t('expenses.page.expensesTable.price'),
+            headerName: t('transactions.page.table.price'),
             flex: 0.8,
             renderCell: (params) => {
                 // const account = accounts.find(a => a.name === params.row.accountName);
@@ -218,11 +213,13 @@ function ExpensesPage() {
                 const symbol = 'zł';
                 return `${params.value} ${symbol}`;
             },
-            cellClassName: 'priceNegative',
+            cellClassName: (params) => {
+                return params.value < 0 ? 'priceNegative' : 'pricePositive'
+            },
         },
         {
             field: 'actions',
-            headerName: t('expenses.page.expensesTable.actions'),
+            headerName: t('transactions.page.table.actions'),
             flex: 0.5,
             sortable: false,
             filterable: false,
@@ -233,7 +230,7 @@ function ExpensesPage() {
                     width: '100%',
                     height: '100%',
                 }}>
-                    <Tooltip title={t("expenses.page.expensesTable.tooltip.edit")} arrow>
+                    <Tooltip title={t("transactions.page.table.tooltip.edit")} arrow>
                         <IconButton
                             onClick={() => {
                                 setSelectedTransaction(params.row as Transaction)
@@ -243,7 +240,7 @@ function ExpensesPage() {
                             <EditOutlinedIcon/>
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title={t("expenses.page.expensesTable.tooltip.delete")} arrow>
+                    <Tooltip title={t("transactions.page.table.tooltip.delete")} arrow>
                         <IconButton
                             color="error"
                             onClick={() => handleDeletion(params.row)}
@@ -260,8 +257,7 @@ function ExpensesPage() {
     const recurringColumns: GridColDef[] = [
         {
             field: 'accountName',
-            //TODO ZMIENIC NA WIELOJEZYCZNOSC
-            headerName: t('Nazwa konta'),
+            headerName: t('transactions.page.table.account'),
             flex: 1,
             renderCell: (params) => {
                 const account = accounts.find(a => a.name === params.value);
@@ -280,18 +276,18 @@ function ExpensesPage() {
         },
         {
             field: 'createdAt',
-            headerName: t('expenses.page.expensesTable.date'),
+            headerName: t('transactions.page.recurringTable.date'),
             flex: 1,
         },
         {
             field: 'description',
-            headerName: t('expenses.page.expensesTable.description'),
+            headerName: t('transactions.page.table.description'),
             flex: 2,
             valueFormatter: value => value ?? '-'
         },
         {
-            field: 'category',
-            headerName: t('expenses.page.expensesTable.category'),
+            field: 'categoryName',
+            headerName: t('transactions.page.table.category'),
             flex: 1,
             renderCell: (params) => {
                 const category = categories.find(a => a.name === params.value);
@@ -310,8 +306,7 @@ function ExpensesPage() {
         },
         {
             field: 'active',
-            //TODO WIELOJĘZYCZNBOSC
-            headerName: "Aktywność",
+            headerName: t("transactions.page.recurringTable.active"),
             flex: 0.5,
             renderCell: (params) => {
                 const isActive = params.row.active;
@@ -323,15 +318,14 @@ function ExpensesPage() {
                                 checked={isActive}
                                 onChange={async () => {
                                     try {
-                                        const response = await transactionService.deactivateTransaction(params.row.id);
+                                        await transactionService.deactivateTransaction(params.row.id);
                                         const transaction: RecurringTransaction = {
                                             ...params.row,
                                             active: !params.row.active,
                                         };
                                         updateRecurringTransaction(transaction)
-                                    } catch (e) {
-                                        //TODO DELETE CONSOLE LOG AND ADD NOTIFICATION
-                                        console.error(e);
+                                    } catch {
+                                        error(t("transactions.notifications.deactivate.error"))
                                     }
                                 }}
                                 color="secondary"
@@ -345,7 +339,7 @@ function ExpensesPage() {
         },
         {
             field: 'price',
-            headerName: t('expenses.page.expensesTable.price'),
+            headerName: t('transactions.page.table.price'),
             flex: 0.8,
             renderCell: (params) => {
                 // const account = accounts.find(a => a.name === params.row.accountName);
@@ -353,11 +347,13 @@ function ExpensesPage() {
                 const symbol = 'zł';
                 return `${params.value} ${symbol}`;
             },
-            cellClassName: 'priceNegative',
+            cellClassName: (params) => {
+                return params.value < 0 ? 'priceNegative' : 'pricePositive'
+            },
         },
         {
             field: 'actions',
-            headerName: t('expenses.page.expensesTable.actions'),
+            headerName: t('transactions.page.table.actions'),
             flex: 0.5,
             sortable: false,
             filterable: false,
@@ -368,17 +364,17 @@ function ExpensesPage() {
                     width: '100%',
                     height: '100%',
                 }}>
-                    <Tooltip title={t("expenses.page.expensesTable.tooltip.edit")} arrow>
+                    <Tooltip title={t("transactions.page.table.tooltip.edit")} arrow>
                         <IconButton
                             onClick={() => {
                                 setSelectedRecurringTransaction(params.row as RecurringTransaction)
-                                setEditRecurringExpense(true);
+                                setEditRecurringTransaction(true);
                             }}
                         >
                             <EditOutlinedIcon/>
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title={t("expenses.page.expensesTable.tooltip.delete")} arrow>
+                    <Tooltip title={t("transactions.page.table.tooltip.delete")} arrow>
                         <IconButton
                             color="error"
                             onClick={() => handleRecurringDeletion(params.row)}
@@ -396,8 +392,8 @@ function ExpensesPage() {
             <Box p={2} display="flex" justifyContent="space-between" alignItems="center">
                 <Box>
                     <Typography variant="h5" fontWeight={"bold"}
-                                color={"secondary"}>{t('expenses.page.label')}</Typography>
-                    <Typography variant="body2" sx={{mt: 1}}>{t('expenses.page.secondLabel')}</Typography>
+                                color={"secondary"}>{t('transactions.page.label')}</Typography>
+                    <Typography variant="body2" sx={{mt: 1}}>{t('transactions.page.secondLabel')}</Typography>
                 </Box>
                 <Button
                     variant={'contained'}
@@ -409,44 +405,43 @@ function ExpensesPage() {
                     }}
                 >
                     <Add sx={{mr: 1}}/>
-                    {t('expenses.page.add')}
+                    {t('transactions.page.add')}
                 </Button>
             </Box>
             {/*// SHORT SUMMARY*/}
-            {/*<Box p={2} display="grid" gap={2}*/}
-            {/*     sx={{gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'}}}>*/}
-            {/*    <ExpenseSummaryCard*/}
-            {/*        type="totalExpenses"*/}
-            {/*        title="Całkowite wydatki"*/}
-            {/*        description=" względem poprzedniego miesiąca"*/}
-            {/*        amount={overview?.totalAmount}*/}
-            {/*        change={overview?.totalAmountChangePercentage}*/}
-            {/*        // currency={user?.currency.symbol || 'zł'}*/}
-            {/*        currency={'zł'}*/}
-            {/*        accentColor="#E53935"*/}
-            {/*        icon={<AttachMoneyOutlined fontSize="medium"/>}*/}
-            {/*    />*/}
-            {/*    <ExpenseSummaryCard*/}
-            {/*        type="totalTransactions"*/}
-            {/*        title="Transakcje"*/}
-            {/*        description=" transakcji w tym miesiącu"*/}
-            {/*        amount={overview?.expenseCount}*/}
-            {/*        change={overview?.expenseCountChangePercentage}*/}
-            {/*        accentColor="#70B2B1"*/}
-            {/*        icon={<ReceiptIcon fontSize="medium"/>}*/}
-            {/*    />*/}
-            {/*    <ExpenseSummaryCard*/}
-            {/*        type="Average"*/}
-            {/*        title="Średnia dzienna"*/}
-            {/*        description="na podstawie 30 dni"*/}
-            {/*        amount={overview?.averageAmount}*/}
-            {/*        // currency={user?.currency.symbol || 'zł'}*/}
-            {/*        currency={'zł'}*/}
-            {/*        accentColor="#5C86D3"*/}
-            {/*        icon={<TrendingUpIcon fontSize="medium"/>}*/}
-            {/*    />*/}
-
-            {/*</Box>*/}
+            <Box p={2} display="grid" gap={2}
+                 sx={{gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'}}}>
+                <TransactionSummaryCard
+                    type="totalValue"
+                    title={t("transactions.page.overview.totalValue.title")}
+                    description={t("transactions.page.overview.totalValue.description")}
+                    amount={overview?.totalValue.toFixed(2)}
+                    change={overview?.totalValuePercentageChange.toFixed(2)}
+                    // currency={user?.currency.symbol || 'zł'}
+                    currency={'zł'}
+                    accentColor={overview?.totalValue < 0 ? "#E53935" : "green"}
+                    icon={<AttachMoneyOutlined fontSize="medium"/>}
+                />
+                <TransactionSummaryCard
+                    type="totalAmount"
+                    title={t("transactions.page.overview.totalAmount.title")}
+                    description={t("transactions.page.overview.totalAmount.description")}
+                    amount={overview?.totalAmount}
+                    change={overview?.totalAmountPercentageChange}
+                    accentColor="#70B2B1"
+                    icon={<ReceiptIcon fontSize="medium"/>}
+                />
+                <TransactionSummaryCard
+                    type="Average"
+                    title={t("transactions.page.overview.average.title")}
+                    description={t("transactions.page.overview.average.description")}
+                    amount={overview?.dailyAverage.toFixed(2)}
+                    // currency={user?.currency.symbol || 'zł'}
+                    currency={'zł'}
+                    accentColor="#5C86D3"
+                    icon={<TrendingUpIcon fontSize="medium"/>}
+                />
+            </Box>
             {/*// EXPENSES TABLE*/}
             <Box ml={2} mr={2}>
                 <Card
@@ -456,9 +451,9 @@ function ExpensesPage() {
                         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                             <Box>
                                 <Typography variant="subtitle1"
-                                            fontWeight={"bold"}>{t('expenses.page.expensesTable.label')}</Typography>
+                                            fontWeight={"bold"}>{t('transactions.page.table.label')}</Typography>
                                 <Typography variant="body2"
-                                            color={"text.secondary"}>{t('expenses.page.expensesTable.secondLabel')}</Typography>
+                                            color={"text.secondary"}>{t('transactions.page.table.secondLabel')}</Typography>
                             </Box>
                             <Box display="flex" gap={2} alignItems="center">
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -521,8 +516,7 @@ function ExpensesPage() {
                                         },
                                     }}
                                 >
-                                    {/*//TODO ZMIENIC NA WIELOJEZYCZNOSC*/}
-                                    <MenuItem value="Wszystkie">Wszystkie</MenuItem>
+                                    <MenuItem value="Wszystkie">{t('transactions.page.table.categories.all')}</MenuItem>
 
                                     {Object.values(categories).map((cat) => (
                                         <MenuItem key={cat.id} value={cat.name}>
@@ -548,95 +542,99 @@ function ExpensesPage() {
                                     color: 'error.main',
                                     fontWeight: 500,
                                 },
+                                '& .MuiDataGrid-cell.pricePositive': {
+                                    color: "green",
+                                    fontWeight: 500,
+                                },
                             }}
                         />
                     </CardContent>
                 </Card>
             </Box>
             {/*EXPENSES FOR CATEGORIES*/}
-            <Box p={2}>
-                <Card
-                    data-testid='categories-table-card'
-                >
-                    <CardContent>
-                        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                            <Box>
-                                <Typography variant="subtitle1"
-                                            fontWeight={"bold"}>{t('expenses.page.categories.label')}</Typography>
-                                <Typography variant="body2"
-                                            color={"text.secondary"}>{t('expenses.page.categories.secondLabel')}</Typography>
-                            </Box>
-                            <Box display="flex" gap={2} alignItems="center">
-                                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                    <DatePicker
-                                        value={categorySelectedDate}
-                                        yearsOrder="desc"
-                                        maxDate={currentYear}
-                                        onMonthChange={(newMonth) => {
-                                            setCategorySelectedDate(dayjs(newMonth));
-                                        }}
-                                        views={['month', 'year']}
-                                        format={"MMMM YYYY"}
-                                        slotProps={{
-                                            textField: {
-                                                size: 'small',
-                                                sx: {width: 250},
-                                                InputProps: {
-                                                    startAdornment: (
-                                                        <InputAdornment position="start">
-                                                            <IconButton
-                                                                aria-label="Poprzedni miesiąc"
-                                                                size="small"
-                                                                edge="start"
-                                                                onClick={() => setCategorySelectedDate(prev => prev.subtract(1, 'month'))}
-                                                                tabIndex={-1}
-                                                            >
-                                                                <ChevronLeftIcon fontSize="small"/>
-                                                            </IconButton>
-                                                            <IconButton
-                                                                aria-label="Następny miesiąc"
-                                                                size="small"
-                                                                edge="start"
-                                                                onClick={() => setCategorySelectedDate(prev => prev.add(1, 'month'))}
-                                                                disabled={categorySelectedDate.add(1, 'month').isAfter(currentYear, 'month')}
-                                                                tabIndex={-1}
-                                                            >
-                                                                <ChevronRightIcon fontSize="small"/>
-                                                            </IconButton>
-                                                        </InputAdornment>
-                                                    ),
-                                                },
-                                            },
-                                        }}
-                                    />
-                                </LocalizationProvider>
-                            </Box>
-                        </Box>
-                        {/*<Box*/}
-                        {/*    sx={{*/}
-                        {/*        display: 'grid',*/}
-                        {/*        gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'},*/}
-                        {/*        gap: 2,*/}
-                        {/*    }}*/}
-                        {/*>*/}
-                        {/*    {Object.values(categoriesExpenses).map((cat, i) => {*/}
-                        {/*        const matchedCategory = categories.find(c => c.name === cat.category);*/}
+            {/*<Box ml={2} mr={2} mt={2}>*/}
+            {/*    <Card*/}
+            {/*        data-testid='categories-table-card'*/}
+            {/*    >*/}
+            {/*        <CardContent>*/}
+            {/*            <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>*/}
+            {/*                <Box>*/}
+            {/*                    <Typography variant="subtitle1"*/}
+            {/*                                fontWeight={"bold"}>{t('expenses.page.categories.label')}</Typography>*/}
+            {/*                    <Typography variant="body2"*/}
+            {/*                                color={"text.secondary"}>{t('expenses.page.categories.secondLabel')}</Typography>*/}
+            {/*                </Box>*/}
+            {/*                <Box display="flex" gap={2} alignItems="center">*/}
+            {/*                    <LocalizationProvider dateAdapter={AdapterDayjs}>*/}
+            {/*                        <DatePicker*/}
+            {/*                            value={categorySelectedDate}*/}
+            {/*                            yearsOrder="desc"*/}
+            {/*                            maxDate={currentYear}*/}
+            {/*                            onMonthChange={(newMonth) => {*/}
+            {/*                                setCategorySelectedDate(dayjs(newMonth));*/}
+            {/*                            }}*/}
+            {/*                            views={['month', 'year']}*/}
+            {/*                            format={"MMMM YYYY"}*/}
+            {/*                            slotProps={{*/}
+            {/*                                textField: {*/}
+            {/*                                    size: 'small',*/}
+            {/*                                    sx: {width: 250},*/}
+            {/*                                    InputProps: {*/}
+            {/*                                        startAdornment: (*/}
+            {/*                                            <InputAdornment position="start">*/}
+            {/*                                                <IconButton*/}
+            {/*                                                    aria-label="Poprzedni miesiąc"*/}
+            {/*                                                    size="small"*/}
+            {/*                                                    edge="start"*/}
+            {/*                                                    onClick={() => setCategorySelectedDate(prev => prev.subtract(1, 'month'))}*/}
+            {/*                                                    tabIndex={-1}*/}
+            {/*                                                >*/}
+            {/*                                                    <ChevronLeftIcon fontSize="small"/>*/}
+            {/*                                                </IconButton>*/}
+            {/*                                                <IconButton*/}
+            {/*                                                    aria-label="Następny miesiąc"*/}
+            {/*                                                    size="small"*/}
+            {/*                                                    edge="start"*/}
+            {/*                                                    onClick={() => setCategorySelectedDate(prev => prev.add(1, 'month'))}*/}
+            {/*                                                    disabled={categorySelectedDate.add(1, 'month').isAfter(currentYear, 'month')}*/}
+            {/*                                                    tabIndex={-1}*/}
+            {/*                                                >*/}
+            {/*                                                    <ChevronRightIcon fontSize="small"/>*/}
+            {/*                                                </IconButton>*/}
+            {/*                                            </InputAdornment>*/}
+            {/*                                        ),*/}
+            {/*                                    },*/}
+            {/*                                },*/}
+            {/*                            }}*/}
+            {/*                        />*/}
+            {/*                    </LocalizationProvider>*/}
+            {/*                </Box>*/}
+            {/*            </Box>*/}
+            {/*            <Box*/}
+            {/*                sx={{*/}
+            {/*                    display: 'grid',*/}
+            {/*                    gridTemplateColumns: {xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)'},*/}
+            {/*                    gap: 2,*/}
+            {/*                }}*/}
+            {/*            >*/}
+            {/*                {Object.values(categoriesExpenses).map((cat, i) => {*/}
+            {/*                    const matchedCategory = categories.find(c => c.name === cat.category);*/}
 
-                        {/*        return (*/}
-                        {/*            <CategoryExpense*/}
-                        {/*                key={i}*/}
-                        {/*                categoryAmount={cat}*/}
-                        {/*                color={matchedCategory?.color}*/}
-                        {/*                // currency={user?.currency.symbol || ""}*/}
-                        {/*                currency={"zł"}*/}
-                        {/*            />*/}
-                        {/*        );*/}
-                        {/*    })}*/}
+            {/*                    return (*/}
+            {/*                        <CategoryTransactionOverview*/}
+            {/*                            key={i}*/}
+            {/*                            categoryAmount={cat}*/}
+            {/*                            color={matchedCategory?.color}*/}
+            {/*                            // currency={user?.currency.symbol || ""}*/}
+            {/*                            currency={"zł"}*/}
+            {/*                        />*/}
+            {/*                    );*/}
+            {/*                })}*/}
 
-                        {/*</Box>*/}
-                    </CardContent>
-                </Card>
-            </Box>
+            {/*            </Box>*/}
+            {/*        </CardContent>*/}
+            {/*    </Card>*/}
+            {/*</Box>*/}
 
             {/*// RECURRING EXPENSES TABLE*/}
             <Box p={2} display="flex" gap={3}>
@@ -648,14 +646,14 @@ function ExpensesPage() {
                             <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                                 <Box>
                                     <Typography variant="subtitle1"
-                                                fontWeight={"bold"}>{t('expenses.page.recurringTable.label')}</Typography>
+                                                fontWeight={"bold"}>{t('transactions.page.table.label')}</Typography>
                                     <Typography variant="body2"
-                                                color={"text.secondary"}>{t('expenses.page.recurringTable.secondLabel')}</Typography>
+                                                color={"text.secondary"}>{t('transactions.page.table.secondLabel')}</Typography>
                                 </Box>
                             </Box>
                             <Divider sx={{my: 1}}/>
                             <DataGrid
-                                rows={recurringExpenses}
+                                rows={recurringTransactions}
                                 columns={recurringColumns}
                                 initialState={{pagination: {paginationModel}}}
                                 pageSizeOptions={[5, 10]}
@@ -666,6 +664,10 @@ function ExpensesPage() {
                                     border: 0, width: '100%', backgroundColor: 'transparent',
                                     '& .MuiDataGrid-cell.priceNegative': {
                                         color: 'error.main',
+                                        fontWeight: 500,
+                                    },
+                                    '& .MuiDataGrid-cell.pricePositive': {
+                                        color: "green",
                                         fontWeight: 500,
                                     },
                                 }}
@@ -684,15 +686,18 @@ function ExpensesPage() {
                 accounts={accounts}
                 categories={categories}
             />
-            {/*<RecurringExpenseDialog*/}
-            {/*    open={editRecurringExpense}*/}
-            {/*    onClose={() => setEditRecurringExpense(false)}*/}
-            {/*    recurringExpense={selectedRecurringTransaction}*/}
-            {/*    accounts={accounts}*/}
-            {/*    categories={categories}*/}
-            {/*/>*/}
+            <RecurringTransactionDialog
+                open={editRecurringTransaction}
+                onClose={() => {
+                    setEditRecurringTransaction(false)
+                    setSelectedTransaction(null)
+                }}
+                recurringTransaction={selectedRecurringTransaction}
+                accounts={accounts}
+                categories={categories}
+            />
         </>
     );
 }
 
-export default ExpensesPage;
+export default TransactionPage;

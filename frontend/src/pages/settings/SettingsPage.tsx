@@ -4,9 +4,10 @@ import AddIcon from '@mui/icons-material/Add'
 import CategoryTree from './CategoryTree'
 import AddCategoryDialog from './AddCategoryDialog'
 import GeneralSettings from './GeneralSettings'
-import type {Category, TransactionType} from "../../types/category.ts";
+import type {Category} from "../../types/category.ts";
 import {useCategoryStore} from "../../store/category-store.ts";
 import {useTranslation} from "react-i18next";
+import type {TransactionType} from "../../types/transaction.ts";
 
 const SettingsPage: React.FC = () => {
     const [view, setView] = useState<'CATEGORIES' | 'GENERAL'>('CATEGORIES')

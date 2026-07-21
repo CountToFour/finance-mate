@@ -3,13 +3,13 @@ import type {CategoryAmount} from "../../lib/types.ts";
 import {Box, Typography} from "@mui/material";
 import {useTranslation} from "react-i18next";
 
-interface CategoryExpenseProps {
+interface CategoryTransactionProps {
     categoryAmount: CategoryAmount;
     color?: string;
     currency?: string;
 }
 
-const CategoryExpense: React.FC<CategoryExpenseProps> = ({categoryAmount, color, currency}) => {
+const CategoryTransactionOverview: React.FC<CategoryTransactionProps> = ({categoryAmount, color, currency}) => {
     const {t} = useTranslation();
     
     const hexToRgba = (hex: string, alpha: number) => {
@@ -53,4 +53,4 @@ const CategoryExpense: React.FC<CategoryExpenseProps> = ({categoryAmount, color,
     )
 }
 
-export default CategoryExpense
+export default CategoryTransactionOverview

@@ -77,9 +77,9 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getAllCategoriesAmount(userId, startDate, endDate, type));
     }
 
-    @GetMapping("/overview/type/{type}")
+    @GetMapping("/overview")
     public ResponseEntity<TransactionOverviewDto> getTransactionOverview(@RequestHeader("X-User-Id") String userId,
-                                                                         @PathVariable TransactionType type,
+                                                                         @RequestParam(required = false) TransactionType type,
                                                                          @RequestParam(required = false) LocalDate startDate,
                                                                          @RequestParam(required = false) LocalDate endDate) {
         return ResponseEntity.ok(transactionService.getTransactionOverview(userId, startDate, endDate, type));

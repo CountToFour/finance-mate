@@ -16,6 +16,7 @@ import finance_mate.core.transaction.model.TransactionType;
 import finance_mate.core.transaction.model.dto.EditTransactionDto;
 import finance_mate.core.transaction.model.dto.RecurringTransactionResponse;
 import finance_mate.core.transaction.model.dto.TransactionRequest;
+import finance_mate.core.transaction.model.dto.TransactionResponse;
 import finance_mate.core.transaction.repository.RecurringTransactionRepository;
 import finance_mate.core.transaction.repository.TransactionRepository;
 import jakarta.transaction.Transactional;
@@ -39,6 +40,7 @@ public class StandardRecurringTransactionService implements RecurringTransaction
     private final AccountService accountService;
     private final CategoryService categoryService;
     private final TransactionMapper transactionMapper;
+    private final TransactionService transactionService;
 
     @Transactional
     @Override
@@ -65,8 +67,9 @@ public class StandardRecurringTransactionService implements RecurringTransaction
             recurringTransaction.setAccount(account);
             recurringTransaction.setUserId(userId);
             recurringTransaction.setCategory(category);
-            recurringTransactionRepository.save(recurringTransaction);
-            RecurringTransactionResponse savedDto = transactionMapper.recurringTransactionToDto(recurringTransaction);
+            RecurringTransaction calculatedDate = addTransaction(recurringTransaction, dto, userId);
+            recurringTransactionRepository.save(calculatedDate);
+            RecurringTransactionResponse savedDto = transactionMapper.recurringTransactionToDto(calculatedDate);
             savedDto.setAccountName(account.getName());
             savedDto.setCategoryName(category.getName());
             return savedDto;
@@ -77,8 +80,13 @@ public class StandardRecurringTransactionService implements RecurringTransaction
 
     @Override
     public List<RecurringTransactionResponse> getAllRecurringTransactions(String userId, TransactionType type) {
-
-        return recurringTransactionRepository.findAllByUserIdAndTransactionType(userId, type).stream()
+        List<RecurringTransaction> recurringTransactions;
+        if (type == null) {
+            recurringTransactions = recurringTransactionRepository.findAllByUserId(userId);
+        } else {
+            recurringTransactions = recurringTransactionRepository.findAllByUserIdAndTransactionType(userId, type);
+        }
+        return recurringTransactions.stream()
                 .map(transaction -> {
                     RecurringTransactionResponse dto = transactionMapper.recurringTransactionToDto(transaction);
                     dto.setAccountName(transaction.getAccount().getName());
@@ -144,7 +152,7 @@ public class StandardRecurringTransactionService implements RecurringTransaction
         return transactionMapper.recurringTransactionToDto(transaction);
     }
 
-    @Scheduled(cron = "0 21 22 * * ?")
+    @Scheduled(cron = "0 0 1 * * ?")
     @Transactional
     @Override
     public void generateRecurringExpenses() {
@@ -188,6 +196,14 @@ public class StandardRecurringTransactionService implements RecurringTransaction
         if (!recurringToDelete.isEmpty()) {
             recurringTransactionRepository.deleteAll(recurringToDelete);
         }
+    }
+
+    private RecurringTransaction addTransaction(RecurringTransaction transaction, TransactionRequest request, String userId) {
+        if (transaction.getCreatedAt().isEqual(LocalDate.now())) {
+            TransactionResponse transactionResponse = transactionService.addTransaction(request, userId);
+            transaction.setCreatedAt(calculateNextDate(transaction.getCreatedAt(), transaction.getPeriodType()));
+        }
+        return transaction;
     }
 
     private LocalDate calculateNextDate(LocalDate baseDate, PeriodType type) {

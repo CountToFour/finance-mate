@@ -2,8 +2,7 @@
   "layout": {
     "account": "Konta",
     "dashboard": "Pulpit",
-    "expenses": "Wydatki",
-    "incomes": "Przychody",
+    "transactions": "Transakcje",
     "budget": "Budżet",
     "report": "Raporty",
     "settings": "Ustawienia",
@@ -61,15 +60,16 @@
       }
     }
   },
-  "expenses": {
+  "transactions": {
     "page": {
-      "label": "Twoje wydatki",
-      "secondLabel": "Zarządzaj swoimi wydatkami i śledź kategorie",
-      "add": "Dodaj wydatek",
-      "expensesTable": {
-        "label": "Ostatnie wydatki",
+      "label": "Twoje transakcje",
+      "secondLabel": "Zarządzaj swoimi przychodami, wydatkami i śledź kategorie",
+      "add": "Dodaj transakcję",
+      "table": {
+        "label": "Ostatnie transakcje",
         "secondLabel": "Przegląd najnowszych transakcji",
-        "date": "Data wydatku",
+        "account": "Nazwa konta",
+        "date": "Data transakcji",
         "description": "Opis",
         "category": "Kategoria",
         "price": "Kwota",
@@ -77,36 +77,60 @@
         "tooltip": {
           "edit": "Edytuj",
           "delete": "Usuń"
+        },
+        "categories" : {
+          "all" : "Wszystkie"
         }
       },
       "recurringTable": {
-        "label": "Wydatki stałe",
-        "secondLabel": "Przegląd wydatków okresowych"
+        "label": "Transakcje stałe",
+        "secondLabel": "Przegląd transakcji stałych",
+        "date": "Data następnej transakcji",
+        "active": "Aktywność"
       },
       "categories": {
         "label": "Wydatki według kategorii",
         "secondLabel": "Podział wydatków na kategorie w danym miesiącu",
         "transaction": "transakcji"
+      },
+      "overview" : {
+        "totalValue" : {
+          "title" : "Całkowita wartość operacji",
+          "description" : " względem poprzedniego miesiąca"
+        },
+        "totalAmount" : {
+          "title" : "Ilość transakcji",
+          "description" : " transakcji w przeciągu 30 dni"
+        },
+        "average" : {
+          "title" : "Średnia dzienna",
+          "description" : "na podstawie ostatnich 30 dni"
+        }
       }
     },
     "notifications": {
       "delete": {
-        "success": "Wydatek został usunięty",
-        "error": "Nie udało się usunąć wydatku"
+        "success": "Transakcja została usunięta",
+        "error": "Nie udało się usunąć transakcji"
       },
       "add": {
-        "success": "Wydatek został pomyślnie dodany",
-        "error": "Nie udało się dodać wydatku. Spróbuj ponownie."
+        "success": "Transakcja została pomyślnie dodana",
+        "error": "Nie udało się dodać transakcji. Spróbuj ponownie"
       },
       "edit": {
-        "success": "Wydatek został pomyślnie edytowany",
-        "error": "Nie udało się edytować wydatku. Spróbuj ponownie."
+        "success": "Transakcja została pomyślnie edytowana",
+        "error": "Nie udało się edytować transakcji. Spróbuj ponownie"
+      },
+      "deactivate": {
+        "error" : "Nie udało się zmienić statusu transakcji"
       }
     },
-    "addExpense": {
-      "addLabel": "Dodaj wydatek",
-      "editLabel": "Edytuj wydatek",
-      "date": "Data wydatku",
+    "add": {
+      "addLabel": "Dodaj transakcję",
+      "editLabel": "Edytuj transakcję",
+      "expense" : "Wydatek",
+      "income" : "Przychód",
+      "date": "Data transakcji",
       "description": "Opis",
       "category": {
         "label": "Kategoria",
@@ -116,66 +140,28 @@
         "label": "Kwota",
         "required": "Kwota musi być większa od 0"
       },
-      "repeat": "Powtarzaj",
-      "save": "Zapisz",
-      "cancel": "Anuluj"
-    },
-    "recurringExpense": {
-      "label": "Edytuj wydatek okresowy",
-      "active": "Aktywny",
-      "inactive": "Nieaktywny"
-    }
-  },
-  "income": {
-    "page": {
-      "label": "Twoje przychody",
-      "secondLabel": "Zarządzaj swoimi przychodami i śledź kategorie",
-      "add": "Dodaj przychód",
-      "table": {
-        "label": "Ostatnie przychody",
-        "secondLabel": "Przegląd najnowszych przychodów",
-        "date": "Data przychodu",
-        "description": "Opis",
-        "category": "Kategoria",
-        "amount": "Kwota",
-        "actions": "Akcje"
-      }
-    },
-    "notifications": {
-      "delete": {
-        "success": "Przychód został usunięty",
-        "error": "Nie udało się usunąć przychodu"
+      "account": {
+        "label" : "Konto",
+        "required" : "Wybierz konto"
       },
-      "add": {
-        "success": "Przychód został pomyślnie dodany",
-        "error": "Nie udało się dodać przychodu. Spróbuj ponownie."
-      },
-      "edit": {
-        "success": "Przychód został pomyślnie zaktualizowany",
-        "error": "Nie udało się zaktualizować przychodu. Spróbuj ponownie."
-      }
-    },
-    "addIncome": {
-      "addLabel": "Dodaj przychód",
-      "editLabel": "Edytuj przychód",
-      "date": "Data przychodu",
-      "description": "Opis",
-      "category": {
-        "label": "Kategoria",
-        "required": "Wybierz kategorię"
-      },
-      "price": {
-        "label": "Kwota",
-        "required": "Kwota musi być większa od 0"
+      "currency" : {
+        "label" : "Waluta"
       },
       "repeat": "Powtarzaj",
       "save": "Zapisz",
       "cancel": "Anuluj"
     },
-    "recurringIncome": {
-      "label": "Edytuj przychód okresowy",
+    "recurringTransaction": {
+      "label": "Edytuj powtarzającą się transakcję",
       "active": "Aktywny",
       "inactive": "Nieaktywny"
+    },
+    "period" : {
+      "none" : "Nie powtarzaj",
+      "daily" : "Co dzień",
+      "weekly" : "Co tydzień",
+      "monthly" : "Co miesiąc",
+      "yearly" : "Co rok"
     }
   },
   "account": {

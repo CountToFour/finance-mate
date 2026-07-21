@@ -1,5 +1,15 @@
-export type PeriodType = 'NONE' | 'ONCE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
+import type {TFunction} from "i18next";
+
+export type PeriodType = 'NONE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
 export type TransactionType = 'EXPENSE' | 'INCOME' | 'TRANSFER'
+
+export const getPeriodTypes = (t: TFunction): Record<PeriodType, string> => ({
+    NONE: t('transactions.period.none'),
+    DAILY: t('transactions.period.daily'),
+    WEEKLY: t('transactions.period.weekly'),
+    MONTHLY: t('transactions.period.monthly'),
+    YEARLY: t('transactions.period.yearly'),
+})
 
 interface TransactionBase {
     price: number
@@ -45,4 +55,18 @@ export interface TransactionFilters {
     startDate?: string;
     endDate?: string;
     accountName?: string;
+}
+
+export interface TransactionsOverview {
+    totalValue: number;
+    totalAmount: number;
+    totalValuePercentageChange: number;
+    totalAmountPercentageChange: number;
+    dailyAverage: number;
+}
+
+export interface OverviewFilter {
+    type?: TransactionType,
+    startDate: string;
+    endDate: string;
 }

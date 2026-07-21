@@ -43,7 +43,6 @@ import java.util.stream.Collectors;
 public class StandardTransactionService implements TransactionService {
 
     private final TransactionRepository transactionRepository;
-    private final RecurringTransactionRepository recurringTransactionRepository;
     private final TransactionMapper transactionMapper;
     private final AccountService accountService;
     private final CategoryService categoryService;
@@ -54,7 +53,7 @@ public class StandardTransactionService implements TransactionService {
         Transaction transaction = transactionMapper.transactionToEntity(dto);
         Account account = accountService.findByIdAndUserId(dto.getAccountId(), userId)
                 .orElseThrow(() -> new AccountException(ErrorCode.ACCOUNT_NOT_FOUND));
-        Category category = categoryService .findById(dto.getCategoryId())
+        Category category = categoryService.findById(dto.getCategoryId())
                 .orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
 
         if (category.getTransactionType() != transaction.getTransactionType()) {
@@ -84,8 +83,6 @@ public class StandardTransactionService implements TransactionService {
         savedDto.setCategoryName(category.getName());
         return savedDto;
     }
-
-
 
     @Override
     public List<TransactionResponse> getTransactionsByUser(String userId, String category, Double minPrice, Double maxPrice,
@@ -165,51 +162,53 @@ public class StandardTransactionService implements TransactionService {
 
     @Override
     public TransactionOverviewDto getTransactionOverview(String userId, LocalDate startDate, LocalDate endDate, TransactionType type) {
+        boolean useDefaultDate = startDate == null && endDate == null;
 
-        boolean useLast30Days = (startDate == null || endDate == null);
-        LocalDate currentStart;
-        LocalDate currentEnd;
-        LocalDate previousStart;
-        LocalDate previousEnd;
+        LocalDate start;
+        LocalDate middle;
+        LocalDate end;
 
-        if (useLast30Days) {
-            currentEnd = LocalDate.now();
-            currentStart = currentEnd.minusDays(29);
-            previousEnd = currentStart.minusDays(1);
-            previousStart = previousEnd.minusDays(29);
+        if (useDefaultDate) {
+            end = LocalDate.now();
+            middle = end.minusDays(30);
+            start = end.minusDays(60);
         } else {
-            currentStart = startDate;
-            currentEnd = endDate;
-            previousStart = currentStart.minusMonths(1);
-            previousEnd = currentEnd.minusMonths(1);
+            end = endDate;
+            middle = startDate;
+            start = middle.minusDays(ChronoUnit.DAYS.between(end, middle));
         }
 
-        List<Object> actualTotalOverview = getMonthlyTransactionOverview(userId, currentStart, currentEnd, type);
-        List<Object> previousTotalOverview = getMonthlyTransactionOverview(userId, previousStart, previousEnd, type);
+        Double totalValue = transactionRepository.calculateSum(middle, end);
+        totalValue = totalValue == null ? 0 : totalValue;
+        Double previousValue = transactionRepository.calculateSum(start, middle);
+        previousValue = previousValue == null ? 0 : previousValue;
 
-        double actualTotal = (double) actualTotalOverview.getFirst();
-        double previousTotal = (double) previousTotalOverview.getFirst();
+        int totalAmount = transactionRepository.getCount(middle, end);
+        int previousAmount = transactionRepository.getCount(start, middle);
 
-        double totalAmountChangePercentage;
-        if (previousTotal == 0) {
-            totalAmountChangePercentage = actualTotal == 0 ? 0.0 : 100.0;
-        } else {
-            totalAmountChangePercentage = ((actualTotal - previousTotal) / previousTotal) * 100.0;
+        double totalValueChange = 0;
+        if (previousValue != 0) {
+            totalValueChange = (totalValue / previousValue - 1) * 100;
+        } else if (totalValue > 0) {
+            totalValueChange = 100;
+        } else if (totalValue < 0) {
+            totalValueChange = -100;
         }
 
-        totalAmountChangePercentage = Math.round(totalAmountChangePercentage * 10.0) / 10.0;
+        double totalAmountChange = 0;
+        if (previousAmount != 0) {
+            totalAmountChange = ((double) totalAmount / previousAmount - 1) * 100;
+        } else if (totalAmount > 0) {
+            totalAmountChange = 100;
+        }
 
-        int expenseCountChange = (int) actualTotalOverview.get(2) - (int) previousTotalOverview.get(2);
-
-        double totalRounded = Math.round(actualTotal * 100.0) / 100.0;
-        double averageRounded = Math.round(((double) actualTotalOverview.get(1)) * 100.0) / 100.0;
-
+        double average = totalValue / 30;
         return new TransactionOverviewDto(
-                totalRounded,
-                averageRounded,
-                (int) actualTotalOverview.get(2),
-                totalAmountChangePercentage,
-                expenseCountChange
+                totalValue,
+                totalAmount,
+                totalValueChange,
+                totalAmountChange,
+                average
         );
     }
 

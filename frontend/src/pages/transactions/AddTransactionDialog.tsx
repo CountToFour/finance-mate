@@ -6,7 +6,7 @@ import {
     DialogActions,
     Button,
     TextField,
-    MenuItem, Box,
+    MenuItem, Box, ToggleButton, ToggleButtonGroup,
 } from "@mui/material";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import dayjs, {Dayjs} from "dayjs";
@@ -15,15 +15,20 @@ import type {Currency} from "../../lib/types.ts";
 import {LocalizationProvider} from "@mui/x-date-pickers";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {useTranslation} from "react-i18next";
-import type {Transaction, TransactionDto, TransactionType} from "../../types/transaction.ts";
+import {
+    getPeriodTypes,
+    type PeriodType,
+    type Transaction,
+    type TransactionDto,
+    type TransactionType
+} from "../../types/transaction.ts";
 import type { Account } from "../../types/account.ts";
 import type { Category } from "../../types/category.ts";
 import {transactionService} from "../../api/transaction-client.ts";
 import {useTransactionStore} from "../../store/transaction-store.ts";
 import {useRecurringTransactionStore} from "../../store/recurring-transaction-store.ts";
 
-
-interface AddExpenseDialogProps {
+interface AddTransactionDialogProps {
     open: boolean;
     onClose: () => void;
     initialTransaction?: Transaction | null;
@@ -31,16 +36,7 @@ interface AddExpenseDialogProps {
     categories: Category[];
 }
 
-//TODO ZROBIĆ Z TEGO ENUM W types.ts I ROZWAŻYĆ CUSTOM PERIOD
-const periodTypes = {
-    NONE: "Nie powtarzaj",
-    DAILY: "Co dzień",
-    WEEKLY: "Co tydzień",
-    MONTHLY: "Co miesiąc",
-    YEARLY: "Co rok"
-}
-
-const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initialTransaction, accounts, categories}) => {
+const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({open, onClose, initialTransaction, accounts, categories}) => {
     const {success, error} = useNotification();
     const {t} = useTranslation();
     const [date, setDate] = useState<Dayjs | null>(dayjs());
@@ -49,8 +45,11 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
     const [category, setCategory] = useState<Category | null>(null);
     const [currency, setCurrency] = useState<Currency | null>(null);
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
-    const [periodType, setPeriodType] = useState<keyof typeof periodTypes>("NONE");
+    const [periodType, setPeriodType] = useState<PeriodType>("NONE");
     const [type, setType] = useState<TransactionType>(initialTransaction?.transactionType ? initialTransaction.transactionType : "EXPENSE");
+    const [categoriesTyped, setCategoriesTyped] = useState<Category[]>([]);
+
+    const periodTypes = getPeriodTypes(t)
 
     const addTransaction = useTransactionStore(state => state.addTransaction)
     const addRecurringTransaction = useRecurringTransactionStore(state => state.addTransaction)
@@ -82,21 +81,26 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         }
     }, [initialTransaction, accounts, categories])
 
+    useEffect(() => {
+        const temp = categories.filter(cat => cat.transactionType === type)
+        setCategoriesTyped(temp);
+    }, [categories, type]);
+
 
     const validate = () => {
         let valid = true;
         const newErrors = {description: "", amount: "", category: "", account: ""};
 
         if (!amount || parseFloat(amount) <= 0.01) {
-            newErrors.amount = t('expenses.addExpense.price.required');
+            newErrors.amount = t('transactions.add.price.required');
             valid = false;
         }
         if (!category) {
-            newErrors.category = t('expenses.addExpense.category.required');
+            newErrors.category = t('transactions.add.category.required');
             valid = false;
         }
         if (!selectedAccount) {
-            newErrors.account = t('expenses.addExpense.account.required') || 'Wybierz konto';
+            newErrors.account = t('transactions.add.account.required');
             valid = false;
         }
 
@@ -122,25 +126,25 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                 if (periodType !== 'NONE') {
                     const response = await transactionService.addRecurringTransaction(transactionDto)
                     addRecurringTransaction(response)
-                    success(t('expenses.notifications.add.success'));
+                    success(t('transactions.notifications.add.success'));
                     handleClose();
                 } else {
                     const response = await transactionService.addTransaction(transactionDto)
                     addTransaction(response)
-                    success(t('expenses.notifications.add.success'));
+                    success(t('transactions.notifications.add.success'));
                     handleClose();
                 }
             } catch {
-                error(t('expenses.notifications.add.error'));
+                error(t('transactions.notifications.add.error'));
             }
         } else {
             try {
                 const response = await transactionService.editTransaction(initialTransaction.id, transactionDto)
                 updateTransaction(response)
-                success(t('expenses.notifications.edit.success'));
+                success(t('transactions.notifications.edit.success'));
                 handleClose();
             } catch {
-                error(t('expenses.notifications.edit.error'));
+                error(t('transactions.notifications.edit.error'));
             }
         }
     };
@@ -154,12 +158,30 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         setPeriodType("NONE");
         setDate(dayjs());
         setErrors({amount: "", category: "", account: ""});
+        setType("EXPENSE")
         onClose();
     };
 
     return (
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-            <DialogTitle>{initialTransaction ? t('expenses.addExpense.editLabel') : t('expenses.addExpense.addLabel')}</DialogTitle>
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+                <DialogTitle>{initialTransaction ? t('transactions.add.editLabel') : t('transactions.add.addLabel')}</DialogTitle>
+                <ToggleButtonGroup
+                    value={type}
+                    exclusive
+                    onChange={(_, val) => { if (val) setType(val) }}
+                    size="small"
+                    sx={{mr: 3}}
+                    disabled={!!initialTransaction}
+                >
+                    <ToggleButton value={'EXPENSE'}>
+                        {t('transactions.add.expense')}
+                    </ToggleButton>
+                    <ToggleButton value={'INCOME'}>
+                        {t('transactions.add.income')}
+                    </ToggleButton>
+                </ToggleButtonGroup>
+            </Box>
             <DialogContent dividers>
                 <Box
                     sx={{
@@ -170,7 +192,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                 >
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <DatePicker
-                            label={t('expenses.addExpense.date')}
+                            label={t('transactions.add.date')}
                             value={date}
                             onChange={(newValue) => setDate(newValue)}
                             slotProps={{textField: {fullWidth: true}}}
@@ -180,7 +202,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     </LocalizationProvider>
                     <TextField
                         fullWidth
-                        label={t('expenses.addExpense.price.label')}
+                        label={t('transactions.add.price.label')}
                         type="number"
                         value={amount}
                         onChange={(e) => {
@@ -196,7 +218,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     />
                     <TextField
                         fullWidth
-                        label={"Waluta"}
+                        label={t('transactions.add.currency.label')}
                         value={currency?.symbol ?? ""}
                         disabled
                         sx={{ flex: 0.5 }}
@@ -206,7 +228,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     data-testid='description-input'
                     fullWidth
                     margin="normal"
-                    label={t('expenses.addExpense.description')}
+                    label={t('transactions.add.description')}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                 />
@@ -216,14 +238,13 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     fullWidth
                     margin="normal"
                     disabled={!!initialTransaction}
-                    //TODO WIELOJEZYCZNOSC
-                    label={t('Konto')}
+                    label={t('transactions.add.account.label')}
                     value={selectedAccount ? selectedAccount.id : ""}
                     onChange={(e) => {
                         const id = e.target.value as string;
                         const acct = accounts.find(a => a.id === id) ?? null;
                         setSelectedAccount(acct);
-                        setCurrency(acct!.currency);
+                        // setCurrency(acct!.currency);
                         setErrors({...errors, account: ""});
                     }
                     }
@@ -241,7 +262,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     select
                     fullWidth
                     margin="normal"
-                    label={t('expenses.addExpense.category.label')}
+                    label={t('transactions.add.category.label')}
                     value={category ? category.id : ""}
                     onChange={(e) => {
                         const id = e.target.value as string;
@@ -253,7 +274,7 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     error={!!errors.category}
                     helperText={errors.category}
                 >
-                    {categories.map((cat) => (
+                    {categoriesTyped.map((cat) => (
                         <MenuItem key={cat.id} value={cat.id}>
                             {cat.name}
                         </MenuItem>
@@ -263,11 +284,11 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                         select
                         fullWidth
                         margin="normal"
-                        label={t('expenses.addExpense.repeat')}
+                        label={t('transactions.add.repeat')}
                         value={periodType}
                         onChange={(e) => setPeriodType(e.target.value as keyof typeof periodTypes
                         )}
-                        defaultValue={periodTypes.NONE}
+                        defaultValue={"NONE"}
                     >
                         {Object.entries(periodTypes).map(([key, label]) => (
                             <MenuItem key={key} value={key}>
@@ -280,14 +301,14 @@ const AddExpenseDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
             </DialogContent>
             <DialogActions sx={{mr: 2, mb: 1, mt: 1}}>
                 <Button onClick={handleClose} color="secondary">
-                    {t('expenses.addExpense.cancel')}
+                    {t('transactions.add.cancel')}
                 </Button>
                 <Button onClick={handleSave} variant="contained" color="primary">
-                    {t('expenses.addExpense.save')}
+                    {t('transactions.add.save')}
                 </Button>
             </DialogActions>
         </Dialog>
     );
 };
 
-export default AddExpenseDialog;
+export default AddTransactionDialog;
