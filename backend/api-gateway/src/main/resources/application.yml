@@ -15,6 +15,10 @@ spring:
               uri: lb://core-finance-service
               predicates:
                 - Path=/api/account/**, /api/transactions/**, /api/currency/**, /api/categories/**,
+            - id: budget-service-route
+              uri: lb://budget-service
+              predicates:
+                - Path=/api/bugets/**, /api/goals/**
 
   security:
     oauth2:

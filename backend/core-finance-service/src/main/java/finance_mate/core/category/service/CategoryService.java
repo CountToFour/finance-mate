@@ -23,4 +23,6 @@ public interface CategoryService {
     Optional<Category> findById(String id);
     List<Category> findAllByUser(String userId);
     void assignCategoriesToUser(String userId);
+
+    CategoryResponse getCategoryById(String id);
 }

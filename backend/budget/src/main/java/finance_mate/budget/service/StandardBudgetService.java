@@ -1,16 +1,15 @@
 package finance_mate.budget.service;
 
-import com.financemate.account.dto.ExchangeRateDto;
-import com.financemate.account.service.CurrencyService;
-import com.financemate.auth.model.user.User;
-import com.financemate.budget.dto.BudgetDto;
-import com.financemate.budget.dto.BudgetResponseDto;
-import com.financemate.budget.mapper.BudgetMapper;
-import com.financemate.budget.model.Budget;
-import com.financemate.budget.repository.BudgetRepository;
-import com.financemate.budget.service.BudgetService;
-import com.financemate.category.model.Category;
-import com.financemate.category.repository.CategoryRepository;
+import finance_mate.budget.communication.CategoryClient;
+import finance_mate.budget.exception.BudgetException;
+import finance_mate.budget.exception.ErrorCode;
+import finance_mate.budget.mapper.BudgetMapper;
+import finance_mate.budget.model.Budget;
+import finance_mate.budget.model.dto.BudgetDto;
+import finance_mate.budget.model.dto.BudgetResponseDto;
+import finance_mate.budget.model.dto.CategoryResponse;
+import finance_mate.budget.model.dto.UpdateBudgetDto;
+import finance_mate.budget.repository.BudgetRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,18 +25,17 @@ import java.util.Optional;
 public class StandardBudgetService implements BudgetService {
 
     private final BudgetRepository budgetRepository;
-    private final CategoryRepository categoryRepository;
     private final BudgetMapper budgetMapper;
-    private final CurrencyService currencyService;
+    private final CategoryClient categoryClient;
+//    private final CurrencyService currencyService;
 
     @Override
-    public BudgetResponseDto createBudget(User user, BudgetDto dto) {
-        Category category = categoryRepository.findById(dto.categoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+    public BudgetResponseDto createBudget(String userId, BudgetDto dto) {
+        CategoryResponse category = categoryClient.getCategory(dto.categoryId());
 
-        Optional<Budget> existing = budgetRepository.findByCategoryAndActive(category, true);
+        Optional<Budget> existing = budgetRepository.findByCategoryIdAndActive(dto.categoryId(), true);
         if (existing.isPresent()) {
-            throw new IllegalStateException("Budżet dla tej kategorii już istnieje");
+            throw new BudgetException(ErrorCode.BUDGET_EXISTS_ERROR);
         }
 
         LocalDate start = dto.startDate() != null ? dto.startDate() : LocalDate.now();
@@ -45,83 +43,65 @@ public class StandardBudgetService implements BudgetService {
 
         Budget budget = budgetMapper.mapDtoToBudget(dto);
         budget.setSpentAmount(0);
-        budget.setUser(user);
-        budget.setCategory(category);
+        budget.setUserId(userId);
+        budget.setCategoryId(dto.categoryId());
+        budget.setCategoryName(category.getName());
         budget.setStartDate(start);
         budget.setEndDate(end);
         budget.setActive(true);
 
         budgetRepository.save(budget);
-        BudgetResponseDto responseDto = budgetMapper.mapBudgetToResponseDto(budget);
-        responseDto.setCategoryName(budget.getCategory().getName());
-        return  responseDto;
+        return budgetMapper.mapBudgetToResponseDto(budget);
     }
 
-    @Override
-    public void updateSpentAmount(Category category, double amount, String accountCurrency, String userCurrency) {
-        Optional<Budget> budget = budgetRepository.findByCategoryAndActive(category, true);
-        if (budget.isEmpty()) {
-            log.warn("No active budget found for category: {}", category.getName());
-            return;
-        }
-        double newValue = amount;
-        if (!accountCurrency.equals(userCurrency)) {
-            ExchangeRateDto exchangeRateByPair = currencyService.getExchangeRateByPair(accountCurrency, userCurrency);
-            newValue = amount * exchangeRateByPair.getConversion_rate();
-        }
-        Budget b = budget.get();
-        b.setSpentAmount(b.getSpentAmount() + newValue);
-        budgetRepository.save(b);
-    }
+//    @Override
+//    public void updateSpentAmount(Category category, double amount, String accountCurrency, String userCurrency) {
+//        Optional<Budget> budget = budgetRepository.findByCategoryIdAndActive(category, true);
+//        if (budget.isEmpty()) {
+//            log.warn("No active budget found for category: {}", category.getName());
+//            return;
+//        }
+//        double newValue = amount;
+//        if (!accountCurrency.equals(userCurrency)) {
+//            ExchangeRateDto exchangeRateByPair = currencyService.getExchangeRateByPair(accountCurrency, userCurrency);
+//            newValue = amount * exchangeRateByPair.getConversion_rate();
+//        }
+//        Budget b = budget.get();
+//        b.setSpentAmount(b.getSpentAmount() + newValue);
+//        budgetRepository.save(b);
+//    }
 
     @Override
-    public List<BudgetResponseDto> getBudgetsForUser(User user) {
-        return budgetRepository.findByUserAndActive(user, true).stream().map(budget -> {
-            BudgetResponseDto dto = budgetMapper.mapBudgetToResponseDto(budget);
-            dto.setCategoryName(budget.getCategory().getName());
-            return dto;
-        }).toList();
+    public List<BudgetResponseDto> getBudgetsForUser(String userId) {
+        return budgetRepository.findByUserIdAndActive(userId, true).stream().map(budgetMapper::mapBudgetToResponseDto).toList();
     }
 
     @Override
     public BudgetResponseDto getBudgetById(String id) {
         Budget budget = budgetRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Budget not found with id: " + id));
-        BudgetResponseDto dto = budgetMapper.mapBudgetToResponseDto(budget);
-        dto.setCategoryName(budget.getCategory().getName());
-        return dto;
+                .orElseThrow(() -> new BudgetException(ErrorCode.BUDGET_NOT_FOUND));
+        return budgetMapper.mapBudgetToResponseDto(budget);
     }
 
     @Transactional
     @Override
-    public BudgetResponseDto updateBudget(String id, BudgetDto dto) {
+    public BudgetResponseDto updateBudget(String id, UpdateBudgetDto dto) {
         Budget budget = budgetRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Budget not found with id: " + id));
+                .orElseThrow(() -> new BudgetException(ErrorCode.BUDGET_NOT_FOUND));
 
-        if (dto.categoryId() != null) {
-            String currentCategoryId = budget.getCategory() != null ? budget.getCategory().getId() : null;
-            if (!dto.categoryId().equals(currentCategoryId)) {
-                Category newCategory = categoryRepository.findById(dto.categoryId())
-                        .orElseThrow(() -> new RuntimeException("Category not found"));
-                budget.setCategory(newCategory);
-            }
-        }
-
-        if (Double.compare(dto.limitAmount(), budget.getLimitAmount()) != 0) {
-            budget.setLimitAmount(dto.limitAmount());
+        if (Double.compare(dto.getLimitAmount(), budget.getLimitAmount()) != 0) {
+            budget.setLimitAmount(dto.getLimitAmount());
         }
 
         budgetRepository.save(budget);
-        BudgetResponseDto responseDto = budgetMapper.mapBudgetToResponseDto(budget);
-        responseDto.setCategoryName(budget.getCategory().getName());
-        return responseDto;
+        return budgetMapper.mapBudgetToResponseDto(budget);
     }
 
     @Transactional
     @Override
     public void deleteBudget(String id) {
         Budget budget = budgetRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Budget not found with id: " + id));
+                .orElseThrow(() -> new BudgetException(ErrorCode.BUDGET_NOT_FOUND));
         budgetRepository.delete(budget);
     }
 }

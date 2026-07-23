@@ -1,22 +1,13 @@
 package finance_mate.budget.controller;
 
-import com.financemate.auth.model.user.User;
-import com.financemate.auth.service.UserService;
-import com.financemate.budget.dto.BudgetDto;
-import com.financemate.budget.dto.BudgetResponseDto;
-import com.financemate.budget.service.BudgetService;
+import finance_mate.budget.model.dto.BudgetDto;
+import finance_mate.budget.model.dto.BudgetResponseDto;
+import finance_mate.budget.model.dto.UpdateBudgetDto;
+import finance_mate.budget.service.BudgetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -26,20 +17,17 @@ import java.util.List;
 public class BudgetController {
 
     private final BudgetService budgetService;
-    private final UserService userService;
 
     @PostMapping
     public ResponseEntity<BudgetResponseDto> createBudget(@Valid @RequestBody BudgetDto budgetDto,
-                                                          Authentication authentication) {
-        User user = userService.getUserFromAuthentication(authentication);
-        BudgetResponseDto createdBudget = budgetService.createBudget(user, budgetDto);
+                                                          @RequestHeader("X-User-Id") String userId) {
+        BudgetResponseDto createdBudget = budgetService.createBudget(userId, budgetDto);
         return ResponseEntity.ok(createdBudget);
     }
 
     @GetMapping
-    public ResponseEntity<List<BudgetResponseDto>> getBudgetsForUser(Authentication authentication) {
-        User user = userService.getUserFromAuthentication(authentication);
-        List<BudgetResponseDto> budgets = budgetService.getBudgetsForUser(user);
+    public ResponseEntity<List<BudgetResponseDto>> getBudgetsForUser(@RequestHeader("X-User-Id") String userId) {
+        List<BudgetResponseDto> budgets = budgetService.getBudgetsForUser(userId);
         return ResponseEntity.ok(budgets);
     }
 
@@ -51,7 +39,7 @@ public class BudgetController {
 
     @PutMapping("/{id}")
     public ResponseEntity<BudgetResponseDto> updateBudget(@PathVariable String id,
-                                                          @Valid @RequestBody BudgetDto budgetDto) {
+                                                          @Valid @RequestBody UpdateBudgetDto budgetDto) {
         BudgetResponseDto updatedBudget = budgetService.updateBudget(id, budgetDto);
         return ResponseEntity.ok(updatedBudget);
     }

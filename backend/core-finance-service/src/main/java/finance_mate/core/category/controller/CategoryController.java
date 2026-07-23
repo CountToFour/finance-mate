@@ -1,5 +1,6 @@
 package finance_mate.core.category.controller;
 
+import finance_mate.core.category.model.Category;
 import finance_mate.core.category.model.dto.CategoryDto;
 import finance_mate.core.category.model.dto.CategoryResponse;
 import finance_mate.core.category.model.dto.SubCategoryDto;
@@ -7,6 +8,8 @@ import finance_mate.core.category.service.CategoryService;
 import finance_mate.core.transaction.model.TransactionType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/categories")
@@ -50,6 +54,11 @@ public class CategoryController {
     @GetMapping
     public ResponseEntity<List<CategoryResponse>> getUserCategories(@RequestHeader("X-User-Id") String userId) {
         return ResponseEntity.ok(categoryService.getUserCategories(userId));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CategoryResponse> getCategory(@PathVariable String id) {
+        return ResponseEntity.ok(categoryService.getCategoryById(id));
     }
 
     @DeleteMapping("/{id}")

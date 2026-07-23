@@ -173,4 +173,10 @@ public class StandardCategoryService implements CategoryService {
         }
     }
 
+    @Override
+    public CategoryResponse getCategoryById(String id) {
+        Category category = categoryRepository.findById(id).orElseThrow(() -> new CategoryException(ErrorCode.CATEGORY_NOT_FOUND));
+        return categoryMapper.mapToDto(category);
+    }
+
 }

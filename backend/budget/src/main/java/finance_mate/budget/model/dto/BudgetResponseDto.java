@@ -1,6 +1,5 @@
-package finance_mate.budget.budget.dto;
+package finance_mate.budget.model.dto;
 
-import com.financemate.budget.model.BudgetPeriodType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,6 +14,5 @@ public class BudgetResponseDto {
         private boolean active;
         private LocalDate startDate;
         private LocalDate endDate;
-        private BudgetPeriodType periodType;
         private String categoryName;
 }

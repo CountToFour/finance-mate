@@ -1,4 +1,4 @@
-package finance_mate.budget.budget.dto;
+package finance_mate.budget.model.dto;
 
 import java.time.LocalDate;
 

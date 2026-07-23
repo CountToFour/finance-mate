@@ -1,6 +1,5 @@
 package finance_mate.budget.model;
 
-import com.financemate.auth.model.user.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -32,11 +31,5 @@ public class FinancialGoal {
     private LocalDate deadline;
     private boolean lockedFunds;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
-
-    public boolean isCompleted() {
-        return currentAmount - targetAmount >= 0;
-    }
+    private String userId;
 }
