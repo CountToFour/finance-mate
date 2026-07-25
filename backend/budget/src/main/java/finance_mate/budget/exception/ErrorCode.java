@@ -15,6 +15,7 @@ public enum ErrorCode {
     FINANCIAL_GOAL_FUNDS_EXCEPTION(HttpStatus.BAD_REQUEST, "Not enough saved funds in the goal"),
 
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "Category does not exists"),
+    CATEGORY_TYPE_EXCEPTION(HttpStatus.BAD_REQUEST, "Invalid category type"),
     CATEGORY_SERVICE_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
 
     private final HttpStatus httpStatus;

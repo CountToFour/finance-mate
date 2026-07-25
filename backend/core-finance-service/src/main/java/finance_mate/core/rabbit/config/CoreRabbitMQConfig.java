@@ -24,6 +24,7 @@ public class CoreRabbitMQConfig {
 
     //FOR TRANSACTIONS
     public static final String TRANSACTION_QUEUE = "transaction.budget.queue";
+    public static final String TRANSACTION_ROUTING_KEY = "transaction.budget.update";
 
     //FOR ACCOUNT
     @Bean

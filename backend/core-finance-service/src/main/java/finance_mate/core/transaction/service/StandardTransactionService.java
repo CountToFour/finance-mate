@@ -70,7 +70,7 @@ public class StandardTransactionService implements TransactionService {
         transaction.setCategory(category);
 
         if (TransactionType.EXPENSE.equals(transaction.getTransactionType())) {
-            publisher.updateBudget(new BudgetProgressDto(category.getId(), Math.abs(transaction.getPrice())));
+            publisher.updateBudget(new BudgetProgressDto(category.getId(), Math.abs(transaction.getPrice()), transaction.getCreatedAt()));
         }
 
         transactionRepository.save(transaction);
@@ -138,7 +138,7 @@ public class StandardTransactionService implements TransactionService {
             if (existingTransaction.getTransactionType() == TransactionType.EXPENSE) {
                 change = -Math.abs(dto.price()) - existingTransaction.getPrice();
                 existingTransaction.setPrice(-Math.abs(dto.price()));
-                publisher.updateBudget(new BudgetProgressDto(existingTransaction.getCategory().getId(), change));
+                publisher.updateBudget(new BudgetProgressDto(existingTransaction.getCategory().getId(), change, existingTransaction.getCreatedAt()));
             } else {
                 existingTransaction.setPrice(Math.abs(dto.price()));
                 change = Math.abs(dto.price()) - existingTransaction.getPrice();

@@ -29,12 +29,12 @@ public class RabbitMQConfig {
 
     //FOR TRANSACTIONS
     @Bean
-    public Queue trnasactionQueue() {
+    public Queue transactionQueue() {
         return new Queue(TRANSACTION_QUEUE, true);
     }
 
     @Bean
-    public Binding goalAccountBinding(Queue transactionQueue, TopicExchange budgetExchange) {
+    public Binding transactionBinding(Queue transactionQueue, TopicExchange budgetExchange) {
         return BindingBuilder.bind(transactionQueue).to(budgetExchange).with(TRANSACTION_ROUTING_KEY);
     }
 

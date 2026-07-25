@@ -16,6 +16,6 @@ public class CoreRabbitMQPublisher {
 
     public void updateBudget(BudgetProgressDto dto) {
         log.info("Publishing message to update budget for category with id {}", dto.getCategoryId());
-        rabbitTemplate.convertAndSend(CoreRabbitMQConfig.BUDGET_EXCHANGE, CoreRabbitMQConfig.TRANSACTION_QUEUE, dto);
+        rabbitTemplate.convertAndSend(CoreRabbitMQConfig.BUDGET_EXCHANGE, CoreRabbitMQConfig.TRANSACTION_ROUTING_KEY, dto);
     }
 }

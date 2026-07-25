@@ -26,9 +26,15 @@ public class StandardBudgetService implements BudgetService {
     private final CategoryClient categoryClient;
 //    private final CurrencyService currencyService;
 
+    private static final String CATEGORY_EXPENSE_TYPE = "EXPENSE";
+
     @Override
     public BudgetResponseDto createBudget(String userId, BudgetDto dto) {
         CategoryResponse category = categoryClient.getCategory(dto.categoryId());
+
+        if (!CATEGORY_EXPENSE_TYPE.equals(category.getTransactionType())) {
+            throw new BudgetException(ErrorCode.CATEGORY_TYPE_EXCEPTION);
+        }
 
         Optional<Budget> existing = budgetRepository.findByCategoryIdAndActive(dto.categoryId(), true);
         if (existing.isPresent()) {
@@ -56,6 +62,10 @@ public class StandardBudgetService implements BudgetService {
         Optional<Budget> budget = budgetRepository.findByCategoryIdAndActive(dto.getCategoryId(), true);
         if (budget.isEmpty()) {
             log.warn("No active budget found for category: {}", dto.getCategoryId());
+            return;
+        }
+        if (!dto.getTransactionDate().isAfter(budget.get().getStartDate()) &&
+                !dto.getTransactionDate().isBefore(budget.get().getEndDate())) {
             return;
         }
         double newValue = dto.getAmount();

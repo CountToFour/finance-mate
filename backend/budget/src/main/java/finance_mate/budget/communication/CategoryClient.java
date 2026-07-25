@@ -16,7 +16,7 @@ import java.time.Duration;
 public class CategoryClient {
 
     private final WebClient webClient;
-    private static final String CATEGORY_URL = "http://localhost:8080/api/categories";
+    private static final String CATEGORY_URL = "http://localhost:8082/api/categories";
 
     public CategoryClient(WebClient.Builder builder) {
         this.webClient = builder.baseUrl(CATEGORY_URL).build();
@@ -36,7 +36,7 @@ public class CategoryClient {
                 )
                 .bodyToMono(CategoryResponse.class)
                 .timeout(Duration.ofSeconds(5))
-                .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
+                .retryWhen(Retry.backoff(5, Duration.ofSeconds(1))
                         .filter(throwable -> {
                             if (throwable instanceof BudgetException ex) {
                                 return ex.getErrorCode() != ErrorCode.CATEGORY_NOT_FOUND;
