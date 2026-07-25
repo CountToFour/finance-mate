@@ -16,6 +16,6 @@ public class RabbitMQPublisher {
 
     public void updateAccountBalance(AccountBalanceDto dto) {
         log.info("Publishing message to change account {} balance for userId: {}", dto.getAccountId(), dto.getUserId());
-        rabbitTemplate.convertAndSend(RabbitMQConfig.BUDGET_EXCHANGE, "budget.goal.account", dto);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.BUDGET_EXCHANGE, RabbitMQConfig.GOAL_ACCOUNT_QUEUE, dto);
     }
 }

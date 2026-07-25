@@ -5,10 +5,7 @@ import finance_mate.budget.exception.BudgetException;
 import finance_mate.budget.exception.ErrorCode;
 import finance_mate.budget.mapper.BudgetMapper;
 import finance_mate.budget.model.Budget;
-import finance_mate.budget.model.dto.BudgetDto;
-import finance_mate.budget.model.dto.BudgetResponseDto;
-import finance_mate.budget.model.dto.CategoryResponse;
-import finance_mate.budget.model.dto.UpdateBudgetDto;
+import finance_mate.budget.model.dto.*;
 import finance_mate.budget.repository.BudgetRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,22 +51,22 @@ public class StandardBudgetService implements BudgetService {
         return budgetMapper.mapBudgetToResponseDto(budget);
     }
 
-//    @Override
-//    public void updateSpentAmount(Category category, double amount, String accountCurrency, String userCurrency) {
-//        Optional<Budget> budget = budgetRepository.findByCategoryIdAndActive(category, true);
-//        if (budget.isEmpty()) {
-//            log.warn("No active budget found for category: {}", category.getName());
-//            return;
-//        }
-//        double newValue = amount;
+    @Override
+    public void updateSpentAmount(BudgetProgressDto dto) {
+        Optional<Budget> budget = budgetRepository.findByCategoryIdAndActive(dto.getCategoryId(), true);
+        if (budget.isEmpty()) {
+            log.warn("No active budget found for category: {}", dto.getCategoryId());
+            return;
+        }
+        double newValue = dto.getAmount();
 //        if (!accountCurrency.equals(userCurrency)) {
 //            ExchangeRateDto exchangeRateByPair = currencyService.getExchangeRateByPair(accountCurrency, userCurrency);
 //            newValue = amount * exchangeRateByPair.getConversion_rate();
 //        }
-//        Budget b = budget.get();
-//        b.setSpentAmount(b.getSpentAmount() + newValue);
-//        budgetRepository.save(b);
-//    }
+        Budget b = budget.get();
+        b.setSpentAmount(b.getSpentAmount() + newValue);
+        budgetRepository.save(b);
+    }
 
     @Override
     public List<BudgetResponseDto> getBudgetsForUser(String userId) {

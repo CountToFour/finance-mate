@@ -9,17 +9,12 @@ import finance_mate.core.exception.AccountException;
 import finance_mate.core.exception.CategoryException;
 import finance_mate.core.exception.ErrorCode;
 import finance_mate.core.exception.TransactionException;
+import finance_mate.core.rabbit.publish.CoreRabbitMQPublisher;
 import finance_mate.core.transaction.mapper.TransactionMapper;
 import finance_mate.core.transaction.model.PeriodType;
 import finance_mate.core.transaction.model.Transaction;
 import finance_mate.core.transaction.model.TransactionType;
-import finance_mate.core.transaction.model.dto.CategoryDto;
-import finance_mate.core.transaction.model.dto.DailyOverviewDto;
-import finance_mate.core.transaction.model.dto.EditTransactionDto;
-import finance_mate.core.transaction.model.dto.MonthOverviewDto;
-import finance_mate.core.transaction.model.dto.TransactionOverviewDto;
-import finance_mate.core.transaction.model.dto.TransactionRequest;
-import finance_mate.core.transaction.model.dto.TransactionResponse;
+import finance_mate.core.transaction.model.dto.*;
 import finance_mate.core.transaction.repository.RecurringTransactionRepository;
 import finance_mate.core.transaction.repository.TransactionRepository;
 import finance_mate.core.transaction.utils.TransactionSpecifications;
@@ -46,6 +41,7 @@ public class StandardTransactionService implements TransactionService {
     private final TransactionMapper transactionMapper;
     private final AccountService accountService;
     private final CategoryService categoryService;
+    private final CoreRabbitMQPublisher publisher;
 
     @Transactional
     @Override
@@ -73,8 +69,9 @@ public class StandardTransactionService implements TransactionService {
         transaction.setAccount(account);
         transaction.setCategory(category);
 
-        //TODO MAKE IT AFTER BUDGET SERVICE REFACTOR
-//        budgetService.updateSpentAmount(category, Math.abs(transaction.getPrice()), account.getCurrencyCode().getCode(), user.getMainCurrency().getCode());
+        if (TransactionType.EXPENSE.equals(transaction.getTransactionType())) {
+            publisher.updateBudget(new BudgetProgressDto(category.getId(), Math.abs(transaction.getPrice())));
+        }
 
         transactionRepository.save(transaction);
         accountService.changeBalance(account.getId(), transaction.getPrice(), userId);
@@ -141,6 +138,7 @@ public class StandardTransactionService implements TransactionService {
             if (existingTransaction.getTransactionType() == TransactionType.EXPENSE) {
                 change = -Math.abs(dto.price()) - existingTransaction.getPrice();
                 existingTransaction.setPrice(-Math.abs(dto.price()));
+                publisher.updateBudget(new BudgetProgressDto(existingTransaction.getCategory().getId(), change));
             } else {
                 existingTransaction.setPrice(Math.abs(dto.price()));
                 change = Math.abs(dto.price()) - existingTransaction.getPrice();
