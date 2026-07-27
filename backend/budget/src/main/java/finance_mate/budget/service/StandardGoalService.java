@@ -4,15 +4,18 @@ import finance_mate.budget.exception.ErrorCode;
 import finance_mate.budget.exception.FinancialGoalException;
 import finance_mate.budget.mapper.FinancialGoalMapper;
 import finance_mate.budget.model.FinancialGoal;
+import finance_mate.budget.model.PeriodContribution;
 import finance_mate.budget.model.dto.AccountBalanceDto;
 import finance_mate.budget.model.dto.FinancialGoalDto;
 import finance_mate.budget.model.dto.FinancialGoalResponseDto;
 import finance_mate.budget.publisher.RabbitMQPublisher;
 import finance_mate.budget.repository.FinancialGoalRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -36,6 +39,12 @@ public class StandardGoalService implements GoalService {
             goal.setCurrentAmount(0);
         }
 
+        if (PeriodContribution.WEEKLY.equals(dto.periodContribution())) {
+            goal.setNextContribution(LocalDate.now().plusWeeks(1));
+        } else if (PeriodContribution.MONTHLY.equals(dto.periodContribution())) {
+            goal.setNextContribution(LocalDate.now().plusMonths(1));
+        }
+
         FinancialGoal saved = goalRepository.save(goal);
         return financialGoalMapper.mapGoalToDto(saved);
     }
@@ -53,6 +62,10 @@ public class StandardGoalService implements GoalService {
     public FinancialGoalResponseDto depositToGoal(String goalId, double amount, String accountId, String userId) {
         FinancialGoal goal = goalRepository.findById(goalId)
                 .orElseThrow(() -> new FinancialGoalException(ErrorCode.FINANCIAL_GOAL_NOT_FOUND));
+
+        if (amount <= 0) {
+            return financialGoalMapper.mapGoalToDto(goal);
+        }
 
         AccountBalanceDto balanceDto = balanceDto(accountId, -amount, userId);
         rabbitMQPublisher.updateAccountBalance(balanceDto);
@@ -92,6 +105,27 @@ public class StandardGoalService implements GoalService {
 
         goalRepository.save(goal);
         return financialGoalMapper.mapGoalToDto(goal);
+    }
+
+    @Scheduled(cron = "0 0 1 * * *")
+    @Override
+    public void getFundsForGoal() {
+        LocalDate actualDate = LocalDate.now();
+
+        List<FinancialGoal> goals = goalRepository.findAllByDateAndActive(actualDate);
+        for (FinancialGoal goal : goals) {
+            goal.setCurrentAmount(goal.getCurrentAmount() + goal.getContribution());
+            if (goal.getContribution() >= goal.getCurrentAmount()) {
+                goal.setCompleted(true);
+                continue;
+            }
+            if (PeriodContribution.WEEKLY.equals(goal.getPeriodContribution())) {
+                goal.setNextContribution(LocalDate.now().plusWeeks(1));
+            } else if (PeriodContribution.MONTHLY.equals(goal.getPeriodContribution())) {
+                goal.setNextContribution(LocalDate.now().plusMonths(1));
+            }
+        }
+        goalRepository.saveAll(goals);
     }
 
     private AccountBalanceDto balanceDto(String accountId, double amount, String userId){

@@ -15,7 +15,7 @@ public class RabbitMQConfig {
 
     //FOR ACCOUNTS
     public static final String BUDGET_EXCHANGE = "budget.exchange";
-    public static final String GOAL_ACCOUNT_QUEUE = "goal.account.queue";
+    public static final String GOAL_ACCOUNT_ROUTING_KEY = "goal.account.update";
 
     //FOR TRANSACTIONS
     public static final String TRANSACTION_QUEUE = "transaction.budget.queue";

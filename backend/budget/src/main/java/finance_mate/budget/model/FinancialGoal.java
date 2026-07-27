@@ -1,13 +1,6 @@
 package finance_mate.budget.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,10 +19,12 @@ public class FinancialGoal {
     private String name;
     private double targetAmount;
     private double currentAmount = 0;
-    private double monthlyContribution;
+    private double contribution;
     private boolean completed = false;
     private LocalDate deadline;
     private boolean lockedFunds;
-
     private String userId;
+    @Enumerated(EnumType.STRING)
+    private PeriodContribution periodContribution;
+    private LocalDate nextContribution;
 }
