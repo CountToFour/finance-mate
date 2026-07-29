@@ -27,14 +27,9 @@ public class Budget {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-
     private String userId;
-
     private String categoryId;
     private String categoryName;
-
-    @Enumerated(EnumType.STRING)
-    private BudgetPeriodType periodType = BudgetPeriodType.MONTHLY;
     private LocalDate startDate;
     private LocalDate endDate;
     private boolean active = true;

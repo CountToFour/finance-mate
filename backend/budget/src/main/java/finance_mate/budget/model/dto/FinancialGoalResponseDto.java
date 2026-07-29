@@ -14,6 +14,7 @@ public record FinancialGoalResponseDto (
         boolean lockedFunds,
         LocalDate deadline,
         PeriodContribution periodContribution,
-        LocalDate nextContribution
+        LocalDate nextContribution,
+        String accountId
 ) {
 }

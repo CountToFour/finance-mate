@@ -31,18 +31,23 @@ public class StandardGoalService implements GoalService {
         FinancialGoal goal = financialGoalMapper.mapDtoToGoal(dto);
         goal.setUserId(userId);
 
+        if (goal.getContribution() > 0) {
+            if (goal.getAccountId().isBlank() || goal.getPeriodContribution() == null) {
+                throw new FinancialGoalException(ErrorCode.FINANCIAL_GOAL_EMPTY_ACCOUNT_EXCEPTION);
+            }
+            if (PeriodContribution.WEEKLY.equals(goal.getPeriodContribution())) {
+                goal.setNextContribution(LocalDate.now().plusWeeks(1));
+            } else if (PeriodContribution.MONTHLY.equals(goal.getPeriodContribution())) {
+                goal.setNextContribution(LocalDate.now().plusMonths(1));
+            }
+        }
+
         if (dto.initialAmount() > 0) {
             goal.setCurrentAmount(dto.initialAmount());
             AccountBalanceDto balanceDto = balanceDto(dto.accountId(), -dto.initialAmount(), userId);
             rabbitMQPublisher.updateAccountBalance(balanceDto);
         } else {
             goal.setCurrentAmount(0);
-        }
-
-        if (PeriodContribution.WEEKLY.equals(dto.periodContribution())) {
-            goal.setNextContribution(LocalDate.now().plusWeeks(1));
-        } else if (PeriodContribution.MONTHLY.equals(dto.periodContribution())) {
-            goal.setNextContribution(LocalDate.now().plusMonths(1));
         }
 
         FinancialGoal saved = goalRepository.save(goal);
@@ -115,6 +120,10 @@ public class StandardGoalService implements GoalService {
         List<FinancialGoal> goals = goalRepository.findAllByDateAndActive(actualDate);
         for (FinancialGoal goal : goals) {
             goal.setCurrentAmount(goal.getCurrentAmount() + goal.getContribution());
+
+            AccountBalanceDto balanceDto = balanceDto(goal.getAccountId(), -goal.getContribution(), goal.getUserId());
+            rabbitMQPublisher.updateAccountBalance(balanceDto);
+
             if (goal.getContribution() >= goal.getCurrentAmount()) {
                 goal.setCompleted(true);
                 continue;

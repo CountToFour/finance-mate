@@ -11,8 +11,8 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-
-import type { Budget, Category} from "../../lib/types";
+import type {Budget} from "../../../types/budget.ts";
+import type {Category} from "../../../types/category.ts";
 
 const hexToRgba = (hex: string, alpha = 0.2) => {
     if (!hex) return `rgba(0,0,0,${alpha})`;
@@ -30,7 +30,7 @@ const BudgetCard: React.FC<{
     budget: Budget;
     category?: Category | null;
     onEdit: (b: Budget) => void;
-    onDelete: (id: string) => void;
+    onDelete: (budget: Budget) => void;
     currency?: string;
 }> = ({ budget, category, onEdit, onDelete, currency }) => {
     const pct = percent(budget.spentAmount, budget.limitAmount);
@@ -76,7 +76,7 @@ const BudgetCard: React.FC<{
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="Usuń budżet">
-                            <IconButton size="small" onClick={() => onDelete(budget.id)} color="error">
+                            <IconButton size="small" onClick={() => onDelete(budget)} color="error">
                                 <DeleteIcon />
                             </IconButton>
                         </Tooltip>

@@ -3,8 +3,9 @@ import {Card, CardContent, Typography, Box, LinearProgress, Chip, Button, Stack}
 import FlagIcon from '@mui/icons-material/Flag';
 import LockIcon from '@mui/icons-material/Lock';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import type { FinancialGoal } from '../../lib/types';
 import dayjs from 'dayjs';
+import type {FinancialGoal} from "../../../types/budget.ts";
+import {useTranslation} from "react-i18next";
 
 interface Props {
     goal: FinancialGoal;
@@ -14,6 +15,7 @@ interface Props {
 const GoalCard: React.FC<Props> = ({ goal, onDeposit }) => {
     const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
     const daysLeft = dayjs(goal.deadline).diff(dayjs(), 'day');
+    const {t} = useTranslation();
 
     return (
         <Card variant="outlined" sx={{ borderRadius: 2, position: 'relative', overflow: 'visible' }}>
@@ -70,7 +72,7 @@ const GoalCard: React.FC<Props> = ({ goal, onDeposit }) => {
                                 onClick={() => onDeposit(goal)}
                                 sx={{ textTransform: 'none' }}
                             >
-                                Wpłać
+                                {t('goal.page.card.deposit')}
                             </Button>
                         )}
                     </Stack>

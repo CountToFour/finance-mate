@@ -275,5 +275,141 @@
         "buttonLabel" : "Ogólne"
       }
     }
+  },
+  "budget" : {
+    "page" : {
+      "label" : "Budżet",
+      "secondLabel" : "Planuj i kontroluj swoje wydatki według kategorii",
+      "add" : {
+        "label" : "Ustaw budżet",
+        "success" : "Udało się dodać budżet",
+        "error" : "Nie udało się zapisać budżetu"
+      },
+      "edit" : {
+        "success" : "Udało się edytować budżet"
+      },
+      "card1" : {
+        "label" : "Całkowity budżet",
+        "text" : "Miesięczny limit wydatków"
+      },
+      "card2" : {
+        "label" : "Wydano",
+        "text" : " budżetu wykorzystane"
+      },
+      "card3" : {
+        "label" : "Pozostało",
+        "text" : "Do końca miesiąca"
+      },
+      "card4" : {
+        "label" : "Średnia dzienna",
+        "text" : "Na pozostałe dni"
+      },
+      "table" : {
+        "label" : "Budżet wg kategorii",
+        "secondLabel" : "Postęp wydatków w poszczególnych kategoriach",
+        "empty" : "Brak ustawionych budżetów — dodaj nowy budżet, aby zacząć monitorować wydatki"
+      },
+      "delete" : {
+        "confirm" : "Czy napewno usunąć budżet?",
+        "success" : "Pomyślnie usunięto budżet",
+        "error" : "Nie udało się usunąć budżetu"
+      }
+    },
+    "dialog" : {
+      "limitAmount" : {
+        "label" : "Limit wydatków",
+        "required" : "Limit wydatków jest wymagany"
+      },
+      "category" : {
+        "label" : "Kategoria",
+        "required" : "Kategoria jest wymagana"
+      },
+      "startDate" : {
+        "label" : "Data rozpoczęcia",
+        "required" : "Data rozpoczęcia jest wymagana"
+      },
+      "endDate" : {
+        "label" : "Data zakończenia",
+        "required" : "Data zakończenia jest wymagana"
+      },
+      "currency" : {
+        "label" : "Waluta"
+      },
+      "add" : {
+        "label" : "Nowy budżet"
+      },
+      "edit"  : {
+        "label" : "Edytuj budżet"
+      },
+      "save" : "Zapisz",
+      "cancel" : "Anuluj"
+    }
+  },
+  "goal" : {
+    "page" : {
+      "add" : {
+        "label" : "Dodaj cel",
+        "success" : "Cel finansowy został utworzony",
+        "error" : "Nie udało się utworzyć celu"
+      },
+      "deposit" : {
+        "success" : "Wpłata zakończona powodzeniem",
+        "error" : "Błąd podczas wpłacania środków"
+      },
+      "table" : {
+        "label" : "Twoje Cele Finansowe"
+      },
+      "card" : {
+        "deposit" : "Wpłać"
+      }
+    },
+    "dialog" : {
+      "add" : {
+        "label" : "Nowy cel finansowy",
+        "name" : {
+          "label" : "Nazwa celu",
+          "helper" : "np. Wakacje, Nowy samochód"
+        },
+        "targetAmount" : {
+          "label" : "Kwota docelowa"
+        },
+        "date" : {
+          "label" : "Data realizacji"
+        },
+        "initialAmount" : {
+          "label" : "Wpłata początkowa"
+        },
+        "contribution" : {
+          "label" : "Stałe zlecenie"
+        },
+        "currency" : {
+          "label" : "Waluta"
+        },
+        "periodContribution" : {
+          "label" : "Okres wpłat",
+          "monthly" : "Miesięcznie",
+          "weekly" : "Tygodniowo"
+        },
+        "account" : {
+          "label" : "Konto"
+        },
+        "optional" : "Ustawienia opcjonalne",
+        "error" : "Wypełnij wymagane pola",
+        "save" : "Utwórz cel",
+        "cancel" : "Anuluj"
+      },
+      "deposit" : {
+        "label" : "Wpłata na cel:",
+        "targetAmount" : "Cel:",
+        "account" : {
+          "source" : "Wybierz konto źródłowe"
+        },
+        "amount" : {
+          "label" : "Kwota wpłaty"
+        },
+        "save" : "Wpłat",
+        "cancel" : "Anuluj"
+      }
+    }
   }
 }

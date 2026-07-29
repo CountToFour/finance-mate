@@ -13,33 +13,31 @@ import {
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {LocalizationProvider, DatePicker} from "@mui/x-date-pickers";
 import dayjs, {type Dayjs} from "dayjs";
-
-import {
-    createBudget,
-    updateBudget,
-} from "../../lib/api";
-import type {Budget, BudgetDto, Category, Currency} from "../../lib/types";
 import {useTranslation} from "react-i18next";
-import {useNotification} from "../../components/NotificationContext.tsx";
+import {useNotification} from "../../../components/NotificationContext.tsx";
+import type {Category} from "../../../types/category.ts";
+import type {Budget, BudgetDto, UpdateBudgetDto} from "../../../types/budget.ts";
+import {budgetService} from "../../../api/budget-client.ts";
 
-
-const BudgetDialog: React.FC<{
+interface BudgetDialogProps {
     open: boolean;
     onClose: () => void;
     categories: Category[];
     initial?: Budget | null;
     onSaved: (saved: Budget) => void;
-    currency?: Currency | null;
-}> = ({open, onClose, categories, initial, onSaved, currency}) => {
+    // currency?: Currency | null;
+    currency?: string | null;
+}
+
+const BudgetDialog: React.FC<BudgetDialogProps> = ({open, onClose, categories, initial, onSaved, currency}) => {
     const {success, error} = useNotification();
     const {t} = useTranslation();
     const isEdit = !!initial;
     const [category, setCategory] = useState<Category | null>(null);
     const [limitAmount, setLimitAmount] = useState<string>(initial ? String(initial.limitAmount) : "");
-    const [periodType, setPeriodType] = useState<string>(initial ? initial.periodType : "MONTHLY");
+
     const [startDate, setStartDate] = useState<Dayjs | null>(initial ? dayjs(initial.startDate) : dayjs());
-    const [endDate, setEndDate] = useState<Dayjs | null>(initial ? dayjs(initial.endDate) : dayjs().endOf("month"));
-    // const [color, setColor] = useState<string>(initial ? (categories.find(c => c.name === initial.categoryName)?.color ?? "#6b7280") : "#6b7280");
+    const [endDate, setEndDate] = useState<Dayjs | null>(initial ? dayjs(initial.endDate) : dayjs().add(1, "month"));
     const [saving, setSaving] = useState(false);
 
     const [errors, setErrors] = useState({
@@ -52,20 +50,17 @@ const BudgetDialog: React.FC<{
     useEffect(() => {
         if (initial) {
             setLimitAmount(String(initial.limitAmount));
-            setPeriodType(initial.periodType);
             setStartDate(dayjs(initial.startDate));
             setEndDate(dayjs(initial.endDate));
-            if ((initial as Budget).categoryName) {
+            if (initial.categoryName) {
                 const cat = categories.find(c => c.name === (initial as Budget).categoryName);
                 if (cat) setCategory(cat);
             }
-            // setColor(cat?.color ?? "#6b7280");
         } else {
             setCategory(null);
             setLimitAmount("");
-            setPeriodType("MONTHLY");
             setStartDate(dayjs());
-            setEndDate(dayjs().endOf("month"));
+            setEndDate(dayjs().add(1, "month"));
         }
     }, [initial, categories, open]);
 
@@ -74,21 +69,21 @@ const BudgetDialog: React.FC<{
         const newErrors = {limitAmount: "", category: "", startDate: "", endDate: "",};
 
         if (!limitAmount || parseFloat(limitAmount) <= 0.01) {
-            newErrors.limitAmount = t('expenses.addExpense.price.required');
+            newErrors.limitAmount = t('budget.dialog.limitAmount.required');
             valid = false;
         }
         if (!category) {
-            newErrors.category = t('expenses.addExpense.category.required');
+            newErrors.category = t('budget.dialog.category.required');
             valid = false;
         }
 
         if (!startDate) {
-            newErrors.startDate = 'Wybierz datę rozpoczęcia';
+            newErrors.startDate = t('budget.dialog.startDate.required');
             valid = false;
         }
 
         if (!endDate) {
-            newErrors.endDate = 'Wybierz datę zakończenia';
+            newErrors.endDate = t('budget.dialog.endDate.required');
             valid = false;
         }
 
@@ -99,29 +94,30 @@ const BudgetDialog: React.FC<{
     const handleSave = async () => {
         if (!validate()) return;
         setSaving(true);
-        const dto: BudgetDto = {
-            categoryId: category!.id,
-            limitAmount: parseFloat(limitAmount),
-            periodType: periodType,
-            startDate: startDate!.format("YYYY-MM-DD"),
-            endDate: endDate!.format("YYYY-MM-DD"),
-            // color,
-        };
-
         try {
             if (isEdit && initial) {
-                const res = await updateBudget(dto, initial.id);
-                onSaved(res.data);
-                success("Udało się edytować budżet")
+                const updateDto: UpdateBudgetDto = {
+                    limitAmount: parseFloat(limitAmount),
+                    startDate: startDate!.format("YYYY-MM-DD"),
+                    endDate: endDate!.format("YYYY-MM-DD"),
+                };
+                const res = await budgetService.updateBudget(initial.id, updateDto);
+                onSaved(res);
+                success(t('budget.page.edit.success'));
             } else {
-                const res = await createBudget(dto);
-                success("Udało się dodać budżetu")
-                onSaved(res.data);
+                const dto: BudgetDto = {
+                    categoryId: category!.id,
+                    limitAmount: parseFloat(limitAmount),
+                    startDate: startDate!.format("YYYY-MM-DD"),
+                    endDate: endDate!.format("YYYY-MM-DD"),
+                };
+                const res = await budgetService.createBudget(dto);
+                onSaved(res);
+                success(t('budget.page.add.success'))
             }
             onClose();
-        } catch (e) {
-            console.error(e);
-            error("Nie udało się zapisać budżetu")
+        } catch {
+            error(t('budget.page.add.error'))
         } finally {
             setSaving(false);
         }
@@ -129,20 +125,22 @@ const BudgetDialog: React.FC<{
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-            <DialogTitle>{isEdit ? "Edytuj budżet" : "Nowy budżet"}</DialogTitle>
+            <DialogTitle>
+                {isEdit ? t('budget.dialog.edit.label') : t('budget.dialog.add.label')}
+            </DialogTitle>
             <DialogContent dividers>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <Stack direction={{xs: 'column', sm: 'row'}} spacing={2}>
                         <DatePicker
                             disablePast={true}
-                            label="Start"
+                            label={t('budget.dialog.startDate.label')}
                             value={startDate}
                             onChange={(v) => setStartDate(v as Dayjs | null)}
                             slotProps={{textField: {fullWidth: true}}}
                         />
                         <DatePicker
                             disablePast={true}
-                            label="Koniec"
+                            label={t('budget.dialog.endDate.label')}
                             value={endDate}
                             onChange={(v) => setEndDate(v as Dayjs | null)}
                             slotProps={{textField: {fullWidth: true}}}
@@ -159,18 +157,8 @@ const BudgetDialog: React.FC<{
                     }}
                 >
                     <TextField
-                        select
-                        label="Okres"
-                        value={periodType}
-                        onChange={(e) => setPeriodType(e.target.value)}
                         fullWidth
-                        sx={{ flex: 1 }}
-                    >
-                        <MenuItem value="MONTHLY">Miesięczny</MenuItem>
-                    </TextField>
-                    <TextField
-                        fullWidth
-                        label={t('expenses.addExpense.price.label')}
+                        label={t('budget.dialog.limitAmount.label')}
                         type="number"
                         value={limitAmount}
                         onChange={(e) => {
@@ -186,7 +174,7 @@ const BudgetDialog: React.FC<{
                     />
                     <TextField
                         fullWidth
-                        label={"Waluta"}
+                        label={t('budget.dialog.currency.label')}
                         value={currency ?? ""}
                         disabled
                         sx={{flex: 0.5}}
@@ -198,7 +186,7 @@ const BudgetDialog: React.FC<{
                         select
                         fullWidth
                         margin="normal"
-                        label={t('expenses.addExpense.category.label')}
+                        label={t('budget.dialog.category.label')}
                         value={category ? category.id : ""}
                         onChange={(e) => {
                             const id = e.target.value as string;
@@ -210,31 +198,19 @@ const BudgetDialog: React.FC<{
                         error={!!errors.category}
                         helperText={errors.category}
                     >
-                        {categories.map((cat) => (
+                        {categories.filter(c => c.transactionType === "EXPENSE").map((cat) => (
                             <MenuItem key={cat.id} value={cat.id}>
                                 {cat.name}
                             </MenuItem>
                         ))}
                     </TextField>
                 </Box>
-
-                {/*<Stack direction="row" spacing={2} alignItems="center">*/}
-                {/*    <TextField*/}
-                {/*        label="Kolor"*/}
-                {/*        type="color"*/}
-                {/*        value={color}*/}
-                {/*        onChange={(e) => setColor(e.target.value)}*/}
-                {/*        sx={{ width: 80 }}*/}
-                {/*    />*/}
-                {/*    <Typography variant="body2">Podgląd koloru</Typography>*/}
-                {/*    <Box sx={{ width: 32, height: 24, background: color, borderRadius: 1, border: "1px solid #ccc" }} />*/}
-                {/*</Stack>*/}
             </DialogContent>
 
             <DialogActions sx={{display: 'flex', justifyContent: 'flex-end', gap: 1, p: 2}}>
-                <Button onClick={onClose} color="secondary">Anuluj</Button>
+                <Button onClick={onClose} color="secondary">{t('budget.dialog.cancel')}</Button>
                 <Button onClick={handleSave} variant="contained" color="primary"
-                        disabled={saving}>{isEdit ? 'Zapisz' : 'Utwórz'}</Button>
+                        disabled={saving}>{t('budget.dialog.save')}</Button>
             </DialogActions>
         </Dialog>
     );

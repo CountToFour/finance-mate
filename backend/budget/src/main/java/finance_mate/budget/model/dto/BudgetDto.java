@@ -13,12 +13,10 @@ public record BudgetDto (
         String categoryId,
         @Positive(message = "Limit amount must be a number greater than 0")
         double limitAmount,
-        @Nullable
-        BudgetPeriodType periodType,
-        @Nullable
+        @NotBlank(message = "Start date is required")
         @FutureOrPresent(message = "Start date cannot be in past")
         LocalDate startDate,
-        @Nullable
+        @NotBlank(message = "End date is required")
         @FutureOrPresent(message = "End date cannot be in the past")
         LocalDate endDate
 ) {}

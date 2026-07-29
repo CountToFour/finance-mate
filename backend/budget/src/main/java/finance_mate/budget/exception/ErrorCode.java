@@ -13,6 +13,7 @@ public enum ErrorCode {
     FINANCIAL_GOAL_NOT_FOUND(HttpStatus.NOT_FOUND, "Financial goal not found"),
     FINANCIAL_GOAL_LOCKED_EXCEPTION(HttpStatus.BAD_REQUEST, "Funds in this goal are locked"),
     FINANCIAL_GOAL_FUNDS_EXCEPTION(HttpStatus.BAD_REQUEST, "Not enough saved funds in the goal"),
+    FINANCIAL_GOAL_EMPTY_ACCOUNT_EXCEPTION(HttpStatus.BAD_REQUEST, "Contribution require account and period contribution"),
 
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "Category does not exists"),
     CATEGORY_TYPE_EXCEPTION(HttpStatus.BAD_REQUEST, "Invalid category type"),

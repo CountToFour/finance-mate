@@ -10,23 +10,22 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import dayjs from "dayjs";
-
-import {
-    getBudgets,
-    deleteBudget,
-    getCategories, getGoals, getAccounts,
-} from "../../lib/api";
-import type {Account, Budget, Category, FinancialGoal} from "../../lib/types";
-import BudgetDialog from "./BudgetDialog.tsx";
-import BudgetCard from "./BudgetCard.tsx";
+import BudgetDialog from "./budget/BudgetDialog.tsx";
+import BudgetCard from "./budget/BudgetCard.tsx";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import SmartInvestmentWidget from "./InvestmentWidget.tsx";
-import {useAuthStore} from "../../store/auth-store.ts";
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import GoalCard from "./GoalCard.tsx";
-import AddGoalDialog from "./AddGoalDialog.tsx";
-import GoalAcceleratorWidget from "./GoalAcceleratorWidget.tsx";
-import DepositGoalDialog from "./DepositGoalDialog.tsx";
+import GoalCard from "./goal/GoalCard.tsx";
+import AddGoalDialog from "./goal/AddGoalDialog.tsx";
+import GoalAcceleratorWidget from "./goal/GoalAcceleratorWidget.tsx";
+import DepositGoalDialog from "./goal/DepositGoalDialog.tsx";
+import type {Budget, FinancialGoal} from "../../types/budget.ts";
+import {useBudgetStore} from "../../store/budget-store.ts";
+import {useCategoryStore} from "../../store/category-store.ts";
+import {useAccountStore} from "../../store/account-store.ts";
+import {useGoalStore} from "../../store/goal-store.ts";
+import {budgetService} from "../../api/budget-client.ts";
+import {useTranslation} from "react-i18next";
 
 
 const hexToRgba = (hex: string, alpha = 0.2) => {
@@ -38,53 +37,51 @@ const hexToRgba = (hex: string, alpha = 0.2) => {
 };
 
 const BudgetPage: React.FC = () => {
+    const {t} = useTranslation();
     const theme = useTheme();
-    const {user} = useAuthStore();
-
     const {success, error} = useNotification();
-    const [budgets, setBudgets] = useState<Budget[]>([]);
-    const [categories, setCategories] = useState<Category[]>([]);
+
+    const budgets = useBudgetStore(state => state.budgets);
+    const setBudgets = useBudgetStore(state => state.setBudgets);
+    const addBudget = useBudgetStore(state => state.addBudget);
+    const deleteBudget = useBudgetStore(state => state.deleteBudget);
+
+    const categories = useCategoryStore(state => state.categories);
+    const accounts = useAccountStore(state => state.accounts);
+
+    const goals = useGoalStore(state => state.goals);
+    const setGoals = useGoalStore(state => state.setGoals)
+    const addGoal = useGoalStore(state => state.addGoal);
+    const updateGoal = useGoalStore(state => state.updateGoal);
+
     const [openDialog, setOpenDialog] = useState(false);
     const [editing, setEditing] = useState<Budget | null>(null);
-    const [goals, setGoals] = useState<FinancialGoal[]>([]);
     const [openGoalDialog, setOpenGoalDialog] = useState(false);
-    const [accounts, setAccounts] = useState<Account[]>([]);
     const [depositGoal, setDepositGoal] = useState<FinancialGoal | null>(null);
     const [openDepositDialog, setOpenDepositDialog] = useState(false);
 
-    const loadAll = async () => {
-        try {
-            getAccounts().then((res) => {
-                setAccounts(res.data);
-            });
-            const [bRes, cRes, goalsRes] = await Promise.all([
-                getBudgets(),
-                getCategories("EXPENSE"),
-                getGoals()
-            ]);
-            setBudgets(bRes.data);
-            setCategories(cRes.data);
-            console.log(goalsRes.data);
-            setGoals(goalsRes.data);
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
     useEffect(() => {
+        const loadAll = async () => {
+            try {
+                const [budgetResponse, goalResponse] = await Promise.all([
+                    budgetService.getBudgets(),
+                    budgetService.getGoals()
+                ]);
+                setBudgets(budgetResponse);
+                setGoals(goalResponse);
+            } catch (e) {
+                console.error(e);
+            }
+        };
         loadAll();
-    }, []);
-
-    const refreshGoals = () => {
-        getGoals().then(res => setGoals(res.data));
-        getAccounts().then(res => setAccounts(res.data));
-    };
+    }, [setBudgets, setGoals]);
 
     const money = (v: number) =>
         v.toLocaleString(undefined, {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
-        }) + ` ${user?.currency.symbol || ''}`;
+            // }) + ` ${user?.currency.symbol || ''}`;
+        }) + ` zł`;
 
     const totals = useMemo(() => {
         const totalLimit = budgets.reduce((s, b) => s + b.limitAmount, 0);
@@ -109,13 +106,7 @@ const BudgetPage: React.FC = () => {
     }, [budgets]);
 
     const handleSavedBudget = (saved: Budget) => {
-        setBudgets(prev => {
-            const exist = prev.find(p => p.id === saved.id);
-            if (exist) {
-                return prev.map(p => (p.id === saved.id ? saved : p));
-            }
-            return [saved, ...prev];
-        });
+        addBudget(saved);
     };
 
     const handleEdit = (b: Budget) => {
@@ -123,15 +114,15 @@ const BudgetPage: React.FC = () => {
         setOpenDialog(true);
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Usunąć budżet?")) return;
+    const handleDelete = async (budget: Budget) => {
+        if (!confirm(t('budget.page.delete.confirm'))) return;
         try {
-            await deleteBudget(id);
-            success("Operacja zakończona powodzeniem")
-            setBudgets(prev => prev.filter(b => b.id !== id));
+            await budgetService.deleteBudget(budget.id);
+            success(t('budget.page.delete.success'))
+            deleteBudget(budget)
         } catch (e) {
             console.error(e);
-            error("Operacja zakończona niepowodzeniem")
+            error(t('budget.page.delete.error'))
         }
     };
 
@@ -140,20 +131,25 @@ const BudgetPage: React.FC = () => {
             {/* HEADER */}
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
                 <Box>
-                    <Typography variant="h5" fontWeight={"bod"} color="secondary">Budżet</Typography>
-                    <Typography variant="body2" sx={{mt: 1}}>Planuj i kontroluj swoje wydatki według
-                        kategorii</Typography>
+                    <Typography variant="h5" fontWeight={"bod"} color="secondary">
+                        {t('budget.page.label')}
+                    </Typography>
+                    <Typography variant="body2" sx={{mt: 1}}>
+                        {t('budget.page.secondLabel')}
+                    </Typography>
                 </Box>
 
                 <Stack direction="row" spacing={2}>
-                    <Button variant="outlined" startIcon={<EmojiEventsIcon/>} onClick={() => setOpenGoalDialog(true)} data-testid='add-goal-button'>
-                        Dodaj cel
+                    <Button variant="outlined" startIcon={<EmojiEventsIcon/>} onClick={() => setOpenGoalDialog(true)}
+                            data-testid='add-goal-button'>
+                        {t('goal.page.add.label')}
                     </Button>
                     <Button variant="contained" color="secondary" onClick={() => {
                         setEditing(null);
                         setOpenDialog(true);
                     }}>
-                        <AddIcon sx={{mr: 1}}/> Ustaw budżet
+                        <AddIcon sx={{mr: 1}}/>
+                        {t('budget.page.add.label')}
                     </Button>
                 </Stack>
             </Stack>
@@ -194,10 +190,15 @@ const BudgetPage: React.FC = () => {
                     }}
                 >
                     <CardContent>
-                        <Typography variant="subtitle2">Całkowity budżet</Typography>
+                        <Typography variant="subtitle2">
+                            {t('budget.page.card1.label')}
+                        </Typography>
                         <Typography variant="h5" color="primary"
-                                    fontWeight={700}>{money(totals.totalLimit)}</Typography>
-                        <Typography variant="caption" color="text.secondary">Miesięczny limit wydatków</Typography>
+                                    fontWeight={700}>{money(totals.totalLimit)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {t('budget.page.card1.text')}
+                        </Typography>
                     </CardContent>
                 </Card>
 
@@ -213,11 +214,16 @@ const BudgetPage: React.FC = () => {
                     }}
                 >
                     <CardContent>
-                        <Typography variant="subtitle2">Wydano</Typography>
-                        <Typography variant="h5" color="error" fontWeight={700}>{money(totals.totalSpent)}</Typography>
+                        <Typography variant="subtitle2">
+                            {t('budget.page.card2.label')}
+                        </Typography>
+                        <Typography variant="h5" color="error" fontWeight={700}>
+                            {money(totals.totalSpent)}
+                        </Typography>
                         <Typography variant="caption"
                                     color="text.secondary">{(totals.totalLimit > 0 ? ((totals.totalSpent / totals.totalLimit) * 100).toFixed(1) : 0)}%
-                            budżetu wykorzystane</Typography>
+                            {t('budget.page.card2.text')}
+                        </Typography>
                     </CardContent>
                 </Card>
 
@@ -233,10 +239,15 @@ const BudgetPage: React.FC = () => {
                     }}
                 >
                     <CardContent>
-                        <Typography variant="subtitle2">Pozostało</Typography>
+                        <Typography variant="subtitle2">
+                            {t('budget.page.card3.label')}
+                        </Typography>
                         <Typography variant="h5" color="success.main"
-                                    fontWeight={700}>{money(totals.remaining)}</Typography>
-                        <Typography variant="caption" color="text.secondary">Do końca miesiąca</Typography>
+                                    fontWeight={700}>{money(totals.remaining)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {t('budget.page.card3.text')}
+                        </Typography>
                     </CardContent>
                 </Card>
 
@@ -252,9 +263,15 @@ const BudgetPage: React.FC = () => {
                     }}
                 >
                     <CardContent>
-                        <Typography variant="subtitle2">Średnia dzienna</Typography>
-                        <Typography variant="h5" color="secondary" fontWeight={700}>{money(totals.avg)}</Typography>
-                        <Typography variant="caption" color="text.secondary">Na pozostałe dni</Typography>
+                        <Typography variant="subtitle2">
+                            {t('budget.page.card4.label')}
+                        </Typography>
+                        <Typography variant="h5" color="secondary" fontWeight={700}>
+                            {money(totals.avg)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {t('budget.page.card4.text')}
+                        </Typography>
                     </CardContent>
                 </Card>
             </Box>
@@ -264,25 +281,31 @@ const BudgetPage: React.FC = () => {
                 <CardContent>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                         <Box>
-                            <Typography variant="h6" fontWeight={700}>Budżet wg kategorii</Typography>
-                            <Typography variant="body2" color="text.secondary">Postęp wydatków w poszczególnych
-                                kategoriach</Typography>
+                            <Typography variant="h6" fontWeight={700}>
+                                {t('budget.page.table.label')}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {t('budget.page.table.secondLabel')}
+                            </Typography>
                         </Box>
                         <Button startIcon={<AddIcon/>} color="secondary" variant="contained" onClick={() => {
                             setEditing(null);
                             setOpenDialog(true);
-                        }}>Ustaw budżet</Button>
+                        }}>
+                            {t('budget.page.add.label')}
+                        </Button>
                     </Stack>
 
                     <Box sx={{display: 'grid', gap: 2, gridTemplateColumns: {xs: '1fr', md: 'repeat(3, 1fr)'}}}>
                         {budgets.length === 0 &&
-                            <Typography color="text.secondary">Brak ustawionych budżetów — dodaj nowy budżet, aby zacząć
-                                monitorować wydatki</Typography>}
+                            <Typography color="text.secondary">
+                                {t('budget.page.table.empty')}
+                            </Typography>}
                         {budgets.map((b) => {
                             const cat = categories.find(c => c.name === b.categoryName);
                             return (
                                 <BudgetCard key={b.id} budget={b} category={cat} onEdit={handleEdit}
-                                            onDelete={handleDelete} currency={user?.currency.symbol}/>
+                                            onDelete={handleDelete} currency={"zł"}/>
                             );
                         })}
                     </Box>
@@ -296,19 +319,22 @@ const BudgetPage: React.FC = () => {
 
             {/*Financial Goals*/}
             <Box mb={3}>
-                <GoalAcceleratorWidget />
+                <GoalAcceleratorWidget/>
             </Box>
 
             <Card variant="outlined" sx={{p: 2, borderRadius: 2, mt: 3}} data-testid='goals-card'>
                 <CardContent>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
                         <Box>
-                            <Typography variant="h6" fontWeight="bold" mb={2} display="flex" alignItems="center" gap={1}>
-                                <EmojiEventsIcon color="warning"/> Twoje Cele Finansowe
+                            <Typography variant="h6" fontWeight="bold" mb={2} display="flex" alignItems="center"
+                                        gap={1}>
+                                <EmojiEventsIcon color="warning"/>
+                                {t('goal.page.table.label')}
                             </Typography>
                         </Box>
-                        <Button variant="outlined" startIcon={<EmojiEventsIcon/>} onClick={() => setOpenGoalDialog(true)}>
-                            Dodaj cel
+                        <Button variant="outlined" startIcon={<EmojiEventsIcon/>}
+                                onClick={() => setOpenGoalDialog(true)}>
+                            {t('goal.page.add.label')}
                         </Button>
                     </Stack>
                     {goals.length > 0 && (
@@ -332,15 +358,17 @@ const BudgetPage: React.FC = () => {
                 categories={categories}
                 initial={editing}
                 onSaved={handleSavedBudget}
-                currency={user?.currency.symbol}
+                // currency={user?.currency.symbol}
+                currency={"zł"}
             />
 
             <AddGoalDialog
                 open={openGoalDialog}
                 onClose={() => setOpenGoalDialog(false)}
-                onSaved={(newGoal) => setGoals(prev => [...prev, newGoal])}
+                onSaved={(newGoal) => addGoal(newGoal)}
                 accounts={accounts}
-                currency={user?.currency.symbol}
+                // currency={user?.currency.symbol}
+                currency={"zł"}
             />
 
             <DepositGoalDialog
@@ -348,7 +376,7 @@ const BudgetPage: React.FC = () => {
                 onClose={() => setOpenDepositDialog(false)}
                 goal={depositGoal}
                 accounts={accounts}
-                onSuccess={refreshGoals}
+                onSuccess={updateGoal}
             />
         </Box>
     );

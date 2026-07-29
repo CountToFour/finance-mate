@@ -27,4 +27,5 @@ public class FinancialGoal {
     @Enumerated(EnumType.STRING)
     private PeriodContribution periodContribution;
     private LocalDate nextContribution;
+    private String accountId;
 }

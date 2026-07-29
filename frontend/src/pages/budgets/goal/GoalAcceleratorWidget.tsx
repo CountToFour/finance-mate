@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, Typography, Box, Avatar } from '@mui/material';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import {getGoalAccelerator} from '../../lib/api';
-import type { GoalRecommendation } from '../../lib/types';
+import {getGoalAccelerator} from '../../../lib/api.ts';
+import type { GoalRecommendation } from '../../../lib/types.ts';
 
 const formatCurrency = (value: number | undefined | null) => {
     if (value === undefined || value === null || isNaN(value)) return '0';

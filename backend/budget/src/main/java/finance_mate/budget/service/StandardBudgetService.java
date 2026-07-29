@@ -41,16 +41,11 @@ public class StandardBudgetService implements BudgetService {
             throw new BudgetException(ErrorCode.BUDGET_EXISTS_ERROR);
         }
 
-        LocalDate start = dto.startDate() != null ? dto.startDate() : LocalDate.now();
-        LocalDate end = start.plusMonths(1);
-
         Budget budget = budgetMapper.mapDtoToBudget(dto);
         budget.setSpentAmount(0);
         budget.setUserId(userId);
         budget.setCategoryId(dto.categoryId());
         budget.setCategoryName(category.getName());
-        budget.setStartDate(start);
-        budget.setEndDate(end);
         budget.setActive(true);
 
         budgetRepository.save(budget);
