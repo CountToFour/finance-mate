@@ -30,8 +30,6 @@ const ExpenseSummaryCard: React.FC<Props> = ({
 
     const changeText = () => {
         if (type === 'totalValue') {
-            console.log(change)
-            console.log(changeIsPositive)
             return changeIsPositive ? `+${change}%` : `${change}%`;
         } else if (type === 'totalAmount') {
             return changeIsPositive ? `+${change}` : `${change}`;

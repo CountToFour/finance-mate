@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,7 +35,7 @@ public class StandardBudgetService implements BudgetService {
             throw new BudgetException(ErrorCode.CATEGORY_TYPE_EXCEPTION);
         }
 
-        Optional<Budget> existing = budgetRepository.findByCategoryIdAndActive(dto.categoryId(), true);
+        Optional<Budget> existing = budgetRepository.findByCategoryIdAndEndDate(dto.categoryId(), dto.startDate());
         if (existing.isPresent()) {
             throw new BudgetException(ErrorCode.BUDGET_EXISTS_ERROR);
         }

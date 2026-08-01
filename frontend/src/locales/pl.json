@@ -322,7 +322,8 @@
       },
       "category" : {
         "label" : "Kategoria",
-        "required" : "Kategoria jest wymagana"
+        "required" : "Kategoria jest wymagana",
+        "exists" : "Budżet z taką kategorią istnieje dla wybranej daty"
       },
       "startDate" : {
         "label" : "Data rozpoczęcia",
@@ -407,7 +408,7 @@
         "amount" : {
           "label" : "Kwota wpłaty"
         },
-        "save" : "Wpłat",
+        "save" : "Wpłata",
         "cancel" : "Anuluj"
       }
     }

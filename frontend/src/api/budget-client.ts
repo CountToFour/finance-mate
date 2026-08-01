@@ -34,7 +34,7 @@ export const budgetService = {
 
     createGoal: async (data: FinancialGoalDto): Promise<FinancialGoal> => {
         const response = await api.post<FinancialGoal>(
-            `goals`,
+            `/goals`,
             data
         )
         return response.data
@@ -49,7 +49,9 @@ export const budgetService = {
 
     deposit: async (id: string, amount: number, accountId: string): Promise<FinancialGoal> => {
         const response = await api.patch<FinancialGoal>(
-            `/goals/${id}/deposit`, {
+            `/goals/${id}/deposit`,
+            null,
+            {
                 params: {
                     amount: amount,
                     accountId: accountId,

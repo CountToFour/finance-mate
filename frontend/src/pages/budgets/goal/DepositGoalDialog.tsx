@@ -108,5 +108,4 @@ const DepositGoalDialog: React.FC<Props> = ({ open, onClose, goal, accounts, onS
         </Dialog>
     );
 };
-
 export default DepositGoalDialog;

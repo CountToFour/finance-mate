@@ -18,18 +18,18 @@ import {useNotification} from "../../../components/NotificationContext.tsx";
 import type {Category} from "../../../types/category.ts";
 import type {Budget, BudgetDto, UpdateBudgetDto} from "../../../types/budget.ts";
 import {budgetService} from "../../../api/budget-client.ts";
+import {useBudgetStore} from "../../../store/budget-store.ts";
 
 interface BudgetDialogProps {
     open: boolean;
     onClose: () => void;
     categories: Category[];
     initial?: Budget | null;
-    onSaved: (saved: Budget) => void;
     // currency?: Currency | null;
     currency?: string | null;
 }
 
-const BudgetDialog: React.FC<BudgetDialogProps> = ({open, onClose, categories, initial, onSaved, currency}) => {
+const BudgetDialog: React.FC<BudgetDialogProps> = ({open, onClose, categories, initial, currency}) => {
     const {success, error} = useNotification();
     const {t} = useTranslation();
     const isEdit = !!initial;
@@ -39,6 +39,10 @@ const BudgetDialog: React.FC<BudgetDialogProps> = ({open, onClose, categories, i
     const [startDate, setStartDate] = useState<Dayjs | null>(initial ? dayjs(initial.startDate) : dayjs());
     const [endDate, setEndDate] = useState<Dayjs | null>(initial ? dayjs(initial.endDate) : dayjs().add(1, "month"));
     const [saving, setSaving] = useState(false);
+
+    const budgets = useBudgetStore(state => state.budgets);
+    const addBudget = useBudgetStore(state => state.addBudget);
+    const updateBudget = useBudgetStore(state => state.updateBudget);
 
     const [errors, setErrors] = useState({
         limitAmount: "",
@@ -93,6 +97,18 @@ const BudgetDialog: React.FC<BudgetDialogProps> = ({open, onClose, categories, i
 
     const handleSave = async () => {
         if (!validate()) return;
+
+        let repeated = false;
+        if (!initial) {
+            budgets.forEach((b) => {
+                if (b.categoryName === category?.name && dayjs(b.endDate).isAfter(startDate)) {
+                    error(t('budget.dialog.category.exists'))
+                    repeated = true
+                    return;
+                }
+            })
+        }
+        if (repeated) return;
         setSaving(true);
         try {
             if (isEdit && initial) {
@@ -102,7 +118,7 @@ const BudgetDialog: React.FC<BudgetDialogProps> = ({open, onClose, categories, i
                     endDate: endDate!.format("YYYY-MM-DD"),
                 };
                 const res = await budgetService.updateBudget(initial.id, updateDto);
-                onSaved(res);
+                updateBudget(res)
                 success(t('budget.page.edit.success'));
             } else {
                 const dto: BudgetDto = {
@@ -112,7 +128,7 @@ const BudgetDialog: React.FC<BudgetDialogProps> = ({open, onClose, categories, i
                     endDate: endDate!.format("YYYY-MM-DD"),
                 };
                 const res = await budgetService.createBudget(dto);
-                onSaved(res);
+                addBudget(res)
                 success(t('budget.page.add.success'))
             }
             onClose();
@@ -183,6 +199,7 @@ const BudgetDialog: React.FC<BudgetDialogProps> = ({open, onClose, categories, i
 
                 <Box sx={{display: 'flex', gap: 2, mb: 1}}>
                     <TextField
+                        disabled={!!initial}
                         select
                         fullWidth
                         margin="normal"

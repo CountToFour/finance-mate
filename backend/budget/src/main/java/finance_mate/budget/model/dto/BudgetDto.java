@@ -1,9 +1,8 @@
 package finance_mate.budget.model.dto;
 
-import finance_mate.budget.model.BudgetPeriodType;
-import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDate;
@@ -13,10 +12,10 @@ public record BudgetDto (
         String categoryId,
         @Positive(message = "Limit amount must be a number greater than 0")
         double limitAmount,
-        @NotBlank(message = "Start date is required")
-        @FutureOrPresent(message = "Start date cannot be in past")
+        @FutureOrPresent(message = "Start date cannot be empty or in past")
+        @NotNull(message = "Start date is required")
         LocalDate startDate,
-        @NotBlank(message = "End date is required")
-        @FutureOrPresent(message = "End date cannot be in the past")
+        @FutureOrPresent(message = "End date cannot be empty or in the past")
+        @NotNull(message = "End date is required")
         LocalDate endDate
 ) {}

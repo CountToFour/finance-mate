@@ -7,6 +7,7 @@ interface BudgetStore {
     setBudgets: (budgets: Budget[]) => void,
     addBudget: (budget: Budget) => void,
     deleteBudget: (budget: Budget) => void,
+    updateBudget: (budget: Budget) => void,
 }
 
 export const useBudgetStore = create<BudgetStore>()(
@@ -21,6 +22,10 @@ export const useBudgetStore = create<BudgetStore>()(
 
             deleteBudget: (budget: Budget) => set((prev) => ({
                 budgets: prev.budgets.filter((b) => b.id !== budget.id),
+            })),
+
+            updateBudget: (budget: Budget) => set((prev) => ({
+               budgets: prev.budgets.map((b) => b.id === budget.id ? budget : b)
             }))
         }),
         {name: 'financemate-budgets'}

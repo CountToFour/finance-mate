@@ -43,7 +43,6 @@ const BudgetPage: React.FC = () => {
 
     const budgets = useBudgetStore(state => state.budgets);
     const setBudgets = useBudgetStore(state => state.setBudgets);
-    const addBudget = useBudgetStore(state => state.addBudget);
     const deleteBudget = useBudgetStore(state => state.deleteBudget);
 
     const categories = useCategoryStore(state => state.categories);
@@ -104,10 +103,6 @@ const BudgetPage: React.FC = () => {
             avg: Math.floor(dailyAllowance)
         };
     }, [budgets]);
-
-    const handleSavedBudget = (saved: Budget) => {
-        addBudget(saved);
-    };
 
     const handleEdit = (b: Budget) => {
         setEditing(b);
@@ -357,7 +352,6 @@ const BudgetPage: React.FC = () => {
                 onClose={() => setOpenDialog(false)}
                 categories={categories}
                 initial={editing}
-                onSaved={handleSavedBudget}
                 // currency={user?.currency.symbol}
                 currency={"zł"}
             />

@@ -13,7 +13,7 @@ public record FinancialGoalDto(
         double targetAmount,
         @PositiveOrZero(message = "Initial amount cannot be less than 0")
         double initialAmount,
-        @Positive(message = "Contribution must cannot be less than 0")
+        @PositiveOrZero(message = "Contribution must cannot be less than 0")
         double contribution,
         boolean lockedFunds,
         @Nullable
