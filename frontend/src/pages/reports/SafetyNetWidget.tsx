@@ -1,24 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, Typography, Box, LinearProgress, Chip, Skeleton, Alert } from '@mui/material';
 import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
-import { getSmartRecommendations } from '../../lib/api';
-import type { SmartRecommendation } from '../../lib/types';
+import type {NetStatus, SafetyNetStatus} from "../../types/transaction.ts";
+import {transactionService} from "../../api/transaction-client.ts";
 
 const SafetyNetWidget: React.FC = () => {
-    const [data, setData] = useState<SmartRecommendation | null>(null);
+    const [data, setData] = useState<NetStatus | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getSmartRecommendations()
-            .then(res => setData(res.data))
-            .catch(err => console.error(err))
-            .finally(() => setLoading(false));
+
+        const fetchData = async () => {
+            try {
+                const response = await transactionService.getNetStatus()
+                setData(response)
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchData();
     }, []);
 
     if (loading) return <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />;
     if (!data) return null;
 
-    const getConfig = (status: string) => {
+    const getConfig = (status: SafetyNetStatus) => {
         switch (status) {
             case 'DANGER': return { color: '#d32f2f', label: 'Krytyczny', msg: 'Masz środki na mniej niż 1 miesiąc życia.' };
             case 'WARNING': return { color: '#ff9800', label: 'Niski', msg: 'Zalecana poduszka to min. 3 miesiące.' };

@@ -1,5 +1,5 @@
 import type {
-    EditTransactionDto, OverviewFilter, RecurringTransaction,
+    EditTransactionDto, NetStatus, OverviewFilter, RecurringTransaction,
     Transaction,
     TransactionDto,
     TransactionFilters, TransactionsOverview,
@@ -83,6 +83,13 @@ export const transactionService = {
             {
                 params: filters
             }
+        )
+        return response.data
+    },
+
+    getNetStatus: async(): Promise<NetStatus> => {
+        const response = await api.get<NetStatus>(
+            `/transactions/net-status`,
         )
         return response.data
     }

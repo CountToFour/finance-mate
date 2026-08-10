@@ -11,10 +11,12 @@ import finance_mate.core.exception.ErrorCode;
 import finance_mate.core.exception.TransactionException;
 import finance_mate.core.rabbit.publish.CoreRabbitMQPublisher;
 import finance_mate.core.transaction.mapper.TransactionMapper;
-import finance_mate.core.transaction.model.PeriodType;
+import finance_mate.core.transaction.model.NetStatus;
+import finance_mate.core.transaction.model.SafetyNetStatus;
 import finance_mate.core.transaction.model.Transaction;
 import finance_mate.core.transaction.model.TransactionType;
 import finance_mate.core.transaction.model.dto.*;
+import finance_mate.core.transaction.repository.NetStatusRepository;
 import finance_mate.core.transaction.repository.TransactionRepository;
 import finance_mate.core.transaction.utils.TransactionSpecifications;
 import jakarta.transaction.Transactional;
@@ -26,10 +28,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,6 +36,8 @@ import java.util.stream.Collectors;
 public class StandardTransactionService implements TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final NetStatusRepository netStatusRepository;
+
     private final TransactionMapper transactionMapper;
     private final AccountService accountService;
     private final CategoryService categoryService;
@@ -74,6 +75,7 @@ public class StandardTransactionService implements TransactionService {
         publisher.updateInvestmentProfile(userId);
         transactionRepository.save(transaction);
         accountService.changeBalance(account.getId(), transaction.getPrice(), userId);
+        calculateNewNetStatus(userId);
         TransactionResponse savedDto = transactionMapper.transactionToDto(transaction);
         savedDto.setAccountName(account.getName());
         savedDto.setCategoryName(category.getName());
@@ -113,6 +115,7 @@ public class StandardTransactionService implements TransactionService {
             accountService.changeBalance(transaction.getAccount().getId(), -Math.abs(transaction.getPrice()), transaction.getUserId());
         }
         publisher.updateInvestmentProfile(transaction.getUserId());
+        calculateNewNetStatus(transaction.getUserId());
         transactionRepository.deleteById(id);
 
     }
@@ -144,6 +147,7 @@ public class StandardTransactionService implements TransactionService {
                 change = Math.abs(dto.price()) - existingTransaction.getPrice();
             }
             publisher.updateInvestmentProfile(existingTransaction.getUserId());
+            calculateNewNetStatus(existingTransaction.getUserId());
             accountService.changeBalance(existingTransaction.getAccount().getId(), change, existingTransaction.getUserId());
         }
         if (dto.description() != null && !dto.description().equals(existingTransaction.getDescription())) {
@@ -303,16 +307,6 @@ public class StandardTransactionService implements TransactionService {
 
     }
 
-    private LocalDate calculateNextDate(LocalDate baseDate, PeriodType type) {
-        return switch (type) {
-            case DAILY -> baseDate.plusDays(1);
-            case WEEKLY -> baseDate.plusWeeks(1);
-            case MONTHLY -> baseDate.plusMonths(1);
-            case YEARLY -> baseDate.plusYears(1);
-            default -> baseDate;
-        };
-    }
-
     //TODO COS SIE STANIE JAK BEDZIE MNIEJ REKORDOW NIZ LIMIT
     @Override
     public List<TransactionResponse> getTopTransactionsByAmount(String userId, LocalDate startDate, LocalDate endDate, int limit, TransactionType type) {
@@ -344,6 +338,44 @@ public class StandardTransactionService implements TransactionService {
         }
 
         return (totalIncome + totalExpense) / totalIncome;
+    }
+
+    @Override
+    public NetStatusDto getNetStatus(String userId) {
+        NetStatus netStatus = netStatusRepository.findByUserId(userId)
+                .orElseGet(() -> calculateNewNetStatus(userId));
+
+        return NetStatusDto.builder()
+                .safetyNetStatus(netStatus.getSafetyNetStatus())
+                .monthsOfSafety(netStatus.getMonthsOfSafety())
+                .build();
+    }
+
+    private NetStatus calculateNewNetStatus(String userId) {
+        double totalBalance = accountService.getUserBalance(userId).balance();
+
+        double avgMonthlyExpenses = getAverageMonthlyExpenses(userId);
+        if (avgMonthlyExpenses <= 0) avgMonthlyExpenses = 1.0;
+
+        double monthsOfSafety = Math.max(0.0, totalBalance / avgMonthlyExpenses);
+
+        SafetyNetStatus newNetStatus;
+        if (monthsOfSafety < 1) {
+            newNetStatus = SafetyNetStatus.DANGER;
+        } else if (monthsOfSafety < 3) {
+            newNetStatus = SafetyNetStatus.WARNING;
+        } else if (monthsOfSafety < 6) {
+            newNetStatus = SafetyNetStatus.SAFE;
+        } else {
+            newNetStatus = SafetyNetStatus.EXCELLENT;
+        }
+        NetStatus netStatus = netStatusRepository.findByUserId(userId)
+                .orElse(new NetStatus());
+
+        netStatus.setUserId(userId);
+        netStatus.setMonthsOfSafety(monthsOfSafety);
+        netStatus.setSafetyNetStatus(newNetStatus);
+        return netStatusRepository.save(netStatus);
     }
 
     private double getConvertedAmount(Transaction t, String userId) {
@@ -431,10 +463,9 @@ public class StandardTransactionService implements TransactionService {
         return result;
     }
 
-    @Override
-    public double getAverageMonthlyExpenses(String userId, int months) {
+    private double getAverageMonthlyExpenses(String userId) {
         LocalDate endDate = LocalDate.now();
-        LocalDate startDate = endDate.minusMonths(months);
+        LocalDate startDate = endDate.minusMonths(3);
 
         Specification<Transaction> spec = Specification.allOf(
                 TransactionSpecifications.hasUserId(userId),
@@ -446,7 +477,7 @@ public class StandardTransactionService implements TransactionService {
                 .mapToDouble(t -> Math.abs(getConvertedAmount(t, userId)))
                 .sum();
 
-        return totalExpenses / months;
+        return totalExpenses / 3;
     }
 
     @Override
@@ -491,7 +522,7 @@ public class StandardTransactionService implements TransactionService {
     }
 
     public double calculateSafetyNetRatio(String userId) {
-        double avgExpenses = getAverageMonthlyExpenses(userId, 3);
+        double avgExpenses = getAverageMonthlyExpenses(userId);
         double totalBalance = accountService.getUserBalance(userId).balance();
         if (avgExpenses == 0) return 0.0;
         return totalBalance / avgExpenses;

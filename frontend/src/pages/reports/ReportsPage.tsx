@@ -1,15 +1,8 @@
-import React, {useEffect, useState} from 'react'
+import React, {useEffect, useMemo, useState} from 'react'
 import {Box, Typography, Button, Paper, Tabs, Tab} from '@mui/material'
-import {
-    getAllCategoriesAmount,
-    getCategories,
-    getMonthlyOverview,
-    getTopExpenses,
-    getTransactionOverview
-} from '../../lib/api'
+
 import dayjs, {type Dayjs} from 'dayjs'
 import SummaryCard from "./SummaryCard"
-import type {Category, CategoryAmount, Expense, MonthlyOverview, TransactionOverview} from "../../lib/types.ts";
 import {AttachMoneyOutlined, TrendingDown} from "@mui/icons-material"
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
@@ -21,24 +14,37 @@ import CrisisAlertIcon from "@mui/icons-material/CrisisAlert";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import Overview from "./tabs/Overview.tsx";
 import Trends from "./tabs/Trends.tsx";
-import {useAuthStore} from "../../store/auth-store.ts";
+import type {OverviewFilter, TransactionsOverview} from "../../types/transaction.ts";
+import {useCategoryStore} from "../../store/category-store.ts";
+import {transactionService} from "../../api/transaction-client.ts";
 
 const KategorieView = () => <Typography>Zawartość: Kategorie</Typography>;
 
 const TABS = ['Przegląd', 'Trendy', 'Kategorie', 'Przepływy', 'Budżet', 'Eksporty'];
 
 const ReportsPage: React.FC = () => {
-    const user = useAuthStore(s => s.user);
 
-    const [expenseOverview, setExpenseOverview] = useState<TransactionOverview>();
-    const [incomeOverview, setIncomeOverview] = useState<TransactionOverview>();
-    const [monthlyOverview, setMonthlyOverview] = useState<MonthlyOverview[]>([])
-    const [topExpenses, setTopExpenses] = useState<Expense[]>([]);
-    const [categoriesExpenses, setCategoriesExpenses] = useState<CategoryAmount[]>([])
-    const [previousPeriodCategoriesExpenses, setPreviousPeriodCategoriesExpenses] = useState<CategoryAmount[]>([])
-    const [categoriesIncomes, setCategoriesIncomes] = useState<CategoryAmount[]>([])
-    const [allExpenseCategories, setAllExpenseCategories] = useState<Category[]>([])
-    const [allIncomeCategories, setAllIncomeCategories] = useState<Category[]>([])
+    const [expenseOverview, setExpenseOverview] = useState<TransactionsOverview>();
+    const [incomeOverview, setIncomeOverview] = useState<TransactionsOverview>();
+
+    // const [monthlyOverview, setMonthlyOverview] = useState<MonthlyOverview[]>([])
+    // const [topExpenses, setTopExpenses] = useState<Expense[]>([]);
+    // const [categoriesExpenses, setCategoriesExpenses] = useState<CategoryAmount[]>([])
+    // const [previousPeriodCategoriesExpenses, setPreviousPeriodCategoriesExpenses] = useState<CategoryAmount[]>([])
+    // const [categoriesIncomes, setCategoriesIncomes] = useState<CategoryAmount[]>([])
+
+    const categories = useCategoryStore(state => state.categories);
+
+    // 2. Filtrujemy kategorie używając useMemo - tablica zostanie przeliczona
+    // TYLKO WTEDY, gdy oryginalna tablica 'categories' faktycznie się zmieni
+    const allExpenseCategories = useMemo(() =>
+            categories.filter(c => c.transactionType === "EXPENSE"),
+        [categories]);
+
+    const allIncomeCategories = useMemo(() =>
+            categories.filter(c => c.transactionType === "INCOME"),
+        [categories]);
+
     const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
     const dateFrom = selectedDate.startOf("month").format("YYYY-MM-DD");
     const dateTo = selectedDate.endOf("month").format("YYYY-MM-DD");
@@ -54,21 +60,41 @@ const ReportsPage: React.FC = () => {
     const [value, setValue] = useState(0);
 
     useEffect(() => {
-        getTransactionOverview('EXPENSE', dateFrom, dateTo).then((res) => setExpenseOverview(res.data)).catch(console.error);
-        getTransactionOverview('INCOME', dateFrom, dateTo).then((res) => setIncomeOverview(res.data)).catch(console.error);
-        getAllCategoriesAmount('EXPENSE', dateFrom, dateTo).then((res) => setCategoriesExpenses(res.data));
-        getAllCategoriesAmount('EXPENSE', prevDateFrom, prevDateTo).then((res) => setPreviousPeriodCategoriesExpenses(res.data));
-        getAllCategoriesAmount('INCOME', dateFrom, dateTo).then((res) => setCategoriesIncomes(res.data));
-        getCategories('EXPENSE').then((res) => setAllExpenseCategories(res.data))
-        getCategories('INCOME').then((res) => setAllIncomeCategories(res.data))
-        getMonthlyOverview("2025-03-31", "2025-12-31").then((res) => setMonthlyOverview(res.data))
-        getTopExpenses("2025-03-31", "2025-12-31", 8, 'EXPENSE').then((res) => setTopExpenses(res.data))
+        const overviewFilter: OverviewFilter = {
+            startDate: dateFrom,
+            endDate: dateTo,
+        }
+
+        const fetchData = async () => {
+            const [expensesOverview, incomesOverview] = await Promise.all([
+                transactionService.getTransactionOverview({
+                    ...overviewFilter,
+                    type: "EXPENSE"
+                }),
+                transactionService.getTransactionOverview({
+                    ...overviewFilter,
+                    type: "INCOME"
+                })
+            ]);
+
+            setExpenseOverview(expensesOverview)
+            setIncomeOverview(incomesOverview)
+
+        }
+
+        fetchData()
+
+        // getAllCategoriesAmount('EXPENSE', dateFrom, dateTo).then((res) => setCategoriesExpenses(res.data));
+        // getAllCategoriesAmount('EXPENSE', prevDateFrom, prevDateTo).then((res) => setPreviousPeriodCategoriesExpenses(res.data));
+        // getAllCategoriesAmount('INCOME', dateFrom, dateTo).then((res) => setCategoriesIncomes(res.data));
+        // getMonthlyOverview("2025-03-31", "2025-12-31").then((res) => setMonthlyOverview(res.data))
+        // getTopExpenses("2025-03-31", "2025-12-31", 8, 'EXPENSE').then((res) => setTopExpenses(res.data))
     }, [dateFrom, dateTo, prevDateFrom, prevDateTo, selectedDate]);
 
     const totalExpenses = expenseOverview?.totalAmount ?? 0
-    const averageExpenses = expenseOverview?.averageAmount ?? 0
+    const averageExpenses = expenseOverview?.dailyAverage ?? 0
     const totalIncome = incomeOverview?.totalAmount ?? 0
-    const averageIncome = incomeOverview?.averageAmount ?? 0
+    const averageIncome = incomeOverview?.dailyAverage ?? 0
     const balance = totalIncome + totalExpenses
     const savingsRate = totalExpenses !== 0 ? Number((((totalIncome - Math.abs(totalExpenses)) / totalIncome) * 100).toFixed(2)) : 0
 
@@ -80,23 +106,25 @@ const ReportsPage: React.FC = () => {
         switch (index) {
             case 0:
                 return <Overview
-                    categoriesOverview={categoriesExpenses}
+                    // categoriesOverview={categoriesExpenses}
                     allExpenseCategories={allExpenseCategories}
-                    monthlyOverview={monthlyOverview}
-                    topExpenses={topExpenses}
-                    currency={user?.currency.symbol}
+                    // monthlyOverview={monthlyOverview}
+                    // topExpenses={topExpenses}
+                    // currency={user?.currency.symbol}
+                    currency="zł"
                 />;
-            case 1:
-                return <Trends
-                    categoriesOverview={categoriesIncomes}
-                    allIncomeCategories={allIncomeCategories}
-                    monthlyOverview={monthlyOverview}
-                    expenseCategoriesOverview={categoriesExpenses}
-                    previousExpenseCategoriesOverview={previousPeriodCategoriesExpenses}
-                    currency={user?.currency.symbol}
-                />;
-            case 2:
-                return <KategorieView/>;
+            // case 1:
+                // return <Trends
+                //     categoriesOverview={categoriesIncomes}
+                //     allIncomeCategories={allIncomeCategories}
+                //     monthlyOverview={monthlyOverview}
+                //     expenseCategoriesOverview={categoriesExpenses}
+                //     previousExpenseCategoriesOverview={previousPeriodCategoriesExpenses}
+                //     // currency={user?.currency.symbol}
+                //     currency="zł"
+                // />;
+            // case 2:
+            //     return <KategorieView/>;
             default:
                 return <Typography>Wybierz zakładkę</Typography>;
         }
@@ -140,8 +168,9 @@ const ReportsPage: React.FC = () => {
                     title="Wydatki"
                     // description=" względem poprzedniego miesiąca"
                     amount={totalExpenses}
-                    change={expenseOverview?.totalAmountChangePercentage ?? 0}
-                    currency={user?.currency.symbol}
+                    change={expenseOverview?.totalValuePercentageChange ?? 0}
+                    // currency={user?.currency.symbol}
+                    currency="zł"
                     accentColor="#E53935"
                     icon={<AttachMoneyOutlined fontSize="medium"/>}
                 />
@@ -149,8 +178,9 @@ const ReportsPage: React.FC = () => {
                     title="Przychody"
                     // description=" transakcji w tym miesiącu"
                     amount={totalIncome}
-                    change={incomeOverview?.totalAmountChangePercentage ?? 0}
-                    currency={user?.currency.symbol}
+                    change={incomeOverview?.totalValuePercentageChange ?? 0}
+                    // currency={user?.currency.symbol}
+                    currency="zł"
                     accentColor="#70B2B1"
                     icon={<ReceiptIcon fontSize="medium"/>}
                 />
@@ -158,7 +188,8 @@ const ReportsPage: React.FC = () => {
                     title="Bilans"
                     // description="na podstawie 30 dni"
                     amount={balance}
-                    currency={user?.currency.symbol}
+                    // currency={user?.currency.symbol}
+                    currency="zł"
                     accentColor="#5C86D3"
                     icon={<TrendingUpIcon fontSize="medium"/>}
                 />
@@ -180,7 +211,8 @@ const ReportsPage: React.FC = () => {
                     period="Ostatnie 30 dni"
                     startColor={"#5C86D3"}
                     icon={<TrendingUpIcon/>}
-                    currency={user?.currency.symbol}
+                    // currency={user?.currency.symbol}
+                    currency="zł"
                 />
                 <AvarageSummaryCard
                     title="Średnie miesięczne wydatki"
@@ -188,7 +220,8 @@ const ReportsPage: React.FC = () => {
                     period="Ostatnie 30 dni"
                     startColor={"#A175BF"}
                     icon={<TrendingDown/>}
-                    currency={user?.currency.symbol}
+                    // currency={user?.currency.symbol}
+                    currency="zł"
                 />
                 <AvarageSummaryCard
                     title="Oszczędności"
@@ -196,7 +229,7 @@ const ReportsPage: React.FC = () => {
                     period="Ostatnie 30 dni"
                     startColor={"#cda25d"}
                     icon={<AccountBalanceWalletIcon/>}
-                    currency={user?.currency.symbol}
+                    currency="zł"
                 />
             </Box>
 

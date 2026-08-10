@@ -70,3 +70,10 @@ export interface OverviewFilter {
     startDate: string;
     endDate: string;
 }
+
+export type SafetyNetStatus = 'DANGER' | 'WARNING' | 'SAFE' | 'EXCELLENT'
+
+export interface NetStatus {
+    safetyNetStatus: SafetyNetStatus;
+    monthsOfSafety: number;
+}

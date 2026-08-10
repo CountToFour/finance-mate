@@ -2,14 +2,7 @@ package finance_mate.core.transaction.service;
 
 import finance_mate.core.category.model.CategoryGroup;
 import finance_mate.core.transaction.model.TransactionType;
-import finance_mate.core.transaction.model.dto.CategoryDto;
-import finance_mate.core.transaction.model.dto.DailyOverviewDto;
-import finance_mate.core.transaction.model.dto.EditTransactionDto;
-import finance_mate.core.transaction.model.dto.MonthOverviewDto;
-import finance_mate.core.transaction.model.dto.RecurringTransactionResponse;
-import finance_mate.core.transaction.model.dto.TransactionOverviewDto;
-import finance_mate.core.transaction.model.dto.TransactionRequest;
-import finance_mate.core.transaction.model.dto.TransactionResponse;
+import finance_mate.core.transaction.model.dto.*;
 import jakarta.transaction.Transactional;
 
 import java.time.LocalDate;
@@ -39,13 +32,13 @@ public interface TransactionService {
 
     Double calculateQuarterlySavingsRate(String userId);
 
+    NetStatusDto getNetStatus(String userId);
+
     List<DailyOverviewDto> getDailyOverview(String userId, LocalDate startDate, LocalDate endDate, TransactionType type);
 
     double getIncome(String userId, LocalDate startDate, LocalDate endDate);
 
     Map<CategoryGroup, Map<String, Double>> getSpendingDetailsByGroup(String userId, LocalDate startDate, LocalDate endDate);
-
-    double getAverageMonthlyExpenses(String userId, int months);
 
     double getAverageMonthlyIncome(String userId, int months);
 

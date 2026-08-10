@@ -1,13 +1,7 @@
 package finance_mate.core.transaction.controller;
 
 import finance_mate.core.transaction.model.TransactionType;
-import finance_mate.core.transaction.model.dto.CategoryDto;
-import finance_mate.core.transaction.model.dto.DailyOverviewDto;
-import finance_mate.core.transaction.model.dto.EditTransactionDto;
-import finance_mate.core.transaction.model.dto.MonthOverviewDto;
-import finance_mate.core.transaction.model.dto.TransactionOverviewDto;
-import finance_mate.core.transaction.model.dto.TransactionRequest;
-import finance_mate.core.transaction.model.dto.TransactionResponse;
+import finance_mate.core.transaction.model.dto.*;
 import finance_mate.core.transaction.service.TransactionService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -117,5 +111,10 @@ public class TransactionController {
     @GetMapping("/recommendation/savings-rate/{userId}")
     public ResponseEntity<Double> calculateQuarterlySavingsRate(@PathVariable String userId) {
         return ResponseEntity.ok(transactionService.calculateQuarterlySavingsRate(userId));
+    }
+
+    @GetMapping("/net-status")
+    public ResponseEntity<NetStatusDto> getNetStatus(@RequestHeader("X-User-Id") String userId) {
+        return ResponseEntity.ok().body(transactionService.getNetStatus(userId));
     }
 }
