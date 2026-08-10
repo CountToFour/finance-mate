@@ -89,7 +89,7 @@ public class StandardRecommendationService implements RecommendationService {
     @Override
     public UserProfile calculateUserProfile(String userId) {
         double savingsRate = transactionClient.calculateQuarterlySavingsRate(userId);
-
+        Optional<UserProfile> byUserId = userProfileRepository.findByUserId(userId);
         if (savingsRate == -1.0) {
             log.error("Cannot calculate savings rate for this user: {}", userId);
             throw new RecommendationException(ErrorCode.SAVINGS_RATE_EXCEPTION);
@@ -105,12 +105,18 @@ public class StandardRecommendationService implements RecommendationService {
         } else {
             profile = InvestmentProfile.AGGRESSIVE;
         }
-
-        UserProfile userProfile = UserProfile.builder()
-                .savingsRate(savingsRate)
-                .profile(profile)
-                .userId(userId)
-                .build();
+        UserProfile userProfile;
+        if (byUserId.isEmpty()) {
+            userProfile = UserProfile.builder()
+                    .savingsRate(savingsRate)
+                    .profile(profile)
+                    .userId(userId)
+                    .build();
+        } else {
+            userProfile = byUserId.get();
+            userProfile.setProfile(profile);
+            userProfile.setSavingsRate(savingsRate);
+        }
 
         return userProfileRepository.save(userProfile);
     }

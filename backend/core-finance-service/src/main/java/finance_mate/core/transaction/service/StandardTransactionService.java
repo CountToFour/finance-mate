@@ -15,7 +15,6 @@ import finance_mate.core.transaction.model.PeriodType;
 import finance_mate.core.transaction.model.Transaction;
 import finance_mate.core.transaction.model.TransactionType;
 import finance_mate.core.transaction.model.dto.*;
-import finance_mate.core.transaction.repository.RecurringTransactionRepository;
 import finance_mate.core.transaction.repository.TransactionRepository;
 import finance_mate.core.transaction.utils.TransactionSpecifications;
 import jakarta.transaction.Transactional;
@@ -72,7 +71,7 @@ public class StandardTransactionService implements TransactionService {
         if (TransactionType.EXPENSE.equals(transaction.getTransactionType())) {
             publisher.updateBudget(new BudgetProgressDto(category.getId(), Math.abs(transaction.getPrice()), transaction.getCreatedAt()));
         }
-
+        publisher.updateInvestmentProfile(userId);
         transactionRepository.save(transaction);
         accountService.changeBalance(account.getId(), transaction.getPrice(), userId);
         TransactionResponse savedDto = transactionMapper.transactionToDto(transaction);
@@ -113,6 +112,7 @@ public class StandardTransactionService implements TransactionService {
         } else {
             accountService.changeBalance(transaction.getAccount().getId(), -Math.abs(transaction.getPrice()), transaction.getUserId());
         }
+        publisher.updateInvestmentProfile(transaction.getUserId());
         transactionRepository.deleteById(id);
 
     }
@@ -143,6 +143,7 @@ public class StandardTransactionService implements TransactionService {
                 existingTransaction.setPrice(Math.abs(dto.price()));
                 change = Math.abs(dto.price()) - existingTransaction.getPrice();
             }
+            publisher.updateInvestmentProfile(existingTransaction.getUserId());
             accountService.changeBalance(existingTransaction.getAccount().getId(), change, existingTransaction.getUserId());
         }
         if (dto.description() != null && !dto.description().equals(existingTransaction.getDescription())) {

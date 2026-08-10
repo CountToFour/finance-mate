@@ -18,4 +18,9 @@ public class CoreRabbitMQPublisher {
         log.info("Publishing message to update budget for category with id {}", dto.getCategoryId());
         rabbitTemplate.convertAndSend(CoreRabbitMQConfig.BUDGET_EXCHANGE, CoreRabbitMQConfig.TRANSACTION_ROUTING_KEY, dto);
     }
+
+    public void updateInvestmentProfile(String userId) {
+        log.info("Publishing message to update investment profile for user with id {}", userId);
+        rabbitTemplate.convertAndSend(CoreRabbitMQConfig.RECOMMENDATION_EXCHANGE, CoreRabbitMQConfig.RECOMMENDATION_ROUTING_KEY, userId);
+    }
 }

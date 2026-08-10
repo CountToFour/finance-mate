@@ -25,6 +25,10 @@ public class CoreRabbitMQConfig {
     //FOR TRANSACTIONS
     public static final String TRANSACTION_ROUTING_KEY = "transaction.budget.update";
 
+    //FOR RECOMMENDATION
+    public static final String RECOMMENDATION_ROUTING_KEY = "transaction.recommendation.profile";
+    public static final String RECOMMENDATION_EXCHANGE = "transaction.exchange";
+
     //FOR ACCOUNT
     @Bean
     public Queue goalAccountQueue() {
