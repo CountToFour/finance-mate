@@ -1,9 +1,8 @@
 {
-  "layout" : {
+  "layout": {
     "account": "Konta",
-    "dashboard" : "Pulpit",
-    "expenses": "Wydatki",
-    "incomes": "Przychody",
+    "dashboard": "Pulpit",
+    "transactions": "Transakcje",
     "budget": "Budżet",
     "report": "Raporty",
     "settings": "Ustawienia",
@@ -27,64 +26,111 @@
   "register": {
     "form": {
       "label": "Rejestracja",
-      "username": "Nazwa użytkownika",
+      "firstName": "Imię",
+      "lastName": "Nazwisko",
       "logIn": "Mam już konto - zaloguj się",
       "createAccount": "Załóż konto",
       "creatingAccount": "Zakładanie konta..."
     },
     "error": {
-      "emailTaken": "Konto z tym e-mailem już istnieje",
       "error": "Wystąpił błąd. Spróbuj ponownie.",
-      "username": "Podaj nazwę użytkownika",
-      "incorrectEmail": "Podaj poprawny email"
+      "firstName": {
+        "required": "Podaj imię",
+        "minLength": "Imię musi mieć co najmniej 2 znaki",
+        "maxLength": "Imię nie może mieć więcej niż 50 znaków",
+        "pattern": "Imię może zawierać tylko litery i spacje"
+      },
+      "lastName": {
+        "required": "Podaj nazwisko",
+        "minLength": "Nazwisko musi mieć co najmniej 2 znaki",
+        "maxLength": "Nazwisko nie może mieć więcej niż 50 znaków",
+        "pattern": "Nazwisko może zawierać tylko litery i spacje"
+      },
+      "email": {
+        "required": "Podaj email",
+        "pattern": "Podaj poprawny email",
+        "emailTaken": "Konto z tym e-mailem już istnieje",
+        "incorrectEmail": "Podaj poprawny email"
+      },
+      "password": {
+        "required": "Podaj hasło",
+        "minLength": "Hasło musi mieć co najmniej 8 znaków",
+        "maxLength": "Hasło nie może mieć więcej niż 64 znaków",
+        "pattern": "Hasło musi zawierać co najmniej jedną wielką literę, jedną małą literę, jedną cyfrę i jeden znak specjalny"
+      }
     }
   },
-  "expenses": {
+  "transactions": {
     "page": {
-      "label": "Twoje wydatki",
-      "secondLabel": "Zarządzaj swoimi wydatkami i śledź kategorie",
-      "add": "Dodaj wydatek",
-      "expensesTable": {
-        "label": "Ostatnie wydatki",
+      "label": "Twoje transakcje",
+      "secondLabel": "Zarządzaj swoimi przychodami, wydatkami i śledź kategorie",
+      "add": "Dodaj transakcję",
+      "table": {
+        "label": "Ostatnie transakcje",
         "secondLabel": "Przegląd najnowszych transakcji",
-        "date": "Data wydatku",
+        "account": "Nazwa konta",
+        "date": "Data transakcji",
         "description": "Opis",
         "category": "Kategoria",
         "price": "Kwota",
         "actions": "Akcje",
-        "tooltip" : {
-          "edit" : "Edytuj",
-          "delete" : "Usuń"
+        "tooltip": {
+          "edit": "Edytuj",
+          "delete": "Usuń"
+        },
+        "categories" : {
+          "all" : "Wszystkie"
         }
       },
       "recurringTable": {
-        "label": "Wydatki stałe",
-        "secondLabel": "Przegląd wydatków okresowych"
+        "label": "Transakcje stałe",
+        "secondLabel": "Przegląd transakcji stałych",
+        "date": "Data następnej transakcji",
+        "active": "Aktywność"
       },
-      "categories" : {
-        "label" : "Wydatki według kategorii",
-        "secondLabel" : "Podział wydatków na kategorie w danym miesiącu",
-        "transaction" : "transakcji"
+      "categories": {
+        "label": "Wydatki według kategorii",
+        "secondLabel": "Podział wydatków na kategorie w danym miesiącu",
+        "transaction": "transakcji"
+      },
+      "overview" : {
+        "totalValue" : {
+          "title" : "Całkowita wartość operacji",
+          "description" : " względem poprzedniego miesiąca"
+        },
+        "totalAmount" : {
+          "title" : "Ilość transakcji",
+          "description" : " transakcji w przeciągu 30 dni"
+        },
+        "average" : {
+          "title" : "Średnia dzienna",
+          "description" : "na podstawie ostatnich 30 dni"
+        }
       }
     },
     "notifications": {
       "delete": {
-        "success": "Wydatek został usunięty",
-        "error": "Nie udało się usunąć wydatku"
+        "success": "Transakcja została usunięta",
+        "error": "Nie udało się usunąć transakcji"
       },
       "add": {
-        "success": "Wydatek został pomyślnie dodany",
-        "error": "Nie udało się dodać wydatku. Spróbuj ponownie."
+        "success": "Transakcja została pomyślnie dodana",
+        "error": "Nie udało się dodać transakcji. Spróbuj ponownie"
       },
       "edit": {
-        "success": "Wydatek został pomyślnie edytowany",
-        "error": "Nie udało się edytować wydatku. Spróbuj ponownie."
+        "success": "Transakcja została pomyślnie edytowana",
+        "error": "Nie udało się edytować transakcji. Spróbuj ponownie"
+      },
+      "deactivate": {
+        "error" : "Nie udało się zmienić statusu transakcji"
       }
     },
-    "addExpense": {
-      "addLabel": "Dodaj wydatek",
-      "editLabel": "Edytuj wydatek",
-      "date": "Data wydatku",
+    "add": {
+      "addLabel": "Dodaj transakcję",
+      "editLabel": "Edytuj transakcję",
+      "expense" : "Wydatek",
+      "income" : "Przychód",
+      "date": "Data transakcji",
       "description": "Opis",
       "category": {
         "label": "Kategoria",
@@ -94,66 +140,297 @@
         "label": "Kwota",
         "required": "Kwota musi być większa od 0"
       },
+      "account": {
+        "label" : "Konto",
+        "required" : "Wybierz konto"
+      },
+      "currency" : {
+        "label" : "Waluta"
+      },
       "repeat": "Powtarzaj",
       "save": "Zapisz",
       "cancel": "Anuluj"
     },
-    "recurringExpense": {
-      "label": "Edytuj wydatek okresowy",
+    "recurringTransaction": {
+      "label": "Edytuj powtarzającą się transakcję",
       "active": "Aktywny",
       "inactive": "Nieaktywny"
+    },
+    "period" : {
+      "none" : "Nie powtarzaj",
+      "daily" : "Co dzień",
+      "weekly" : "Co tydzień",
+      "monthly" : "Co miesiąc",
+      "yearly" : "Co rok"
     }
   },
-  "income": {
+  "account": {
     "page": {
-      "label": "Twoje przychody",
-      "secondLabel": "Zarządzaj swoimi przychodami i śledź kategorie",
-      "add": "Dodaj przychód",
-      "table": {
-        "label": "Ostatnie przychody",
-        "secondLabel": "Przegląd najnowszych przychodów",
-        "date": "Data przychodu",
-        "description": "Opis",
-        "category": "Kategoria",
-        "amount": "Kwota",
-        "actions": "Akcje"
+      "label": "Konta",
+      "secondLabel": "Zarządzaj swoimi kontami",
+      "add": "Dodaj konto",
+      "transfer": "Transfer środków",
+      "card" : {
+        "edit" : "Edytuj",
+        "archive" : "Archiwizuj"
+      },
+      "stats" : {
+        "success" : "Pomyślnie zmianiono uwzględnianie konta w statystykach",
+        "error" : "Nie udało się wykonać operacji. Spróbuj ponownie."
+      },
+      "delete" : {
+        "success" : "Konto zostało pomyślnie usunięte",
+        "error" : "Nie udało się usunąć konta. Spróbuj ponownie."
       }
     },
-    "notifications": {
-      "delete": {
-        "success": "Przychód został usunięty",
-        "error": "Nie udało się usunąć przychodu"
-      },
+    "dialog" : {
       "add": {
-        "success": "Przychód został pomyślnie dodany",
-        "error": "Nie udało się dodać przychodu. Spróbuj ponownie."
+        "label" : "Dodaj nowe konto",
+        "balance": "Saldo początkowe",
+        "name": "Nazwa konta",
+        "description": "Opis konta",
+        "color" : "Kolor konta",
+        "save" : "Zapisz",
+        "cancel" : "Anuluj",
+        "error" : {
+          "balance" : "Saldo początkowe jest wymagane",
+          "negativeBalance" : "Saldo początkowe nie może być ujemne",
+          "color" : "Kolor konta jest wymagany",
+          "name" : "Nazwa konta jest wymagana",
+          "failed" : "Nie udało się dodać konta. Spróbuj ponownie."
+        },
+        "success" : "Konto zostało pomyślnie dodane"
       },
-      "edit": {
-        "success": "Przychód został pomyślnie zaktualizowany",
-        "error": "Nie udało się zaktualizować przychodu. Spróbuj ponownie."
+      "edit" : {
+        "label" : "Edytuj konto",
+        "success": "Konto zostało pomyślnie zaktualizowane",
+        "error": {
+          "failed" : "Nie udało się zaktualizować konta. Spróbuj ponownie."
+        }
+      },
+      "transfer" : {
+        "label" : "Transfer pomiędzy kontami",
+        "from" : "Z konta",
+        "to" : "Na konto",
+        "amount" : "Kwota",
+        "currency" : "Waluta",
+        "save" : "Zapisz",
+        "cancel" : "Anuluj",
+        "error" : {
+          "account" : "Podano takie same konta",
+          "amount" : "Nieprawidłowa kwota",
+          "failed" : "Nie udało się wykonać transferu. Spróbuj ponownie."
+        },
+        "success" : "Transfer został pomyślnie wykonany"
+      }
+    }
+  },
+  "settings" : {
+    "page" : {
+      "label" : "Ustawienia",
+      "secondLabel" : "Zarządzaj kategoriami i preferencjami aplikacji",
+      "categories" : {
+        "buttonLabel" : "Kategorie",
+        "label" : "Kategorie",
+        "expenses" : "Wydatki",
+        "incomes" : "Przychody",
+        "lack" : "Brak kategorii",
+        "secondLabel" : "Kategorie — Przeglądaj i dodawaj nowe podkategorie",
+        "add" : {
+          "label" : "Dodaj kategorię",
+          "secondLabel" : "Dodaj podkategorię",
+          "name" : "Nazwa kategorii",
+          "parent" : "Rodzic",
+          "main" : "Brak (kategoria główna)",
+          "group" : {
+            "label" : "Grupa kategorii",
+            "needs" : "Niezbędne",
+            "wants" : "Zachcianki",
+            "savings" : "Oszczędności"
+          },
+          "color" : {
+            "label" : "Kolor",
+            "inherited" : "Kolor dziedziczony od rodzica"
+          },
+          "error" : {
+            "name" : "Podaj nazwę kategorii",
+            "group" : "Podaj grupę kategorii",
+            "message" : "Błąd podczas zapisu kategorii"
+          },
+          "success" : "Kategoria dodana",
+          "save" : "Zapisz",
+          "cancel" : "Anuluj"
+        },
+        "delete" : {
+          "label" : "Usuń kategorię",
+          "success" : "Udało się usunąć kategorię",
+          "error" : "Nie udało się usunąć kategorii"
+        },
+        "edit" : {
+          "label" : "Edytuj kategorię",
+          "success" : "Kategoria zaktualizowana"
+        }
+      },
+      "general" : {
+        "buttonLabel" : "Ogólne"
+      }
+    }
+  },
+  "budget" : {
+    "page" : {
+      "label" : "Budżet",
+      "secondLabel" : "Planuj i kontroluj swoje wydatki według kategorii",
+      "add" : {
+        "label" : "Ustaw budżet",
+        "success" : "Udało się dodać budżet",
+        "error" : "Nie udało się zapisać budżetu"
+      },
+      "edit" : {
+        "success" : "Udało się edytować budżet"
+      },
+      "card1" : {
+        "label" : "Całkowity budżet",
+        "text" : "Miesięczny limit wydatków"
+      },
+      "card2" : {
+        "label" : "Wydano",
+        "text" : " budżetu wykorzystane"
+      },
+      "card3" : {
+        "label" : "Pozostało",
+        "text" : "Do końca miesiąca"
+      },
+      "card4" : {
+        "label" : "Średnia dzienna",
+        "text" : "Na pozostałe dni"
+      },
+      "table" : {
+        "label" : "Budżet wg kategorii",
+        "secondLabel" : "Postęp wydatków w poszczególnych kategoriach",
+        "empty" : "Brak ustawionych budżetów — dodaj nowy budżet, aby zacząć monitorować wydatki"
+      },
+      "delete" : {
+        "confirm" : "Czy napewno usunąć budżet?",
+        "success" : "Pomyślnie usunięto budżet",
+        "error" : "Nie udało się usunąć budżetu"
       }
     },
-    "addIncome": {
-      "addLabel": "Dodaj przychód",
-      "editLabel": "Edytuj przychód",
-      "date": "Data przychodu",
-      "description": "Opis",
-      "category": {
-        "label": "Kategoria",
-        "required": "Wybierz kategorię"
+    "dialog" : {
+      "limitAmount" : {
+        "label" : "Limit wydatków",
+        "required" : "Limit wydatków jest wymagany"
       },
-      "price": {
-        "label": "Kwota",
-        "required": "Kwota musi być większa od 0"
+      "category" : {
+        "label" : "Kategoria",
+        "required" : "Kategoria jest wymagana",
+        "exists" : "Budżet z taką kategorią istnieje dla wybranej daty"
       },
-      "repeat": "Powtarzaj",
-      "save": "Zapisz",
-      "cancel": "Anuluj"
+      "startDate" : {
+        "label" : "Data rozpoczęcia",
+        "required" : "Data rozpoczęcia jest wymagana"
+      },
+      "endDate" : {
+        "label" : "Data zakończenia",
+        "required" : "Data zakończenia jest wymagana"
+      },
+      "currency" : {
+        "label" : "Waluta"
+      },
+      "add" : {
+        "label" : "Nowy budżet"
+      },
+      "edit"  : {
+        "label" : "Edytuj budżet"
+      },
+      "save" : "Zapisz",
+      "cancel" : "Anuluj"
+    }
+  },
+  "goal" : {
+    "page" : {
+      "add" : {
+        "label" : "Dodaj cel",
+        "success" : "Cel finansowy został utworzony",
+        "error" : "Nie udało się utworzyć celu"
+      },
+      "deposit" : {
+        "success" : "Wpłata zakończona powodzeniem",
+        "error" : "Błąd podczas wpłacania środków"
+      },
+      "table" : {
+        "label" : "Twoje Cele Finansowe"
+      },
+      "card" : {
+        "deposit" : "Wpłać"
+      }
     },
-    "recurringIncome": {
-      "label": "Edytuj przychód okresowy",
-      "active": "Aktywny",
-      "inactive": "Nieaktywny"
+    "dialog" : {
+      "add" : {
+        "label" : "Nowy cel finansowy",
+        "name" : {
+          "label" : "Nazwa celu",
+          "helper" : "np. Wakacje, Nowy samochód"
+        },
+        "targetAmount" : {
+          "label" : "Kwota docelowa"
+        },
+        "date" : {
+          "label" : "Data realizacji"
+        },
+        "initialAmount" : {
+          "label" : "Wpłata początkowa"
+        },
+        "contribution" : {
+          "label" : "Stałe zlecenie"
+        },
+        "currency" : {
+          "label" : "Waluta"
+        },
+        "periodContribution" : {
+          "label" : "Okres wpłat",
+          "monthly" : "Miesięcznie",
+          "weekly" : "Tygodniowo"
+        },
+        "account" : {
+          "label" : "Konto"
+        },
+        "optional" : "Ustawienia opcjonalne",
+        "error" : "Wypełnij wymagane pola",
+        "save" : "Utwórz cel",
+        "cancel" : "Anuluj"
+      },
+      "deposit" : {
+        "label" : "Wpłata na cel:",
+        "targetAmount" : "Cel:",
+        "account" : {
+          "source" : "Wybierz konto źródłowe"
+        },
+        "amount" : {
+          "label" : "Kwota wpłaty"
+        },
+        "save" : "Wpłata",
+        "cancel" : "Anuluj"
+      }
+    }
+  },
+  "recommendation" : {
+    "invest" : {
+      "profile" : {
+        "critical" : "Ujemny bilans",
+        "conservative" : "Profil ostrożny",
+        "balanced" : "Profil zrównoważony",
+        "aggressive" : "Profil agresywny",
+        "default" : "Nieznany"
+      },
+      "analyze" : {
+        "label": "Analiza 3-miesięczna",
+        "rate" : "% oszczędności"
+      },
+      "empty" : "Brak rekomendacji dla Twojego obecnego profilu.",
+      "rsi" : "• RSI: ",
+      "buy" : "KUPUJ",
+      "hold" : "TRZYMAJ",
+      "sell" : "SPRZEDAJ"
     }
   }
 }

@@ -4,6 +4,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import type {SxProps, Theme} from '@mui/material/styles';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockOutlineIcon from '@mui/icons-material/LockOutline';
+import {useTranslation} from "react-i18next";
 
 type AccountProps = {
     name: string
@@ -32,6 +33,8 @@ const AccountSummaryCard: React.FC<AccountProps> = ({
                                                     }) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
+
+    const {t} = useTranslation();
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
     const handleMenuClose = () => setAnchorEl(null);
@@ -86,8 +89,12 @@ const AccountSummaryCard: React.FC<AccountProps> = ({
                         <MenuItem onClick={() => {
                             handleMenuClose();
                             editMethod();
-                        }}>Edytuj</MenuItem>
-                        <MenuItem onClick={deleteMethod}>Archiwizuj</MenuItem>
+                        }}>
+                            {t('account.page.card.edit')}
+                        </MenuItem>
+                        <MenuItem onClick={deleteMethod}>
+                            {t('account.page.card.archive')}
+                        </MenuItem>
                     </Menu>
                 </Box>
 

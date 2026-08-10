@@ -1,0 +1,51 @@
+package finance_mate.core.exception;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@RestControllerAdvice
+@Slf4j
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(AccountException.class)
+    public ResponseEntity<String> handleAccountError(AccountException ex) {
+        return ResponseEntity.status(ex.getErrorCode().getHttpStatus()).body(ex.getErrorCode().getMessage());
+    }
+
+    @ExceptionHandler(CategoryException.class)
+    public ResponseEntity<String> handleCategoryError(CategoryException ex) {
+        return ResponseEntity.status(ex.getErrorCode().getHttpStatus()).body(ex.getErrorCode().getMessage());
+    }
+
+    @ExceptionHandler(TransactionException.class)
+    public ResponseEntity<String> handleTransactionError(TransactionException ex) {
+        return ResponseEntity.status(ex.getErrorCode().getHttpStatus()).body(ex.getErrorCode().getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleError(Exception ex) {
+        log.error("An unexpected error occurred: ", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
+    }
+}

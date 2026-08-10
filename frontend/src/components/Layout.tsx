@@ -10,15 +10,15 @@ import {
     ListItemButton, Avatar, Button
 } from '@mui/material';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/auth';
+import { useAuthStore } from '../store/auth-store.ts';
 import HomeIcon from '@mui/icons-material/Home';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CrisisAlertIcon from '@mui/icons-material/CrisisAlert';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import {useTranslation} from "react-i18next";
+import {authService} from "../api/auth-client.ts";
 
 const drawerWidth = 240;
 
@@ -26,14 +26,13 @@ export function Layout() {
     const { t } = useTranslation();
     const logout = useAuthStore(s => s.logout);
     const user = useAuthStore(s => s.user);
-    const name = user?.username || 'User';
+    const name = user?.firstName && user.lastName ? `${user?.firstName} ${user?.lastName}` : '';
     const navigate = useNavigate();
 
     const menuItems = [
         { text: t('layout.dashboard'), icon: <HomeIcon />, path: "/dashboard" },
         { text: t('layout.account'), icon: <AccountBalanceWalletIcon />, path: "/accounts" },
-        { text: t('layout.expenses'), icon: <ReceiptIcon />, path: "/expenses" },
-        { text: t('layout.incomes'), icon: <AttachMoneyIcon />, path: "/incomes" },
+        { text: t('layout.transactions'), icon: <ReceiptIcon />, path: "/transactions" },
         { text: t('layout.budget'), icon: <CrisisAlertIcon />, path: "/budgets" },
         { text: t('layout.report'), icon: <BarChartIcon />, path: "/reports" },
         { text: t('layout.settings'), icon: <SettingsIcon />, path: "/settings" },
@@ -52,6 +51,12 @@ export function Layout() {
             children: initials,
         };
     };
+
+    const handleLogout = async () => {
+        await authService.logout();
+        logout();
+        navigate('/login');
+    }
 
     return (
         <Box sx={{ display: "flex", bgcolor: "background.default", minHeight: "100vh" }}>
@@ -89,7 +94,7 @@ export function Layout() {
                         fullWidth
                         variant="outlined"
                         color="secondary"
-                        onClick={() => { logout(); navigate('/login'); }}
+                        onClick={() => handleLogout()}
                     >
                         {t('layout.logOut')}
                     </Button>

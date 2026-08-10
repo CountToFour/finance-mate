@@ -1,90 +1,85 @@
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import {
     Box,
     Typography,
     Button
 } from "@mui/material";
 import {Add} from '@mui/icons-material';
-import {deleteAccount, getAccounts, includeInStatsAccount} from "../../lib/api.ts";
-import type {Account} from "../../lib/types.ts";
 import {useNotification} from "../../components/NotificationContext.tsx";
 import AddAccountDialog from "./AddAccountDialog.tsx";
 import AccountSummaryCard from "./AccountSummaryCard.tsx";
 import TransferDialog from "./TransferDialog.tsx";
+import type {Account} from "../../types/account.ts";
+import {useAccountStore} from "../../store/account-store.ts";
+import {accountService} from "../../api/account-client.ts";
+import {useTranslation} from "react-i18next";
 
 export default function Accounts() {
     const [openDialog, setOpenDialog] = useState(false);
     const [transferDialog, setTransferDialog] = useState(false);
-    const [accounts, setAccounts] = useState<Account[]>([]);
     const [accountToEdit, setAccountToEdit] = useState<Account | null>(null);
+
+    const accounts = useAccountStore(state => state.accounts);
+    const update = useAccountStore(state => state.updateAccount);
+    const deleteAccount = useAccountStore(state => state.deleteAccount);
+    const addAccount = useAccountStore(state => state.addAccount);
+
+    const {t} = useTranslation();
     // const [currencies, setCurrencies] = useState<Currency[]>([]);
     // const [isLoading, setIsLoading] = useState(false);
 
     const {success, error} = useNotification();
 
-    useEffect(() => {
-        getAccounts().then((res) => {
-            setAccounts(res.data);
-        });
-        // getCurrencies().then((res) => {
-        //     setCurrencies(res.data);
-        // });
-    }, [transferDialog]);
+    const includeAccountInStats = (account: Account) => {
+        accountService.includeInStats(account.id).then(() => {
+            success(t('account.page.stats.success'));
 
-    const includeAccountInStats = (accountId: string) => {
-        includeInStatsAccount(accountId).then(() => {
-            success('Operacja zakończona sukcesem');
-
-            setAccounts(prev =>
-                prev.map(acc =>
-                    acc.id === accountId
-                        ? { ...acc, includeInStats: !acc.includeInStats }
-                        : acc
-                )
-            );
+            update(account);
         }).catch(() => {
-            error("Błąd podczas aktualizacji konta");
+            error(t('account.page.stats.error'));
         });
     }
 
-    const handleDeleteAccount = (accountId: string) => {
-        deleteAccount(accountId).then(() => {
-            success("Pomyślnie usunięto konto")
-            setAccounts(prevAccounts => prevAccounts.filter(account => account.id !== accountId));
+    const handleDeleteAccount = (account: Account) => {
+        accountService.deleteAccount(account.id).then(() => {
+            success(t('account.page.delete.success'));
+            deleteAccount(account);
         }).catch(() => {
-            error("Błąd podczas usuwania konta");
+            error(t('account.page.delete.error'));
         });
     }
 
     const updateAccount = (updated: Account) => {
-        setAccounts(prev =>
-            prev.map(acc => (acc.id === updated.id ? updated : acc))
-        );
+        update(updated)
     };
 
     const addAccountToList = (newAccount: Account) => {
-        setAccounts(prev => [...prev, newAccount]);
+        addAccount(newAccount);
     }
 
     return (
         <>
             <Box p={2} display="flex" justifyContent="space-between" alignItems="center">
                 <Box>
-                    <Typography variant="h5" fontWeight={'bold'} color={'secondary'}>Konta</Typography>
-                    <Typography variant="body2" sx={{mt: 1}}>Zarządzaj swoimi kontami</Typography>
+                    <Typography variant="h5" fontWeight={'bold'} color={'secondary'}>
+                        {t ('account.page.label')}
+                    </Typography>
+                    <Typography variant="body2" sx={{mt: 1}}>
+                        {t('account.page.secondLabel')}
+                    </Typography>
                 </Box>
                 <Box display="flex" gap={2} alignItems="center">
                     <Button variant="outlined" onClick={() => {
                         setTransferDialog(true)
                     }}>
                         <Add sx={{mr: 1}}/>
-                        Transfer
+                        {t('account.page.transfer')}
                     </Button>
                     <Button variant={'contained'} color={'secondary'} onClick={() => {
                         setOpenDialog(true)
                     }}>
                         <Add sx={{mr: 1}}/>
-                        Nowe konto
+                        {t('account.page.add')}
                     </Button>
                 </Box>
             </Box>
@@ -96,11 +91,12 @@ export default function Accounts() {
                         name={account.name}
                         description={account.description}
                         balance={account.balance}
-                        currencySymbol={account.currency.symbol}
+                        // currencySymbol={account.currency.symbol}
+                        currencySymbol={'zł'}
                         color={account.color}
                         includeInStats={account.includeInStats}
-                        statsMethod={() => includeAccountInStats(account.id)}
-                        deleteMethod={() => handleDeleteAccount(account.id)}
+                        statsMethod={() => includeAccountInStats(account)}
+                        deleteMethod={() => handleDeleteAccount(account)}
                         editMethod={() => {
                             setAccountToEdit(account);
                             setOpenDialog(true)
@@ -112,7 +108,6 @@ export default function Accounts() {
             <TransferDialog
                 open={transferDialog}
                 onClose={() => setTransferDialog(false)}
-                accounts={accounts}
             />
             <AddAccountDialog
                 open={openDialog}

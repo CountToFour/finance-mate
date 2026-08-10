@@ -1,4 +1,4 @@
-import React, {useMemo, useState, useEffect} from 'react'
+import React, {useMemo, useState, useEffect, useCallback} from 'react'
 import {
     Dialog,
     DialogTitle,
@@ -11,21 +11,23 @@ import {
     Box,
     FormControl, InputLabel, Select
 } from '@mui/material'
-import type {Category, CategoryDto, CategoryGroup} from '../../lib/types'
-import {createCategory, updateCategory} from '../../lib/api'
 import {useNotification} from '../../components/NotificationContext'
+import type {Category, CategoryDto, CategoryGroup, SubCategoryDto, TransactionType} from "../../types/category.ts";
+import {useCategoryStore} from "../../store/category-store.ts";
+import {categoryService} from "../../api/category-client.ts";
+import {useTranslation} from "react-i18next";
+import type {TFunction} from "i18next";
 
 type Props = {
     open: boolean
     onClose: () => void
     categories: Category[]
-    transactionType: string
-    onSaved: (cat: Category, edited?: boolean) => void
+    transactionType: TransactionType
     editing?: Category | null
     parentForNew?: string | null
 }
 
-const flattenForSelect = (cats: Category[]) => {
+const flattenForSelect = (cats: Category[], t: TFunction) => {
     const map = new Map<string, Category & { children?: Category[] }>()
     cats.forEach(c => map.set(c.id, {...c, children: []}))
     const roots: Array<Category & { children?: Category[] }> = []
@@ -37,7 +39,7 @@ const flattenForSelect = (cats: Category[]) => {
         } else roots.push(node)
     })
 
-    const out: { id: string|null, label: string }[] = [{id: null, label: 'Brak (kategoria główna)'}]
+    const out: { id: string|null, label: string }[] = [{id: null, label: t('settings.page.categories.add.main')}]
     const walk = (nodes: typeof roots, prefix = '') => {
         nodes.forEach(n => {
             out.push({id: n.id, label: prefix + n.name})
@@ -48,20 +50,24 @@ const flattenForSelect = (cats: Category[]) => {
     return out
 }
 
-const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transactionType, onSaved, editing=null, parentForNew=null}) => {
+const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transactionType, editing=null, parentForNew=null}) => {
     const [name, setName] = useState('')
     const [color, setColor] = useState('#1976d2')
     const [parentId, setParentId] = useState<string | null>(null)
     const [group, setGroup] = useState<CategoryGroup | ''>('')
     const {success, error} = useNotification()
+    const {t} = useTranslation()
 
-    const options = useMemo(() => flattenForSelect(categories), [categories])
+    const addCategory = useCategoryStore(state => state.addCategory)
+    const editCategory = useCategoryStore(state => state.updateCategory)
 
-    const findParentColor = (id: string | null) => {
+    const options = useMemo(() => flattenForSelect(categories, t), [categories])
+
+    const findParentColor = useCallback((id: string | null) => {
         if (!id) return undefined
         const found = categories.find(c => c.id === id)
         return found?.color
-    }
+    }, [categories])
 
     useEffect(() => {
         if (open) {
@@ -84,37 +90,36 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
                 setGroup('')
             }
         }
-    }, [open, editing, parentForNew, categories])
+    }, [open, editing, parentForNew, categories, findParentColor])
 
     useEffect(() => {
         if (parentId) {
             const pcol = findParentColor(parentId)
             if (pcol) setColor(pcol)
         }
-    }, [parentId])
+    }, [findParentColor, parentId])
 
-    const handleSubmit = async () => {
+    const handleMainCategorySave = async() => {
         if (!name.trim()) {
-            return error('Podaj nazwę kategorii')
+            return error(t('settings.page.categories.add.error.name'))
         } else if (!group.trim() && transactionType === 'EXPENSE') {
-            return error('Podaj grupę kategorii')
+            return error(t('settings.page.categories.add.error.group'))
         }
-        const dto: CategoryDto = { 
-            name: name.trim(), 
-            color, 
-            parentId: parentId || undefined, 
+        const dto: CategoryDto = {
+            name: name.trim(),
+            color,
             transactionType: transactionType,
             categoryGroup: (transactionType === 'EXPENSE' && group) ? (group as CategoryGroup) : undefined
         }
         try {
             if (editing) {
-                const res = await updateCategory(dto, editing.id)
-                onSaved(res.data, true)
-                success('Kategoria zaktualizowana')
+                const res = await categoryService.updateCategory(dto, editing.id)
+                editCategory(res)
+                success(t('settings.page.categories.edit.success'))
             } else {
-                const res = await createCategory(dto)
-                onSaved(res.data, false)
-                success('Kategoria dodana')
+                const res = await categoryService.createCategory(dto)
+                addCategory(res)
+                success(t('settings.page.categories.add.success'))
             }
             setName('')
             setColor('#1976d2')
@@ -123,20 +128,55 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
             onClose()
         } catch (e) {
             console.error(e)
-            error('Błąd podczas zapisu kategorii')
+            error(t('settings.page.categories.add.error.message'))
         }
+    }
+
+    const handleSubCategorySave = async() => {
+        if (!name.trim()) {
+            return error(t('settings.page.categories.add.error.name'))
+        }
+
+        const dto: SubCategoryDto = {
+            name: name.trim(),
+            parentId: parentId,
+        }
+        try {
+            const res = await categoryService.createSubCategory(dto)
+            console.log(res)
+            addCategory(res)
+            success(t('settings.page.categories.add.success'))
+            setName('')
+            setColor('#1976d2')
+            setParentId(null)
+            setGroup('')
+            onClose()
+        } catch {
+            error(t('settings.page.categories.add.error.message'))
+        }
+    }
+
+    const handleSubmit = async () => {
+        if (parentId) {
+            await handleSubCategorySave()
+        } else {
+            await handleMainCategorySave()
+        }
+
     }
 
     const colorLocked = !!parentId
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>{editing ? 'Edytuj kategorię' : 'Dodaj kategorię'}</DialogTitle>
+            <DialogTitle>
+                {editing ? t('settings.page.categories.edit.label') : t('settings.page.categories.add.label')}
+            </DialogTitle>
             <DialogContent dividers>
                 <Stack spacing={2} sx={{mt:1}}>
-                    <TextField label="Nazwa" value={name} onChange={e => setName(e.target.value)} fullWidth />
+                    <TextField label={t('settings.page.categories.add.name')} value={name} onChange={e => setName(e.target.value)} fullWidth />
                     <Box>
-                        <TextField select label="Rodzic" value={parentId ?? ''} onChange={e => setParentId(e.target.value || null)} fullWidth>
+                        <TextField select label={t('settings.page.categories.add.parent')} value={parentId ?? ''} onChange={e => setParentId(e.target.value || null)} fullWidth>
                             {options.map(o => (
                                 <MenuItem key={String(o.id)} value={o.id ?? ''}>{o.label}</MenuItem>
                             ))}
@@ -145,25 +185,25 @@ const AddCategoryDialog: React.FC<Props> = ({open, onClose, categories, transact
 
                     {transactionType === 'EXPENSE' && (
                         <FormControl fullWidth>
-                            <InputLabel>Grupa kategorii</InputLabel>
+                            <InputLabel>{t('settings.page.categories.add.group.label')}</InputLabel>
                             <Select
                                 value={group}
-                                label="Grupa kategorii"
+                                label={t('settings.page.categories.add.group.label')}
                                 onChange={(e) => setGroup(e.target.value as CategoryGroup)}
                             >
-                                <MenuItem value="NEEDS">Niezbędne</MenuItem>
-                                <MenuItem value="WANTS">Zachcianki</MenuItem>
-                                <MenuItem value="SAVINGS">Oszczędności</MenuItem>
+                                <MenuItem value="NEEDS">{t('settings.page.categories.add.group.needs')}</MenuItem>
+                                <MenuItem value="WANTS">{t('settings.page.categories.add.group.wants')}</MenuItem>
+                                <MenuItem value="SAVINGS">{t('settings.page.categories.add.group.savings')}</MenuItem>
                             </Select>
                         </FormControl>
                     )}
 
-                    <TextField label="Kolor" type="color" value={color} onChange={e => setColor(e.target.value)} disabled={colorLocked} helperText={colorLocked ? 'Kolor dziedziczony od rodzica' : ''} />
+                    <TextField label={t('settings.page.categories.add.color.label')} type="color" value={color} onChange={e => setColor(e.target.value)} disabled={colorLocked} helperText={colorLocked ? t('settings.page.categories.add.color.inherited') : ''} />
                 </Stack>
             </DialogContent>
             <DialogActions sx={{mr: 2, mb: 1, mt: 1}}>
-                <Button onClick={onClose}>Anuluj</Button>
-                <Button variant="contained" color="secondary" onClick={handleSubmit}>{editing ? 'Zapisz zmiany' : 'Zapisz'}</Button>
+                <Button onClick={onClose}>{t('settings.page.categories.add.cancel')}</Button>
+                <Button variant="contained" color="secondary" onClick={handleSubmit}>{t('settings.page.categories.add.save')}</Button>
             </DialogActions>
         </Dialog>
     )

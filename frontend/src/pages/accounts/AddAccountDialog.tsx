@@ -6,17 +6,14 @@ import {
     DialogActions,
     Button,
     TextField,
-    MenuItem, Box, IconButton, Typography, ClickAwayListener,
+    Box, IconButton, Typography, ClickAwayListener,
 } from "@mui/material";
 import {useNotification} from "../../components/NotificationContext.tsx";
-import type {Account, CreateAccountDto, Currency} from "../../lib/types.ts";
-import {
-    getCurrencies,
-    createAccount, updateAccount
-} from "../../lib/api.ts";
 import {useTranslation} from "react-i18next";
 import {ChromePicker, CirclePicker} from 'react-color';
 import AddIcon from "@mui/icons-material/Add";
+import type {Account, AccountDto} from "../../types/account.ts";
+import {accountService} from "../../api/account-client.ts";
 
 const defaultColor = [ "#4CAF50", "#2196F3", "#FFC107", "#F44336",
     "#9C27B0", "#FF9800", "#607D8B", "#E91E63"
@@ -37,8 +34,8 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
     const [description, setDescription] = useState<string>("");
     const [amount, setAmount] = useState<string>("");
     const [color, setColor] = useState<string>("#2b8aef");
-    const [currencyCode, setCurrencyCode] = useState<string>("");
-    const [currencies, setCurrencies] = useState<Currency[]>([]);
+    // const [currencyCode, setCurrencyCode] = useState<string>("");
+    // const [currencies, setCurrencies] = useState<Currency[]>([]);
     const [customColor, setCustomColor] = useState("");
     const [showPicker, setShowPicker] = useState(false);
 
@@ -60,20 +57,20 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
     }, [showPicker]);
 
     useEffect(() => {
-        void getCurrencies().then((res) => setCurrencies(res.data)).catch(() => {
-        });
+        // void getCurrencies().then((res) => setCurrencies(res.data)).catch(() => {
+        // });
         if (initialAccount) {
             setName(initialAccount.name ?? "");
             setDescription(initialAccount.description ?? "");
             setAmount((initialAccount.balance ?? 0).toString());
             setColor(initialAccount.color ?? '#2b8aef')
-            setCurrencyCode(initialAccount.currency.code ?? "");
+            // setCurrencyCode(initialAccount.currency.code ?? "");
         } else {
             setName("");
             setDescription("");
             setAmount("");
             setColor('#2b8aef');
-            setCurrencyCode("");
+            // setCurrencyCode("");
         }
     }, [initialAccount]);
 
@@ -83,19 +80,22 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         const newErrors = {description: "", amount: "", color: "", currencyId: "", name: ""};
 
         if (!amount || Number.isNaN(parseFloat(amount))) {
-            newErrors.amount = t('accounts.add.amountRequired', 'Saldo jest wymagane');
+            newErrors.amount = t('account.dialog.add.error.balance');
+            valid = false;
+        } else if (parseFloat(amount) < 0) {
+            newErrors.amount = t('account.dialog.add.error.negativeBalance')
             valid = false;
         }
         if (!color) {
-            newErrors.color = 'Kolor jest wymagany'
+            newErrors.color = t('account.dialog.add.error.color');
             valid = false;
         }
-        if (!currencyCode) {
-            newErrors.currencyId = 'Waluta jest wymagana'
-            valid = false;
-        }
+        // if (!currencyCode) {
+        //     newErrors.currencyId = 'Waluta jest wymagana'
+        //     valid = false;
+        // }
         if (!name) {
-            newErrors.name = 'Nazwa jest wymagana'
+            newErrors.name = t('account.dialog.add.error.name');
             valid = false;
         }
 
@@ -105,34 +105,33 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
 
     const handleSave = async () => {
         if (!validate()) return;
-        console.log("waluta " + currencyCode)
-        const accountDto = ({
+        // console.log("waluta " + currencyCode)
+        const accountDto : AccountDto = {
             name: name,
             description: description || undefined,
-            currencyCode: currencyCode,
+            // currencyCode: currencyCode,
             balance: parseFloat(amount) || 0,
             color: color,
-        } as unknown) as CreateAccountDto;
+        }
 
-        console.log(accountDto);
         try {
             if (!initialAccount) {
-                const res = await createAccount(accountDto);
-                success(t('accounts.notifications.createSuccess', 'Udało się utworzyć konto'));
-                onCreated(res.data)
+                const res = await accountService.createAccount(accountDto);
+                success(t('account.dialog.add.success'));
+                onCreated(res)
                 handleClose();
             } else {
-                const res = await updateAccount(accountDto, initialAccount.id);
-                success(t('accounts.notifications.updateSuccess', 'Udało się zaktualizować konto'));
-                onUpdated(res.data);
+                const res = await accountService.updateAccount(accountDto, initialAccount.id);
+                success(t('account.dialog.edit.success'));
+                onUpdated(res);
                 handleClose();
             }
         } catch (e) {
             console.error(e);
             if (!initialAccount) {
-                error(t('accounts.notifications.createError', 'Nie udało się utworzyć konta'));
+                error(t('account.dialog.add.error.failed'));
             } else {
-                error(t('accounts.notifications.updateError', 'Nie udało się zaktualizować konta'));
+                error(t('account.dialog.edit.error.failed'));
             }
         }
 
@@ -143,7 +142,7 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         setDescription("");
         setAmount("");
         setColor('#2b8aef');
-        setCurrencyCode("");
+        // setCurrencyCode("");
         setShowPicker(false);
         setFormErrors({amount: "", color: "", currencyId: "", name: "", description: ""});
         onClose();
@@ -153,22 +152,22 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
             <DialogTitle>
                 {initialAccount
-                    ? t('accounts.dialog.editTitle', 'Edytuj konto')
-                    : t('accounts.dialog.addTitle', 'Dodaj nowe konto')}
+                    ? t('account.dialog.edit.label')
+                    : t('account.dialog.add.label')}
             </DialogTitle>
 
             <DialogContent dividers sx={{ position: 'relative' }}>
                 <Box
                     sx={{
                         display: "grid",
-                        gridTemplateColumns: {xs: "1fr", sm: "1fr 1fr"},
+                        // gridTemplateColumns: {xs: "1fr", sm: "1fr 1fr"},
                         gap: 2,
                         mb: 2,
                     }}
                 >
                     <TextField
                         fullWidth
-                        label={t('accounts.fields.amount', 'Saldo')}
+                        label={t('account.dialog.add.balance')}
                         type="number"
                         value={amount}
                         onChange={(e) => {
@@ -180,30 +179,30 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                         error={!!errors.amount}
                         helperText={errors.amount}
                     />
-                    <TextField
-                        select
-                        fullWidth
-                        disabled={!!initialAccount}
-                        label={t('accounts.fields.currency', 'Waluta')}
-                        value={currencyCode}
-                        onChange={(e) => {
-                            setCurrencyCode(e.target.value);
-                            setFormErrors((prev) => ({...prev, currencyId: ""}));
-                        }}
-                        error={!!errors.currencyId}
-                        helperText={errors.currencyId}
-                    >
-                        {currencies.map((currency: Currency) => (
-                            <MenuItem key={currency.code} value={currency.code}>
-                                {currency.code} {currency.symbol ? `- ${currency.symbol}` : ''}
-                            </MenuItem>
-                        ))}
-                    </TextField>
+                    {/*<TextField*/}
+                    {/*    select*/}
+                    {/*    fullWidth*/}
+                    {/*    disabled={!!initialAccount}*/}
+                    {/*    label={t('accounts.fields.currency', 'Waluta')}*/}
+                    {/*    value={currencyCode}*/}
+                    {/*    onChange={(e) => {*/}
+                    {/*        setCurrencyCode(e.target.value);*/}
+                    {/*        setFormErrors((prev) => ({...prev, currencyId: ""}));*/}
+                    {/*    }}*/}
+                    {/*    error={!!errors.currencyId}*/}
+                    {/*    helperText={errors.currencyId}*/}
+                    {/*>*/}
+                    {/*    {currencies.map((currency: Currency) => (*/}
+                    {/*        <MenuItem key={currency.code} value={currency.code}>*/}
+                    {/*            {currency.code} {currency.symbol ? `- ${currency.symbol}` : ''}*/}
+                    {/*        </MenuItem>*/}
+                    {/*    ))}*/}
+                    {/*</TextField>*/}
                 </Box>
 
                 <TextField
                     fullWidth
-                    label={t('accounts.fields.name', 'Nazwa')}
+                    label={t('account.dialog.add.name')}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     error={!!errors.name}
@@ -214,14 +213,14 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
                     sx={{mb: 2}}
                     fullWidth
                     margin="normal"
-                    label={t('accounts.fields.description', 'Opis')}
+                    label={t('account.dialog.add.description')}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                 />
 
                 <Box sx={{width: '100%'}}>
                     <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 500 }}>
-                        {t('accounts.fields.color', 'Kolor')}
+                        {t('account.dialog.add.color')}
                     </Typography>
 
                     <Box
@@ -294,10 +293,10 @@ const AddAccountDialog: React.FC<AddExpenseDialogProps> = ({open, onClose, initi
 
             <DialogActions sx={{mr: 2, mb: 1, mt: 1}}>
                 <Button onClick={handleClose} color="secondary">
-                    {t('expenses.addExpense.cancel', 'Anuluj')}
+                    {t('account.dialog.add.cancel')}
                 </Button>
                 <Button onClick={handleSave} variant="contained" color="primary">
-                    {t('expenses.addExpense.save', 'Zapisz')}
+                    {t('account.dialog.add.save')}
                 </Button>
             </DialogActions>
         </Dialog>

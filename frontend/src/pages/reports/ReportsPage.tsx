@@ -21,7 +21,7 @@ import CrisisAlertIcon from "@mui/icons-material/CrisisAlert";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import Overview from "./tabs/Overview.tsx";
 import Trends from "./tabs/Trends.tsx";
-import {useAuthStore} from "../../store/auth.ts";
+import {useAuthStore} from "../../store/auth-store.ts";
 
 const KategorieView = () => <Typography>Zawartość: Kategorie</Typography>;
 

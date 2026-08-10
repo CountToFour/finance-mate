@@ -12,14 +12,13 @@ import {
     ListItemText,
     useTheme
 } from '@mui/material';
-import {useAuthStore} from "../../store/auth.ts";
+import {useAuthStore} from "../../store/auth-store.ts";
 import {
-    getAccounts,
     getAllCategoriesAmount,
-    getCategories, getDailyOverview,
-    getExpenses, getSpendingAuditor, getUserBalance
+    getDailyOverview,
+    getSpendingAuditor, getUserBalance
 } from "../../lib/api.ts";
-import type {Account, Category, CategoryAmount, DailyOverview, Expense, SpendingStructure} from "../../lib/types.ts";
+import type {CategoryAmount, DailyOverview, Expense, SpendingStructure} from "../../lib/types.ts";
 import dayjs from "dayjs";
 import 'dayjs/locale/pl';
 import {
@@ -31,6 +30,12 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import AuditorWidget from "./AuditorWidget.tsx";
 import CashFlowWidget from "./CashFlowWidget.tsx";
 import HealthScoreWidget from "./HealthScoreWidget.tsx";
+import {useAccountStore} from "../../store/account-store.ts";
+import {accountService} from "../../api/account-client.ts";
+import {useCategoryStore} from "../../store/category-store.ts";
+import {categoryService} from "../../api/category-client.ts";
+import {transactionService} from "../../api/transaction-client.ts";
+import type {Transaction, TransactionFilters} from "../../types/transaction.ts";
 
 dayjs.locale('pl');
 
@@ -38,10 +43,15 @@ function Dashboard() {
     const {user} = useAuthStore();
     const theme = useTheme();
 
-    const [accounts, setAccounts] = useState<Account[]>([]);
-    const [recentExpenses, setRecentExpenses] = useState<Expense[]>([]);
+    const accounts = useAccountStore(state => state.accounts)
+    const setAccounts = useAccountStore(state => state.setAccounts)
+    // const [accounts, setAccounts] = useState<Account[]>([]);
+    const [recentExpenses, setRecentExpenses] = useState<Transaction[]>([]);
     const [categoryAmounts, setCategoryAmounts] = useState<CategoryAmount[]>([]);
-    const [allCategories, setAllCategories] = useState<Category[]>([]);
+    // const [allCategories, setAllCategories] = useState<Category[]>([]);
+    const allCategories = useCategoryStore(state => state.categories)
+    const setAllCategories = useCategoryStore(state => state.setCategories)
+
     const [weeklyExpenses, setWeeklyExpenses] = useState<{ day: string; amount: number; fullDate: string }[]>([]);
     const [totalBalance, setTotalBalance] = useState<{ amount: number, currency: string }>({amount: 0, currency: ''});
     const [auditorData, setAuditorData] = useState<SpendingStructure | null>(null);
@@ -55,8 +65,8 @@ function Dashboard() {
             const formattedToday = today.format('YYYY-MM-DD');
 
             try {
-                const accountsRes = await getAccounts();
-                setAccounts(accountsRes.data);
+                const accountsResponse = await accountService.getAccounts();
+                setAccounts(accountsResponse);
 
                 const balanceRes = await getUserBalance();
                 setTotalBalance({
@@ -66,9 +76,15 @@ function Dashboard() {
 
                 const weeklyRes = await getDailyOverview(startOfLast7Days, formattedToday, 'EXPENSE');
                 processWeeklyData(weeklyRes.data);
-
-                const recentRes = await getExpenses(null, startOfMonth, formattedToday);
-                const sorted = recentRes.data.sort((a: Expense, b: Expense) =>
+                
+                const filters: TransactionFilters = {
+                    type: "EXPENSE",
+                    startDate: startOfMonth,
+                    endDate: endOfMonth,
+                }
+                
+                const recentExpenses = await transactionService.getTransactions(filters)
+                const sorted = recentExpenses.sort((a: Transaction, b: Transaction) =>
                     dayjs(b.createdAt).diff(dayjs(a.createdAt))
                 );
                 setRecentExpenses(sorted.slice(0, 5));
@@ -76,8 +92,10 @@ function Dashboard() {
                 const catAmountRes = await getAllCategoriesAmount('EXPENSE', startOfMonth, endOfMonth);
                 const sortedCats = catAmountRes.data.sort((a: CategoryAmount, b: CategoryAmount) => b.amount - a.amount);
                 setCategoryAmounts(sortedCats);
-                const catsRes = await getCategories('EXPENSE');
-                setAllCategories(catsRes.data);
+
+                const categoriesResponse = await categoryService.getCategories();
+                setAllCategories(categoriesResponse);
+
                 const auditorRes = await getSpendingAuditor();
                 setAuditorData(auditorRes.data);
                 console.log('Auditor ' + auditorRes);
@@ -87,7 +105,7 @@ function Dashboard() {
         };
 
         fetchData();
-    }, []);
+    }, [setAccounts, setAllCategories]);
 
 
     const processWeeklyData = (data: DailyOverview[]) => {
@@ -115,7 +133,8 @@ function Dashboard() {
         amount.toLocaleString('pl-PL', {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
-        }) + ` ${user?.currency.symbol}`;
+        // }) + ` ${user?.currency.symbol}`;
+        }) + ` zł`;
 
     const weeklyStats = useMemo(() => {
         const total = weeklyExpenses.reduce((sum, item) => sum + item.amount, 0);
@@ -134,7 +153,8 @@ function Dashboard() {
 
     const findTransactionCurrency = (transaction: Expense) => {
         const account = accounts.find(a => a.name === transaction.accountName);
-        const symbol = account?.currency?.symbol ?? '';
+        // const symbol = account?.currency?.symbol ?? '';
+        const symbol = 'zł';
         return symbol
     }
 
@@ -145,7 +165,7 @@ function Dashboard() {
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
                 <Box>
                     <Typography variant="h5" fontWeight="bold" color="secondary">Dashboard Finansowy</Typography>
-                    <Typography variant="body2" sx={{mt: 1}}>Witaj {user?.username}, oto przegląd Twoich
+                    <Typography variant="body2" sx={{mt: 1}}>Witaj {user?.firstName}, oto przegląd Twoich
                         finansów</Typography>
                 </Box>
             </Stack>
@@ -169,7 +189,8 @@ function Dashboard() {
                                             {account.name}
                                         </Typography>
                                         <Typography variant="h5" fontWeight="bold" sx={{mt: 1}}>
-                                            {account.balance.toLocaleString('pl-PL', {minimumFractionDigits: 2})} {account.currency.symbol}
+                                            {/*{account.balance.toLocaleString('pl-PL', {minimumFractionDigits: 2})} {account.currency.symbol}*/}
+                                            {account.balance.toLocaleString('pl-PL', {minimumFractionDigits: 2})} zł
                                         </Typography>
                                     </Box>
                                     <AccountBalanceWalletIcon
@@ -300,7 +321,8 @@ function Dashboard() {
                                             dy={10}
                                         />
                                         <YAxis
-                                            tickFormatter={(val) => `${val} ${user?.currency.symbol}`}
+                                            // tickFormatter={(val) => `${val} ${user?.currency.symbol}`}
+                                            tickFormatter={(val) => `${val} zł`}
                                             tick={{fontSize: 11, fill: '#aaa'}}
                                             axisLine={false}
                                             tickLine={false}
@@ -312,7 +334,8 @@ function Dashboard() {
                                                 border: 'none',
                                                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                                             }}
-                                            formatter={(value: number) => [`${value} ${user?.currency.symbol}`, 'Suma']}
+                                            // formatter={(value: number) => [`${value} ${user?.currency.symbol}`, 'Suma']}
+                                            formatter={(value: number) => [`${value} zł`, 'Suma']}
                                         />
                                         <Bar
                                             dataKey="amount"
@@ -330,12 +353,14 @@ function Dashboard() {
                                 <Box>
                                     <Typography variant="caption" color="text.secondary">Średnia dzienna</Typography>
                                     <Typography variant="body2"
-                                                fontWeight="bold">{weeklyStats.avg} {user?.currency.symbol}</Typography>
+                                                // fontWeight="bold">{weeklyStats.avg} {user?.currency.symbol}</Typography>
+                                                fontWeight="bold">{weeklyStats.avg} zł</Typography>
                                 </Box>
                                 <Box textAlign="right">
                                     <Typography variant="caption" color="text.secondary">Najwyższy dzień</Typography>
                                     <Typography variant="body2" fontWeight="bold">
-                                        {weeklyStats.maxDay} ({weeklyStats.maxAmount} {user?.currency.symbol})
+                                        {/*{weeklyStats.maxDay} ({weeklyStats.maxAmount} {user?.currency.symbol})*/}
+                                        {weeklyStats.maxDay} ({weeklyStats.maxAmount} zł)
                                     </Typography>
                                 </Box>
                             </Stack>
@@ -344,66 +369,66 @@ function Dashboard() {
                 </Grid>
             </Box>
 
-            {/* Last transactions */}
-            <Card variant="outlined" sx={{borderRadius: 2}}>
-                <CardContent>
-                    <Stack direction="row" alignItems="center" gap={1} mb={2}>
-                        <AttachMoneyIcon color="primary"/>
-                        <Typography variant="h6" fontWeight="bold">Ostatnie transakcje</Typography>
-                    </Stack>
-                    <List disablePadding>
-                        {recentExpenses.length === 0 && (
-                            <Typography color="text.secondary" sx={{py: 2, textAlign: 'center'}}>
-                                Brak ostatnich transakcji w tym miesiącu.
-                            </Typography>
-                        )}
-                        {recentExpenses.map((expense, index) => {
-                            const category = allCategories.find(c => c.name === expense.category);
-                            const color = category?.color || '#ccc';
-                            const bg = hexToRgba(color, 0.1);
+            {/*/!* Last transactions *!/*/}
+            {/*<Card variant="outlined" sx={{borderRadius: 2}}>*/}
+            {/*    <CardContent>*/}
+            {/*        <Stack direction="row" alignItems="center" gap={1} mb={2}>*/}
+            {/*            <AttachMoneyIcon color="primary"/>*/}
+            {/*            <Typography variant="h6" fontWeight="bold">Ostatnie transakcje</Typography>*/}
+            {/*        </Stack>*/}
+            {/*        <List disablePadding>*/}
+            {/*            {recentExpenses.length === 0 && (*/}
+            {/*                <Typography color="text.secondary" sx={{py: 2, textAlign: 'center'}}>*/}
+            {/*                    Brak ostatnich transakcji w tym miesiącu.*/}
+            {/*                </Typography>*/}
+            {/*            )}*/}
+            {/*            {recentExpenses.map((expense, index) => {*/}
+            {/*                const category = allCategories.find(c => c.name === expense.category);*/}
+            {/*                const color = category?.color || '#ccc';*/}
+            {/*                const bg = hexToRgba(color, 0.1);*/}
 
-                            return (
-                                <React.Fragment key={expense.id}>
-                                    <ListItem sx={{px: 1}}>
-                                        <Box
-                                            sx={{
-                                                width: 40,
-                                                height: 40,
-                                                borderRadius: '50%',
-                                                bgcolor: bg,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                mr: 2,
-                                                color: color,
-                                                fontWeight: 'bold',
-                                                fontSize: 18
-                                            }}
-                                        >
-                                            {expense.category.charAt(0).toUpperCase()}
-                                        </Box>
-                                        <ListItemText
-                                            primary={
-                                                <Typography
-                                                    fontWeight="medium">{expense.description || 'Bez opisu'}</Typography>
-                                            }
-                                            secondary={
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {dayjs(expense.createdAt).format('DD MMMM YYYY')} • {expense.category}
-                                                </Typography>
-                                            }
-                                        />
-                                        <Typography variant="body1" fontWeight="bold" color="error.main">
-                                            {expense.price.toLocaleString('pl-PL', {minimumFractionDigits: 2})} {findTransactionCurrency(expense)}
-                                        </Typography>
-                                    </ListItem>
-                                    {index < recentExpenses.length - 1 && <Divider component="li" variant="inset"/>}
-                                </React.Fragment>
-                            );
-                        })}
-                    </List>
-                </CardContent>
-            </Card>
+            {/*                return (*/}
+            {/*                    <React.Fragment key={expense.id}>*/}
+            {/*                        <ListItem sx={{px: 1}}>*/}
+            {/*                            <Box*/}
+            {/*                                sx={{*/}
+            {/*                                    width: 40,*/}
+            {/*                                    height: 40,*/}
+            {/*                                    borderRadius: '50%',*/}
+            {/*                                    bgcolor: bg,*/}
+            {/*                                    display: 'flex',*/}
+            {/*                                    alignItems: 'center',*/}
+            {/*                                    justifyContent: 'center',*/}
+            {/*                                    mr: 2,*/}
+            {/*                                    color: color,*/}
+            {/*                                    fontWeight: 'bold',*/}
+            {/*                                    fontSize: 18*/}
+            {/*                                }}*/}
+            {/*                            >*/}
+            {/*                                {expense.category.charAt(0).toUpperCase()}*/}
+            {/*                            </Box>*/}
+            {/*                            <ListItemText*/}
+            {/*                                primary={*/}
+            {/*                                    <Typography*/}
+            {/*                                        fontWeight="medium">{expense.description || 'Bez opisu'}</Typography>*/}
+            {/*                                }*/}
+            {/*                                secondary={*/}
+            {/*                                    <Typography variant="caption" color="text.secondary">*/}
+            {/*                                        {dayjs(expense.createdAt).format('DD MMMM YYYY')} • {expense.category}*/}
+            {/*                                    </Typography>*/}
+            {/*                                }*/}
+            {/*                            />*/}
+            {/*                            <Typography variant="body1" fontWeight="bold" color="error.main">*/}
+            {/*                                {expense.price.toLocaleString('pl-PL', {minimumFractionDigits: 2})} {findTransactionCurrency(expense)}*/}
+            {/*                            </Typography>*/}
+            {/*                        </ListItem>*/}
+            {/*                        {index < recentExpenses.length - 1 && <Divider component="li" variant="inset"/>}*/}
+            {/*                    </React.Fragment>*/}
+            {/*                );*/}
+            {/*            })}*/}
+            {/*        </List>*/}
+            {/*    </CardContent>*/}
+            {/*</Card>*/}
 
 
             <Box display={'flex'} gap={2} mb={3} mt={3}>
