@@ -1,9 +1,5 @@
 import axios from 'axios'
 import {useAuthStore} from "../store/auth-store.ts";
-import type {
-    BudgetDto,
-    CreateGoalDto
-} from "./types.ts";
 
 export const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -46,125 +42,6 @@ export const getExchangeRate = (from: string, to: string) => axios.get(
 
 //EXPENSES
 
-export const getExpenses = (
-    category: string | null,
-    startDate: string,
-    endDate: string,
-) => axios.get(
-    `http://localhost:8080/api/transactions`,
-    {
-        params: {
-            type: 'EXPENSE',
-            category: category,
-            startDate: startDate,
-            endDate: endDate,
-        },
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        },
-    }
-)
-
-export const getTransactions = (
-    type: string,
-    category: string | null,
-    startDate: string,
-    endDate: string,
-) => axios.get(
-    `http://localhost:8080/api/transactions`,
-    {
-        params: {
-            type: type,
-            category: category,
-            startDate: startDate,
-            endDate: endDate,
-        },
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        },
-    }
-)
-
-export const getAllRecurringExpenses = () => axios.get(
-    `http://localhost:8080/api/transactions/recurring`,
-    {
-        params: {
-            type: 'EXPENSE',
-        },
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        }
-    })
-
-export const getAllRecurringTransactions = (type: string) => axios.get(
-    `http://localhost:8080/api/transactions/recurring`,
-    {
-        params: {
-            type: type,
-        },
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        }
-    })
-
-
-export const deleteTransaction = (id: string) => axios.delete(
-    `http://localhost:8080/api/transactions/${id}`,
-    {
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        },
-    }
-)
-
-export const deleteRecurringTransaction = (id: string) => axios.delete(
-    `http://localhost:8080/api/transactions/recurring/${id}`,
-    {
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        },
-    }
-)
-
-export const addTransaction = (transaction: TransactionDto) => axios.post(
-    'http://localhost:8080/api/transactions',
-    transaction,
-    {
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        },
-    }
-)
-
-export const addRecurringTransaction = (transaction: TransactionDto) => axios.post(
-    'http://localhost:8080/api/transactions/recurring',
-    transaction,
-    {
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        },
-    }
-)
-
-export const editExpense = (id: string, transaction: EditTransactionDto) => axios.put(
-    `http://localhost:8080/api/transactions/edit/${id}`,
-    transaction,
-    {
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        },
-    }
-)
-
 export const getAllCategoriesAmount = (
     type: string,
     startDate: string,
@@ -194,17 +71,6 @@ export const getTransactionOverview = (
             startDate: startDate,
             endDate: endDate,
         },
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        },
-    }
-)
-
-export const deactivateRecurringTransaction = (id: string) => axios.put(
-    `http://localhost:8080/api/transactions/deactivate/${id}`,
-    {},
-    {
         withCredentials: true,
         headers: {
             Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
@@ -292,124 +158,7 @@ export const getCurrencies = () => axios.get(
     }
 )
 
-// CATEGORIES
-
-// BUDGETS
-
-export const createBudget = (budgetDto: BudgetDto) => axios.post(
-    'http://localhost:8080/api/budgets',
-    budgetDto,
-    {
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        },
-    }
-)
-
-export const getBudgets = () => axios.get(
-    'http://localhost:8080/api/budgets',
-    {
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        }
-    }
-)
-
-export const getBudgetById = (id: string) => axios.get(
-    `http://localhost:8080/api/budgets/${id}`,
-    {
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        }
-    }
-)
-
-export const updateBudget = (budgetDto: BudgetDto, id: string) => axios.put(
-    `http://localhost:8080/api/budgets/${id}`,
-    budgetDto,
-    {
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        }
-    }
-)
-
-export const deleteBudget = (id: string) => axios.delete(
-    `http://localhost:8080/api/budgets/${id}`,
-    {
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        }
-    }
-)
-
-export const getGoals = () => api.get(
-    'http://localhost:8080/api/goals',
-    {
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        }
-    }
-)
-
-export const createGoal = (goal: CreateGoalDto) => api.post(
-    'http://localhost:8080/api/goals',
-    goal,
-    {
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        }
-    }
-);
-
-export const depositToGoal = (id: string, amount: number, accountId: string) => api.patch(
-    `http://localhost:8080/api/goals/${id}/deposit`,
-    null,
-    {
-        params: {
-            amount: amount,
-            accountId: accountId
-        },
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        }
-    }
-);
-
-export const withdrawFromGoal = (id: string, amount: number, accountId: string) => api.patch(
-    `http://localhost:8080/api/goals/${id}/withdraw`,
-    null,
-    {
-        params: {
-            amount: amount,
-            accountId: accountId
-        },
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        }
-    }
-);
-
 // RECOMMENDATIONS
-
-export const getRecommendations = () => axios.get(
-    'http://localhost:8080/api/investments/recommendations',
-    {
-        withCredentials: true,
-        headers: {
-            Authorization: 'Bearer ' + useAuthStore.getState().accessToken,
-        }
-    }
-)
 
 export const getSmartRecommendations = () => axios.get(
     'http://localhost:8080/api/recommendation/smart',

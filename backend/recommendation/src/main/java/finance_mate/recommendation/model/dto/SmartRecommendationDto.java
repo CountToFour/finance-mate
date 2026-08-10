@@ -1,6 +1,6 @@
 package finance_mate.recommendation.model.dto;
 
-import com.financemate.recommendation.model.InvestmentProfile;
+import finance_mate.recommendation.model.InvestmentProfile;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -1,6 +1,5 @@
 package finance_mate.recommendation.model;
 
-import com.financemate.recommendation.model.RecommendationAction;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "recommendations")
+@Table(name = "investment_recommendations")
 public class RsiRecommendation {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

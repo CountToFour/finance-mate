@@ -1,7 +1,5 @@
 package finance_mate.recommendation.model.dto;
 
-import com.financemate.recommendation.model.dto.MetaData;
-import com.financemate.recommendation.model.dto.Value;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

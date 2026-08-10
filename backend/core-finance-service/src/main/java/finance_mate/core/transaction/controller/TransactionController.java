@@ -113,4 +113,9 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getDailyOverview(userId, startDate, endDate, type));
 
     }
+
+    @GetMapping("/recommendation/savings-rate/{userId}")
+    public ResponseEntity<Double> calculateQuarterlySavingsRate(@PathVariable String userId) {
+        return ResponseEntity.ok(transactionService.calculateQuarterlySavingsRate(userId));
+    }
 }

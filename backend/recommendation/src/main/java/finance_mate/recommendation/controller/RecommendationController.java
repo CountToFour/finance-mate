@@ -1,75 +1,67 @@
 package finance_mate.recommendation.controller;
 
-import com.financemate.auth.model.user.User;
-import com.financemate.auth.service.UserService;
-import com.financemate.budget.dto.GoalRecommendationDto;
-import com.financemate.recommendation.model.RsiRecommendation;
-import com.financemate.recommendation.model.dto.SpendingStructureDto;
-import com.financemate.recommendation.service.RecommendationService;
+import finance_mate.recommendation.model.RsiRecommendation;
+import finance_mate.recommendation.model.dto.GoalRecommendationDto;
+import finance_mate.recommendation.model.dto.InvestmentRecommendationDto;
+import finance_mate.recommendation.model.dto.SpendingStructureDto;
+import finance_mate.recommendation.service.RecommendationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/recommendation")
-@CrossOrigin("*")
 public class RecommendationController {
 
     private final RecommendationService recommendationService;
-    private final UserService userService;
 
-    @GetMapping
-    public ResponseEntity<?> getRecommendation() {
-        try {
-            List<RsiRecommendation> recommendation = recommendationService.getRecommendation();
-            return ResponseEntity.ok().body(recommendation);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error fetching recommendation: " + e.getMessage());
-        }
+    @GetMapping("/investment/all")
+    public ResponseEntity<List<RsiRecommendation>> getRecommendation() {
+        List<RsiRecommendation> recommendation = recommendationService.getRecommendation();
+        return ResponseEntity.ok().body(recommendation);
     }
 
-    @GetMapping("/smart")
-    public ResponseEntity<?> getSmartRecommendation(Authentication authentication) {
-        try {
-            User user = userService.getUserFromAuthentication(authentication);
-            return ResponseEntity.ok(recommendationService.getSmartRecommendation(user));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error fetching smart recommendation: " + e.getMessage());
-        }
+    @GetMapping("/investment")
+    public ResponseEntity<InvestmentRecommendationDto> getSmartInvestmentRecommendation(@RequestHeader("X-User-Id") String userId) {
+        InvestmentRecommendationDto smartInvestmentRecommendation = recommendationService.getSmartInvestmentRecommendation(userId);
+        return ResponseEntity.ok().body(smartInvestmentRecommendation);
     }
 
-    @GetMapping("/auditor")
-    public ResponseEntity<SpendingStructureDto> getSpendingAuditor(Authentication authentication) {
-        try {
-            User user = userService.getUserFromAuthentication(authentication);
-            SpendingStructureDto spendingAuditor = recommendationService.getSpendingAuditor(user);
-            return ResponseEntity.ok(spendingAuditor);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).build();
-        }
-    }
+//    @GetMapping("/smart")
+//    public ResponseEntity<?> getSmartRecommendation(@RequestHeader("X-User-Id") String userId) {
+//        try {
+//            return ResponseEntity.ok(recommendationService.getSmartRecommendation(userId));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(500).body("Error fetching smart recommendation: " + e.getMessage());
+//        }
+//    }
 
-    @GetMapping("/goal-accelerator")
-    public ResponseEntity<?> getGoalAcceleratorRecommendation(Authentication authentication) {
-        try {
-            User user = userService.getUserFromAuthentication(authentication);
-            GoalRecommendationDto goalRecommendation = recommendationService.getGoalRecommendation(user);
+//    @GetMapping("/auditor")
+//    public ResponseEntity<SpendingStructureDto> getSpendingAuditor(@RequestHeader("X-User-Id") String userId) {
+//        try {
+//            SpendingStructureDto spendingAuditor = recommendationService.getSpendingAuditor(userId);
+//            return ResponseEntity.ok(spendingAuditor);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(500).build();
+//        }
+//    }
 
-            if (goalRecommendation == null) {
-                return ResponseEntity.noContent().build();
-            }
-
-            return ResponseEntity.ok(goalRecommendation);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error fetching goal recommendation: " + e.getMessage());
-        }
-    }
+//    @GetMapping("/goal-accelerator")
+//    public ResponseEntity<?> getGoalAcceleratorRecommendation(@RequestHeader("X-User-Id") String userId) {
+//        try {
+//            GoalRecommendationDto goalRecommendation = recommendationService.getGoalRecommendation(userId);
+//
+//            if (goalRecommendation == null) {
+//                return ResponseEntity.noContent().build();
+//            }
+//
+//            return ResponseEntity.ok(goalRecommendation);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(500).body("Error fetching goal recommendation: " + e.getMessage());
+//        }
+//    }
 
 }

@@ -1,12 +1,12 @@
 package finance_mate.recommendation.model.dto;
 
-import com.financemate.recommendation.model.RecommendationAction;
+import finance_mate.recommendation.model.RecommendationAction;
 
 public record RecommendationDto(
         String symbol,
         String friendlyName,
         double rsiValue,
         RecommendationAction action,
-        double latestClose,
-        String currency
+        double latestClose
+//        String currency
 ) {}

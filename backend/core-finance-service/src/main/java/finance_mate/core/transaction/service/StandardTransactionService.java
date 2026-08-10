@@ -176,13 +176,13 @@ public class StandardTransactionService implements TransactionService {
             start = middle.minusDays(ChronoUnit.DAYS.between(end, middle));
         }
 
-        Double totalValue = transactionRepository.calculateSum(middle, end);
+        Double totalValue = transactionRepository.calculateSum(middle, end, userId);
         totalValue = totalValue == null ? 0 : totalValue;
-        Double previousValue = transactionRepository.calculateSum(start, middle);
+        Double previousValue = transactionRepository.calculateSum(start, middle, userId);
         previousValue = previousValue == null ? 0 : previousValue;
 
-        int totalAmount = transactionRepository.getCount(middle, end);
-        int previousAmount = transactionRepository.getCount(start, middle);
+        int totalAmount = transactionRepository.getCount(middle, end, userId);
+        int previousAmount = transactionRepository.getCount(start, middle, userId);
 
         double totalValueChange = 0;
         if (previousValue != 0) {
@@ -331,32 +331,18 @@ public class StandardTransactionService implements TransactionService {
     }
 
     @Override
-    public double calculateQuarterlySavingsRate(String userId) {
+    public Double calculateQuarterlySavingsRate(String userId) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusMonths(3);
 
-        Specification<Transaction> spec = Specification.allOf(
-                TransactionSpecifications.hasUserId(userId),
-                TransactionSpecifications.dateBetween(startDate, endDate)
-        );
+        Double totalIncome = transactionRepository.getTotalAmount(startDate, endDate, TransactionType.INCOME, userId);
+        Double totalExpense = transactionRepository.getTotalAmount(startDate, endDate, TransactionType.EXPENSE, userId);
 
-        List<Transaction> transactions = transactionRepository.findAll(spec);
-
-        double totalIncome = transactions.stream()
-                .filter(t -> t.getTransactionType() == TransactionType.INCOME)
-                .mapToDouble(t -> getConvertedAmount(t, userId))
-                .sum();
-
-        double totalExpense = transactions.stream()
-                .filter(t -> t.getTransactionType() == TransactionType.EXPENSE)
-                .mapToDouble(t -> Math.abs(getConvertedAmount(t, userId)))
-                .sum();
-
-        if (totalIncome == 0) {
+        if (totalIncome == null || totalIncome == 0) {
             return -1.0;
         }
 
-        return (totalIncome - totalExpense) / totalIncome;
+        return (totalIncome + totalExpense) / totalIncome;
     }
 
     private double getConvertedAmount(Transaction t, String userId) {

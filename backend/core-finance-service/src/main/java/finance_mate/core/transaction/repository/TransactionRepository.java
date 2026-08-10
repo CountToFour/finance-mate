@@ -18,14 +18,25 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
 
     @Query(
             "SELECT SUM(t.price) FROM Transaction t " +
-                    "WHERE t.createdAt BETWEEN :startDate AND :endDate"
+                    "WHERE t.createdAt BETWEEN :startDate AND :endDate " +
+                    "AND t.userId = :userId"
     )
-    Double calculateSum(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    Double calculateSum(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate,
+                        @Param("userId") String userId);
 
     @Query(
             "SELECT COUNT(t.id) FROM Transaction t " +
-                    "WHERE t.createdAt BETWEEN :startDate AND :endDate"
+                    "WHERE t.createdAt BETWEEN :startDate AND :endDate " +
+                    "AND t.userId = :userId"
     )
-    int getCount(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    int getCount(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate,
+                 @Param("userId") String userId);
 
+    @Query(
+            "SELECT SUM(t.price) FROM Transaction t " +
+                    "WHERE t.createdAt BETWEEN :startDate AND :endDate " +
+                    "AND t.transactionType = :type AND t.userId = :userId"
+    )
+    Double getTotalAmount(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate,
+                          @Param("type") TransactionType type, @Param("userId") String userId);
 }

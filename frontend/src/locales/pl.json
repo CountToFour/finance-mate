@@ -412,5 +412,25 @@
         "cancel" : "Anuluj"
       }
     }
+  },
+  "recommendation" : {
+    "invest" : {
+      "profile" : {
+        "critical" : "Ujemny bilans",
+        "conservative" : "Profil ostrożny",
+        "balanced" : "Profil zrównoważony",
+        "aggressive" : "Profil agresywny",
+        "default" : "Nieznany"
+      },
+      "analyze" : {
+        "label": "Analiza 3-miesięczna",
+        "rate" : "% oszczędności"
+      },
+      "empty" : "Brak rekomendacji dla Twojego obecnego profilu.",
+      "rsi" : "• RSI: ",
+      "buy" : "KUPUJ",
+      "hold" : "TRZYMAJ",
+      "sell" : "SPRZEDAJ"
+    }
   }
 }

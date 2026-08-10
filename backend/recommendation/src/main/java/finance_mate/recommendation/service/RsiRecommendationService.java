@@ -1,10 +1,9 @@
 package finance_mate.recommendation.service;
 
-import com.financemate.recommendation.integration.TwelveDataClient;
-import com.financemate.recommendation.model.RecommendationAction;
-import com.financemate.recommendation.model.RsiRecommendation;
-import com.financemate.recommendation.model.dto.TwelveDataTimeSeriesResponse;
-import com.financemate.recommendation.model.dto.Value;
+import finance_mate.recommendation.model.RecommendationAction;
+import finance_mate.recommendation.model.RsiRecommendation;
+import finance_mate.recommendation.model.dto.TwelveDataTimeSeriesResponse;
+import finance_mate.recommendation.model.dto.Value;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,8 +18,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class RsiRecommendationService {
-
-    private final TwelveDataClient twelveDataClient;
 
     public RsiRecommendation calculateRsi(TwelveDataTimeSeriesResponse twelveDataTimeSeriesResponse) {
         List<Value> values = twelveDataTimeSeriesResponse.getValues();

@@ -37,7 +37,7 @@ public interface TransactionService {
     //TODO COS SIE STANIE JAK BEDZIE MNIEJ REKORDOW NIZ LIMIT
     List<TransactionResponse> getTopTransactionsByAmount(String userId, LocalDate startDate, LocalDate endDate, int limit, TransactionType type);
 
-    double calculateQuarterlySavingsRate(String userId);
+    Double calculateQuarterlySavingsRate(String userId);
 
     List<DailyOverviewDto> getDailyOverview(String userId, LocalDate startDate, LocalDate endDate, TransactionType type);
 
